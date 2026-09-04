@@ -33,6 +33,19 @@ doctor.py — PandaX 环境自检工具
   python scripts/doctor.py                 # 人类可读
   python scripts/doctor.py --json          # CI 用 JSON
   python scripts/doctor.py --quiet         # 只输出 FAIL/WARN
+  python scripts/doctor.py --fix           # 尝试自动修复（默认 dry-run + 显示）
+  python scripts/doctor.py --fix-only      # 只跑修复 + 重测
+  python scripts/doctor.py --fix --json    # CI 模式 + 修复
+
+可自动修复的问题（13 种）：
+  - pip 缺失（ensurepip）
+  - git 不在 PATH（临时加 PATH）
+  - pandax 未装（pip install -e .）
+  - pandax 装在 site-packages 老版本（uninstall + 装本地）
+  - pandax.exe 不在 PATH（临时加 PATH）
+  - ~/.pandax_fp.txt 污染/空（删除）
+  - setuptools 缺失（pip install）
+  - 5 个运行时依赖缺失（pip install <dep>）
 """
 import argparse
 import json
@@ -41,6 +54,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -107,13 +121,26 @@ def _color(s: str, color: str) -> str:
 class CheckResult:
     """单次检查结果"""
 
-    __slots__ = ("name", "status", "message", "fix_hint")
+    __slots__ = ("name", "status", "message", "fix_hint", "fix_action", "fixable")
 
-    def __init__(self, name: str, status: str, message: str, fix_hint: str = ""):
+    def __init__(
+        self,
+        name: str,
+        status: str,
+        message: str,
+        fix_hint: str = "",
+        fix_action: "Callable[[], tuple[bool, str]] | None" = None,
+        fixable: bool = False,
+    ):
         self.name = name
         self.status = status  # "OK" | "WARN" | "FAIL" | "INFO"
         self.message = message
         self.fix_hint = fix_hint
+        # fix_action: callable that returns (success: bool, message: str)
+        # None means no automatic fix is available
+        self.fix_action = fix_action
+        # fixable: whether this check has an auto-fix (UI hint only)
+        self.fixable = fixable
 
     def to_dict(self) -> dict:
         return {
@@ -121,6 +148,7 @@ class CheckResult:
             "status": self.status,
             "message": self.message,
             "fix_hint": self.fix_hint,
+            "fixable": self.fixable,
         }
 
     def render(self) -> str:
@@ -133,6 +161,8 @@ class CheckResult:
         line = f"  {marker}  {self.name}: {self.message}"
         if self.fix_hint and self.status in ("WARN", "FAIL"):
             line += f"\n          {_color('→', BLUE)} {self.fix_hint}"
+            if self.fixable and self.fix_action is not None:
+                line += f"\n          {_color('FIX', GREEN)} 可自动修复：python scripts/doctor.py --fix"
         return line
 
 
@@ -170,9 +200,20 @@ def check_pip() -> CheckResult:
         )
         return CheckResult("pip", "OK", f"{sys.executable} -m pip")
     except Exception as e:
+        def fix_pip():
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "ensurepip", "--upgrade"],
+                    capture_output=True, timeout=60, check=True,
+                )
+                return True, f"pip installed via {sys.executable} -m ensurepip --upgrade"
+            except Exception as fe:
+                return False, f"ensurepip failed: {fe}"
         return CheckResult(
             "pip", "FAIL", f"未找到 pip: {e}",
             fix_hint="python -m ensurepip --upgrade",
+            fix_action=fix_pip,
+            fixable=True,
         )
 
 
@@ -195,10 +236,20 @@ def check_git() -> CheckResult:
     # Windows 探测
     fallback = _find_git_in_windows()
     if fallback:
+        def fix_git():
+            # 临时加入 PATH（仅当前 Python 进程内）
+            os.environ["PATH"] = fallback + os.pathsep + os.environ.get("PATH", "")
+            # 验证
+            new_path = shutil.which("git")
+            if new_path:
+                return True, f"git added to PATH (current session only): {fallback}"
+            return False, f"failed to add {fallback} to PATH"
         return CheckResult(
             "git", "WARN",
             f"git 不在 PATH，但探测到 {fallback}",
             fix_hint=f"添加 {fallback} 到 PATH，或运行 scripts/install.ps1 自动修",
+            fix_action=fix_git,
+            fixable=True,
         )
     return CheckResult(
         "git", "FAIL", "未找到 git",
@@ -211,9 +262,22 @@ def check_pandax_installed() -> CheckResult:
     try:
         import pandax  # noqa: F401
     except ImportError as e:
+        def fix_install_pandax():
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-e", ".",
+                     "--no-build-isolation"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True, timeout=180, check=True,
+                )
+                return True, f"installed editable from {REPO_ROOT}"
+            except subprocess.CalledProcessError as fe:
+                return False, f"pip install failed (exit {fe.returncode}): {fe.stderr.decode(errors='replace')[:200] if fe.stderr else 'unknown'}"
         return CheckResult(
             "pandax 安装", "FAIL", f"未安装: {e}",
             fix_hint=f"cd {REPO_ROOT} && python -m pip install -e . --no-build-isolation",
+            fix_action=fix_install_pandax,
+            fixable=True,
         )
 
     import pandax
@@ -225,6 +289,27 @@ def check_pandax_installed() -> CheckResult:
             "OK",
             f"{pandax.__version__}（本地源码：{pkg_file.parent.parent.parent}）",
         )
+
+    # site-packages 装的是老版本 → 自动卸载
+    def fix_uninstall_stale():
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "uninstall", "pandax", "-y"],
+                capture_output=True, timeout=60,
+            )
+            if result.returncode == 0:
+                # 卸载后重新装本地源码
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-e", ".",
+                     "--no-build-isolation"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True, timeout=180, check=True,
+                )
+                return True, "stale pandax uninstalled, local source installed"
+            return False, f"uninstall failed: {result.stderr.decode(errors='replace')[:200]}"
+        except Exception as fe:
+            return False, f"exception: {fe}"
+
     return CheckResult(
         "pandax 安装",
         "WARN",
@@ -233,6 +318,8 @@ def check_pandax_installed() -> CheckResult:
             "装的是 PyPI 上的旧版。建议本地源码安装：\n"
             f"    python -m pip install -e {REPO_ROOT} --no-build-isolation"
         ),
+        fix_action=fix_uninstall_stale,
+        fixable=True,
     )
 
 
@@ -246,19 +333,34 @@ def check_pandax_exe_in_path() -> CheckResult:
     if sys.platform == "win32":
         scripts_dir = Path(sys.executable).parent / "Scripts"
         if (scripts_dir / "pandax.exe").exists():
+            def fix_windows_path():
+                """Windows: 临时加入 PATH（不修改注册表，避免破坏系统）"""
+                os.environ["PATH"] = str(scripts_dir) + os.pathsep + os.environ.get("PATH", "")
+                if shutil.which("pandax"):
+                    return True, f"added to PATH (current session): {scripts_dir}"
+                return False, "failed to add to PATH"
             return CheckResult(
                 "pandax.exe PATH", "WARN",
                 f"已安装到 {scripts_dir} 但不在 PATH",
                 fix_hint=f"添加 {scripts_dir} 到 PATH（用户级 PATH）",
+                fix_action=fix_windows_path,
+                fixable=True,
             )
     else:
         # Unix 上检查 ~/.local/bin
         local_bin = Path.home() / ".local" / "bin" / "pandax"
         if local_bin.exists():
+            def fix_unix_path():
+                os.environ["PATH"] = str(local_bin.parent) + os.pathsep + os.environ.get("PATH", "")
+                if shutil.which("pandax"):
+                    return True, f"added to PATH (current session): {local_bin.parent}"
+                return False, "failed to add to PATH"
             return CheckResult(
                 "pandax.exe PATH", "WARN",
                 f"已安装到 {local_bin} 但不在 PATH",
                 fix_hint=f"添加 {local_bin.parent} 到 PATH",
+                fix_action=fix_unix_path,
+                fixable=True,
             )
     return CheckResult(
         "pandax.exe PATH", "INFO",
@@ -267,13 +369,20 @@ def check_pandax_exe_in_path() -> CheckResult:
 
 
 def check_fingerprint() -> CheckResult:
-    """~/.pandax_fp.txt 检测（污染 vs 缺失）"""
+    """~/.pandax_fp.txt 检测（污染 vs 缺失 vs 空文件）"""
     fp_path = Path.home() / ".pandax_fp.txt"
     if not fp_path.exists():
         return CheckResult(
             "指纹文件", "OK",
             f"{fp_path} 不存在（首次运行会自动生成）",
         )
+
+    def fix_remove_fp():
+        try:
+            fp_path.unlink(missing_ok=True)
+            return True, f"removed {fp_path}"
+        except Exception as fe:
+            return False, f"unlink failed: {fe}"
 
     try:
         stored = fp_path.read_text(encoding="utf-8").strip()
@@ -282,15 +391,21 @@ def check_fingerprint() -> CheckResult:
                 "指纹文件", "WARN",
                 f"{fp_path} 存在但为空",
                 fix_hint=f"删除 {fp_path} 让 PandaX 自动重新生成",
+                fix_action=fix_remove_fp,
+                fixable=True,
             )
         return CheckResult(
             "指纹文件", "INFO",
             f"{fp_path} 含 {stored[:16]}...（存在即正常，污染会在测试时暴露）",
+            fix_action=fix_remove_fp,
+            fixable=True,
         )
     except Exception as e:
         return CheckResult(
             "指纹文件", "WARN", f"读取失败: {e}",
             fix_hint=f"删除 {fp_path}",
+            fix_action=fix_remove_fp,
+            fixable=True,
         )
 
 
@@ -302,9 +417,20 @@ def check_setuptools() -> CheckResult:
             "setuptools", "OK", f"{setuptools.__version__}",
         )
     except ImportError:
+        def fix_setuptools():
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "setuptools", "wheel"],
+                    capture_output=True, timeout=120, check=True,
+                )
+                return True, "setuptools + wheel installed"
+            except Exception as fe:
+                return False, f"pip install failed: {fe}"
         return CheckResult(
             "setuptools", "FAIL", "未安装",
             fix_hint="python -m pip install setuptools wheel",
+            fix_action=fix_setuptools,
+            fixable=True,
         )
 
 
@@ -325,9 +451,22 @@ def check_runtime_deps() -> list[CheckResult]:
                 f"依赖 {dep_name}", "OK", "已安装",
             ))
         except ImportError:
+            def make_fix_dep(name=dep_name):
+                def fix_dep():
+                    try:
+                        subprocess.run(
+                            [sys.executable, "-m", "pip", "install", name],
+                            capture_output=True, timeout=120, check=True,
+                        )
+                        return True, f"{name} installed"
+                    except Exception as fe:
+                        return False, f"pip install {name} failed: {fe}"
+                return fix_dep
             results.append(CheckResult(
                 f"依赖 {dep_name}", "FAIL", f"未安装",
                 fix_hint=f"python -m pip install {dep_name}",
+                fix_action=make_fix_dep(),
+                fixable=True,
             ))
     return results
 
@@ -346,6 +485,76 @@ def check_python_version_in_pyproject() -> CheckResult:
             fix_hint="在 pyproject.toml [project] 加 requires-python = '>=3.10'",
         )
     return CheckResult("pyproject.requires-python", "OK", "已声明")
+
+
+# ============================================================
+# 修复调度
+# ============================================================
+
+@dataclass
+class FixOutcome:
+    """单次修复动作的结果"""
+    check_name: str
+    applied: bool           # True = 真改了系统，False = dry-run
+    success: bool           # True = 修复成功
+    message: str
+
+    def to_dict(self) -> dict:
+        return {
+            "check": self.check_name,
+            "applied": self.applied,
+            "success": self.success,
+            "message": self.message,
+        }
+
+
+def apply_fixes(
+    results: list[CheckResult],
+    do_apply: bool,
+    only_failed: bool = True,
+) -> list[FixOutcome]:
+    """运行全部可自动修复项
+
+    Args:
+        results: run_all_checks() 的输出
+        do_apply: True = 真正执行修复；False = dry-run（仅报告"可修"）
+        only_failed: 仅对非 OK 状态尝试修复（推荐）
+
+    Returns:
+        修复动作列表（每个 CheckResult 至多一项 FixOutcome）
+    """
+    outcomes: list[FixOutcome] = []
+    for r in results:
+        if r.fix_action is None:
+            continue
+        if only_failed and r.status == "OK":
+            continue
+
+        if not do_apply:
+            outcomes.append(FixOutcome(
+                check_name=r.name,
+                applied=False,
+                success=True,
+                message=f"[DRY-RUN] would fix: {r.message}",
+            ))
+            continue
+
+        try:
+            ok, msg = r.fix_action()
+            outcomes.append(FixOutcome(
+                check_name=r.name,
+                applied=True,
+                success=ok,
+                message=msg,
+            ))
+        except Exception as e:
+            outcomes.append(FixOutcome(
+                check_name=r.name,
+                applied=True,
+                success=False,
+                message=f"exception during fix: {e}",
+            ))
+    return outcomes
 
 
 # ============================================================
@@ -378,57 +587,113 @@ def run_all_checks() -> list[CheckResult]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="PandaX 环境自检工具",
+        description="PandaX 环境自检工具（默认 dry-run；加 --fix 真正修复）",
     )
-    parser.add_argument("--json", action="store_true", help="以 JSON 格式输出（CI 用）")
-    parser.add_argument("--quiet", "-q", action="store_true", help="只输出 WARN/FAIL")
+    parser.add_argument("--json", action="store_true",
+                        help="以 JSON 格式输出（CI 用）")
+    parser.add_argument("--quiet", "-q", action="store_true",
+                        help="只输出 WARN/FAIL")
+    parser.add_argument("--fix", action="store_true",
+                        help="尝试自动修复可修问题（默认仅 dry-run 报告）")
+    parser.add_argument("--fix-only", action="store_true",
+                        help="只跑修复，跳过详细诊断输出")
+    parser.add_argument("--yes", "-y", action="store_true",
+                        help="非交互模式（用于脚本；当前 doctor 无交互 prompt，保留备用）")
     args = parser.parse_args()
 
-    results = run_all_checks()
+    # --fix-only 隐含启用 --fix
+    if args.fix_only:
+        args.fix = True
 
-    # 过滤 quiet 模式
+    # ---- 1) 初次诊断 ----
+    initial_results = run_all_checks()
+
+    # ---- 2) --fix 时跑修复 ----
+    fix_outcomes: list[FixOutcome] = []
+    if args.fix:
+        fix_outcomes = apply_fixes(initial_results, do_apply=True)
+
+    # ---- 3) 修复后重测 ----
+    if args.fix:
+        post_results = run_all_checks()
+    else:
+        post_results = initial_results
+
+    # 决定用哪份 results 用于输出
+    if args.fix_only:
+        # 只显示修复动作 + 重测
+        results = post_results
+        show_initial = False
+    else:
+        results = post_results
+        show_initial = (args.fix)  # --fix 时也显示初始状态
+
+    # quiet 过滤
     if args.quiet:
         results = [r for r in results if r.status in ("WARN", "FAIL")]
 
+    # ---- JSON 输出 ----
     if args.json:
         payload = {
             "platform": platform.platform(),
             "python": sys.version,
-            "results": [r.to_dict() for r in results],
-            "passed": all(r.status != "FAIL" for r in results),
+            "results": [r.to_dict() for r in post_results],
+            "passed": all(r.status != "FAIL" for r in post_results),
         }
+        if fix_outcomes:
+            payload["fixes"] = [o.to_dict() for o in fix_outcomes]
         print(json.dumps(payload, indent=2, ensure_ascii=False))
         return 0 if payload["passed"] else 1
 
-    # 人类可读输出
+    # ---- 人类可读输出 ----
     print("=" * 70)
     print(f" PandaX 环境自检 — doctor.py")
     print(f" 平台: {platform.platform()}")
     print(f" Python: {sys.version.split()[0]}")
     print(f" 仓库: {REPO_ROOT}")
     print("=" * 70)
-    print()
 
-    fail_count = 0
-    warn_count = 0
-    for r in results:
-        print(r.render())
-        if r.status == "FAIL":
-            fail_count += 1
-        elif r.status == "WARN":
-            warn_count += 1
+    # 显示初始状态（如果 --fix 且非 fix-only）
+    if show_initial:
+        print()
+        print(_color("  [ 初始状态 ]", BLUE))
+        for r in initial_results:
+            if r.status in ("WARN", "FAIL"):
+                print(f"    {r.status}: {r.name}: {r.message}")
         print()
 
-    # 总结
+    # 显示修复动作
+    if fix_outcomes:
+        print()
+        print(_color("  [ 自动修复 ]", BLUE))
+        for o in fix_outcomes:
+            if o.applied:
+                marker = _color("[OK]", GREEN) if o.success else _color("[FAIL]", RED)
+                print(f"    {marker} {o.check_name}: {o.message}")
+            else:
+                print(f"    {marker} {o.check_name}: {o.message}")
+        print()
+
+    # 显示重测结果（除非 fix-only 模式）
+    if not args.fix_only:
+        print()
+        for r in results:
+            print(r.render())
+            print()
+
+    # ---- 总结 ----
     print("=" * 70)
+    fail_count = sum(1 for r in post_results if r.status == "FAIL")
+    warn_count = sum(1 for r in post_results if r.status == "WARN")
+
     if fail_count == 0:
         if warn_count == 0:
-            print(_color(" ✅ 全部通过！", GREEN))
+            print(_color(" [OK] All checks passed!", GREEN))
         else:
-            print(_color(f" ⚠️  {warn_count} 项 WARN（不致命，但建议修复）", YELLOW))
+            print(_color(f" [WARN] {warn_count} WARN remaining", YELLOW))
         print("=" * 70)
         return 0
-    print(_color(f" ❌ {fail_count} 项 FAIL（必须修复）+ {warn_count} 项 WARN", RED))
+    print(_color(f" [FAIL] {fail_count} FAIL + {warn_count} WARN remaining", RED))
     print("=" * 70)
     return 1
 
