@@ -1506,13 +1506,19 @@ def _run_installer(action: str, force: bool = False):
         if os_key == "Windows":
             cmd += ["-Force"]
 
+    # 传当前语言给子进程（installer 脚本读 ~/.pandax/config.json 即可）
+    # 但显式传 PANDAX_LANG 更稳（避免子进程 HOME 路径问题）
+    env = os.environ.copy()
+    from .i18n import get_lang
+    env["PANDAX_LANG"] = get_lang()
+
     print(t("info_os_detected", os=os_key))
     print(t("info_running", cmd=' '.join(cmd)))
     print()
 
     try:
         # Windows 脚本需要 console 可见以弹出确认；macOS/Linux bash 同理
-        rc = subprocess.run(cmd, check=False).returncode
+        rc = subprocess.run(cmd, check=False, env=env).returncode
         return rc
     except FileNotFoundError as e:
         print(f"[ERROR] {t('_interp_unavailable', interp=interpreter[0])}")

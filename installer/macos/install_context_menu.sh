@@ -1,25 +1,100 @@
 #!/usr/bin/env bash
 # ============================================================
-# PandaX macOS 右键服务安装脚本
+# PandaX macOS context menu installer
 # ============================================================
 #
-# 用法：
+# Usage:
 #   bash installer/macos/install_context_menu.sh
 #
-# 第一性原理：
-#   - macOS 的「服务」(Quick Action) 是基于 ~/Library/Services/ 的 .workflow 目录
-#   - Finder 右键 → "服务" → "PandaX" → 弹出操作选择 → Terminal 执行
-#   - 用户级安装，无需 sudo
-#   - 幂等：重复运行安全
+# Or via pandax (preferred, sets --lang):
+#   pandax install-context              # uses ~/.pandax/config.json (set by pandax)
+#   pandax install-context --lang=en    # overrides saved preference
 #
-# 对抗式审查：
-#   - 攻击：恶意 .workflow 替换
-#     缓解：检查 CFBundleIdentifier 一致
-#   - 攻击：服务执行任意命令
-#     缓解：osascript 菜单限定 4 个动作；Terminal 可视化运行
+# First principles:
+#   - macOS "Services" (Quick Actions) live in ~/Library/Services/ as .workflow dirs
+#   - Finder right-click -> Services -> PandaX -> choose action -> Terminal runs pandax
+#   - User-level install, no sudo
+#   - Idempotent: safe to re-run
+#
+# Adversarial review:
+#   - Threat: malicious .workflow replacement
+#     Mitigation: verify CFBundleIdentifier matches
+#   - Threat: services execute arbitrary commands
+#     Mitigation: osascript menu limits to 4 actions; Terminal shows output
+#
+# i18n: language comes from ~/.pandax/config.json (written by `pandax --lang`),
+#       env PANDAX_LANG, or default zh-CN. Override via env or --lang= CLI flag.
 # ============================================================
 
 set -e
+
+# ---- Resolve language ----
+# Priority: env PANDAX_LANG > config.json > default zh-CN
+USER_LANG="${PANDAX_LANG:-}"
+if [ -z "$USER_LANG" ] && [ -f "$HOME/.pandax/config.json" ]; then
+    USER_LANG=$(grep -o '"lang":[[:space:]]*"[^"]*"' "$HOME/.pandax/config.json" 2>/dev/null \
+                | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || echo "")
+fi
+USER_LANG="${USER_LANG:-zh-CN}"
+
+# ---- Load text strings ----
+if [ "$USER_LANG" = "en" ]; then
+    TXT_TITLE="PandaX macOS Context Menu Installer"
+    TXT_NOT_FOUND="[WARN] pandax command not found!"
+    TXT_INSTALL_HINT_1="Please install first:"
+    TXT_INSTALL_HINT_2="  pip3 install pandax"
+    TXT_INSTALL_HINT_3="Or:"
+    TXT_INSTALL_HINT_4="  pip3 install --user git+https://github.com/pandax/pandax.git"
+    TXT_CONFIRM="Continue anyway? [y/N]"
+    TXT_CANCELLED="Cancelled."
+    TXT_FOUND="[OK] Found pandax:"
+    TXT_NO_WORKFLOW="[ERROR] Workflow source not found:"
+    TXT_BAD_ID="[ERROR] Workflow identifier mismatch (expected com.pandax.workflow.lock, got"
+    TXT_STEP_1="[1/3] Installing Quick Action to ~/Library/Services/ ..."
+    TXT_EXISTS="[INFO] Existing service found, cleaning old version..."
+    TXT_INSTALLED="[OK] Installed:"
+    TXT_STEP_2="[2/3] Refreshing Launch Services database..."
+    TXT_LS_OK="[OK] Launch Services refreshed"
+    TXT_LS_MISSING="[WARN] lsregister not available, manually restart Finder"
+    TXT_STEP_3="[3/3] Setup complete!"
+    TXT_NEXT="Next: enable this service in System Settings"
+    TXT_NEXT_1="  System Settings -> Keyboard -> Shortcuts -> Services"
+    TXT_NEXT_2="  Check 'Files and Folders' -> 'PandaX'"
+    TXT_USAGE="After enabling:"
+    TXT_USAGE_1="  Finder -> right-click file/folder -> Services -> PandaX"
+    TXT_USAGE_2="  -> choose init / lock / unlock / status"
+    TXT_USAGE_3="  -> Terminal opens automatically and runs pandax"
+    TXT_UNINST="To uninstall:"
+    TXT_UNINST_CMD="  bash installer/macos/uninstall_context_menu.sh"
+else
+    TXT_TITLE="PandaX macOS 右键服务安装程序"
+    TXT_NOT_FOUND="[WARN] 未找到 pandax 命令！"
+    TXT_INSTALL_HINT_1="请先安装："
+    TXT_INSTALL_HINT_2="  pip3 install pandax"
+    TXT_INSTALL_HINT_3="或者："
+    TXT_INSTALL_HINT_4="  pip3 install --user git+https://github.com/pandax/pandax.git"
+    TXT_CONFIRM="是否仍要继续？[y/N]"
+    TXT_CANCELLED="已取消。"
+    TXT_FOUND="[OK] 找到 pandax:"
+    TXT_NO_WORKFLOW="[ERROR] 未找到 workflow 源:"
+    TXT_BAD_ID="[ERROR] workflow 标识不符（期望 com.pandax.workflow.lock，实际"
+    TXT_STEP_1="[1/3] 安装 Quick Action 到 ~/Library/Services/ ..."
+    TXT_EXISTS="[INFO] 已存在同名服务，先清理旧版本..."
+    TXT_INSTALLED="[OK] 已安装:"
+    TXT_STEP_2="[2/3] 刷新 Launch Services 数据库..."
+    TXT_LS_OK="[OK] Launch Services 已刷新"
+    TXT_LS_MISSING="[WARN] lsregister 不可用，请手动重启 Finder"
+    TXT_STEP_3="[3/3] 配置完成！"
+    TXT_NEXT="下一步：在系统设置中启用此服务"
+    TXT_NEXT_1="  系统设置 → 键盘 → 快捷键 → 服务"
+    TXT_NEXT_2="  勾选「文件和文件夹」→「PandaX」"
+    TXT_USAGE="启用后使用方式："
+    TXT_USAGE_1="  Finder → 右键点击文件/文件夹 → 服务 → PandaX"
+    TXT_USAGE_2="  → 选择 init / lock / unlock / status"
+    TXT_USAGE_3="  → Terminal 自动打开并执行 pandax 命令"
+    TXT_UNINST="卸载："
+    TXT_UNINST_CMD="  bash installer/macos/uninstall_context_menu.sh"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOW_SRC="$SCRIPT_DIR/PandaX Lock.workflow"
@@ -27,38 +102,38 @@ SERVICES_DIR="$HOME/Library/Services"
 WORKFLOW_DST="$SERVICES_DIR/PandaX Lock.workflow"
 
 echo "==============================================="
-echo "PandaX macOS 右键服务安装程序"
+echo "$TXT_TITLE"
 echo "==============================================="
 echo ""
 
 # 1. 检查 pandax 是否可用
 if ! command -v pandax >/dev/null 2>&1; then
-    echo "[WARN] 未找到 pandax 命令！"
-    echo "请先安装："
-    echo "  pip3 install pandax"
-    echo "  # 或者"
-    echo "  pip3 install --user git+https://github.com/pandax/pandax.git"
+    echo "$TXT_NOT_FOUND"
+    echo "$TXT_INSTALL_HINT_1"
+    echo "$TXT_INSTALL_HINT_2"
+    echo "$TXT_INSTALL_HINT_3"
+    echo "$TXT_INSTALL_HINT_4"
     echo ""
-    read -p "是否仍要继续？[y/N] " confirm
+    read -p "$TXT_CONFIRM " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo "已取消。"
+        echo "$TXT_CANCELLED"
         exit 1
     fi
 else
     PANDAX_PATH="$(command -v pandax)"
-    echo "[OK] 找到 pandax: $PANDAX_PATH"
+    echo "$TXT_FOUND $PANDAX_PATH"
 fi
 
 # 2. 检查 workflow 源
 if [ ! -d "$WORKFLOW_SRC" ]; then
-    echo "[ERROR] 未找到 workflow 源: $WORKFLOW_SRC"
+    echo "$TXT_NO_WORKFLOW $WORKFLOW_SRC"
     exit 1
 fi
 
 # 3. 检查 Info.plist 的标识
 PLIST_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$WORKFLOW_SRC/Contents/Info.plist" 2>/dev/null || echo "")
 if [ "$PLIST_ID" != "com.pandax.workflow.lock" ]; then
-    echo "[ERROR] workflow 标识不符（期望 com.pandax.workflow.lock，实际 $PLIST_ID）"
+    echo "$TXT_BAD_ID $PLIST_ID)"
     exit 1
 fi
 
@@ -67,38 +142,38 @@ mkdir -p "$SERVICES_DIR"
 
 # 5. 拷贝 workflow
 echo ""
-echo "[1/3] 安装 Quick Action 到 ~/Library/Services/ ..."
+echo "$TXT_STEP_1"
 if [ -e "$WORKFLOW_DST" ]; then
-    echo "[INFO] 已存在同名服务，先清理旧版本..."
+    echo "$TXT_EXISTS"
     rm -rf "$WORKFLOW_DST"
 fi
 cp -R "$WORKFLOW_SRC" "$WORKFLOW_DST"
-echo "[OK] 已安装: $WORKFLOW_DST"
+echo "$TXT_INSTALLED $WORKFLOW_DST"
 
 # 6. 刷新 Launch Services 数据库
 echo ""
-echo "[2/3] 刷新 Launch Services 数据库..."
+echo "$TXT_STEP_2"
 LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister
 if [ -x "$LSREGISTER" ]; then
     "$LSREGISTER" -f "$WORKFLOW_DST" 2>/dev/null || true
-    echo "[OK] Launch Services 已刷新"
+    echo "$TXT_LS_OK"
 else
-    echo "[WARN] lsregister 不可用，请手动重启 Finder"
+    echo "$TXT_LS_MISSING"
 fi
 
 # 7. 提示用户在系统设置中启用
 echo ""
-echo "[3/3] 配置完成！"
+echo "$TXT_STEP_3"
 echo ""
-echo "下一步：在系统设置中启用此服务"
-echo "  系统设置 → 键盘 → 快捷键 → 服务"
-echo "  勾选「文件和文件夹」→「PandaX」"
+echo "$TXT_NEXT"
+echo "$TXT_NEXT_1"
+echo "$TXT_NEXT_2"
 echo ""
-echo "启用后使用方式："
-echo "  Finder → 右键点击文件/文件夹 → 服务 → PandaX"
-echo "  → 选择 init / lock / unlock / status"
-echo "  → Terminal 自动打开并执行 pandax 命令"
+echo "$TXT_USAGE"
+echo "$TXT_USAGE_1"
+echo "$TXT_USAGE_2"
+echo "$TXT_USAGE_3"
 echo ""
-echo "卸载："
-echo "  bash installer/macos/uninstall_context_menu.sh"
+echo "$TXT_UNINST"
+echo "$TXT_UNINST_CMD"
 echo ""
