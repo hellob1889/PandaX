@@ -49,12 +49,45 @@ PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）
 
 #### 安装
 
+**方式 A：从 PyPI 安装（最简单）**
+
 ```bash
 pip install pandax
 
 # 一键装上右键菜单（Windows / macOS / Linux 自动检测）
 pandax install-context
 ```
+
+**方式 B：从源码一键安装（推荐开发者使用，含最新 i18n + CI lint）**
+
+```bash
+git clone https://github.com/pandax/pandax.git
+cd pandax
+
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+
+# macOS / Linux
+./scripts/install.sh
+```
+
+**安装脚本自动做**：
+1. 检测 Python ≥ 3.10
+2. 探测 git（不在 PATH 时尝试常见安装路径）
+3. 卸载 site-packages 里可能存在的老 pandax 版本（避免版本冲突）
+4. `pip install -e .` 本地源码 editable 安装
+5. 验证 pandax 可用（`python -m pandax --version`）
+6. 调用 `doctor.py` 给出最终环境诊断
+
+#### 环境诊断（任何时候都能跑）
+
+```bash
+python scripts/doctor.py           # 人类可读
+python scripts/doctor.py --json    # CI 用（返回 pass/fail）
+python scripts/doctor.py --quiet   # 只显示 WARN / FAIL
+```
+
+检测 9 个项目：Python 版本 / pip / git / pandax 安装位置 / pandax.exe PATH / 指纹污染 / setuptools / 5 个运行时依赖。
 
 #### 初始化项目
 
@@ -222,9 +255,42 @@ which records reason / problem / approach as immutable audit evidence.
 
 ### Install
 
+**Option A: from PyPI (easiest)**
+
 ```bash
 pip install pandax
 ```
+
+**Option B: from source (recommended for developers, includes latest i18n + CI lint)**
+
+```bash
+git clone https://github.com/pandax/pandax.git
+cd pandax
+
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+
+# macOS / Linux
+./scripts/install.sh
+```
+
+**The install script automatically**:
+1. Checks Python >= 3.10
+2. Locates git (scans common install paths if not in PATH)
+3. Removes stale pandax from site-packages (prevents version conflicts)
+4. `pip install -e .` local source editable install
+5. Verifies pandax works (`python -m pandax --version`)
+6. Runs `doctor.py` for final diagnosis
+
+### Environment diagnostics (run anytime)
+
+```bash
+python scripts/doctor.py           # human-readable
+python scripts/doctor.py --json    # CI mode (returns pass/fail)
+python scripts/doctor.py --quiet   # only WARN / FAIL
+```
+
+Checks 9 items: Python version / pip / git / pandax install location / pandax.exe PATH / fingerprint pollution / setuptools / 5 runtime dependencies.
 
 ### Quick start
 
