@@ -1,0 +1,68 @@
+# ============================================================
+# PandaX .gitignore
+# ============================================================
+
+# Python 构建产物
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.whl
+
+# 测试
+.pytest_cache/
+.coverage
+.tox/
+htmlcov/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 工具
+.mypy_cache/
+.ruff_cache/
+
+# PandaX 自身产物
+test_project/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时
+*.tmp
+*.bak
+
+# Installer（保留 .iss 脚本，忽略 staging 目录）
+installer/staging/
+installer/Output/
+
+# ============================================================
+# Workspace 临时产物（本次工作 session 产生，不入仓库）
+# ============================================================
+# 17 字节占位符文件
+image.png
+/index.html
+# 大体积临时 HTML 报告
+CodeAudit_项目文档.html
+
+# ============================================================
+# 独立 git 仓库（demo 自带 .git，不应被主仓库接管）
+# ============================================================
+examples/demo_03_bypass/
+examples/demo_05_full/

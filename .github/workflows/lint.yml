@@ -1,0 +1,188 @@
+# ============================================================
+# .github/workflows/lint.yml — PandaX Lint & i18n CI
+# ============================================================
+#
+# 第一性原理：
+#   - 代码审查 + i18n 合规性是产品的护城河
+#   - 不能因为开发者偷懒（hardcode 中文）让海外用户看到乱码
+#   - 不能因为 PR 偷懒引入硬编码中文字符串
+#   - 必须 fail-fast：发现违规立即报错，PR 不能合并
+#
+# 对抗式审查：
+#   - audit_i18n.py 扫描所有 pandax 包源码
+#   - 检查 print() / raise / sys.stderr.write 中的硬编码中文
+#   - 检查 i18n 模块的语言包覆盖率
+#   - 失败时 exit 1，阻止 PR 合并
+#
+# 触发条件：
+#   - 任何 push 到 main / develop
+#   - 任何针对 main / develop 的 PR
+#   - 手动触发 (workflow_dispatch)
+#
+# ============================================================
+
+name: Lint & i18n
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# 取消同分支的旧运行（节省 CI 资源）
+concurrency:
+  group: ${{. Git.workflow }}-${{. Git.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ========================================
+  # Job 1: i18n 审计（硬编码中文扫描）
+  # ========================================
+  i18n-audit:
+    name: i18n Hardcoded Chinese Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Run i18n audit (human-readable)
+        run: |
+          echo "================================================================"
+          echo " PandaX i18n 对抗式审查（CI 自动）"
+          echo "================================================================"
+          python scripts/audit_i18n.py
+        shell: bash
+
+      - name: Run i18n audit (JSON output for artifacts)
+        run: |
+          mkdir -p artifacts
+          python scripts/audit_i18n.py --json > artifacts/i18n_audit.json
+        shell: bash
+        continue-on-error: true
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-audit-results
+          path: artifacts/i18n_audit.json
+          retention-days: 7
+
+  # ========================================
+  # Job 2: i18n 覆盖率（必须 ≥95%）
+  # ========================================
+  i18n-coverage:
+    name: i18n Coverage Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: i18n-audit
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install PandaX (editable)
+        run: |
+          pip install -e .
+        shell: bash
+
+      - name: Check i18n coverage
+        run: |
+          python -c "
+          from pandax import i18n
+          import sys
+          report = i18n.coverage_report()
+          failed = False
+          for lang, stats in report.items():
+              pct = 100 - stats['missing_pct']
+              print(f'{lang}: {pct:.1f}% ({stats[\"present\"]}/{stats[\"total\"]})')
+              if pct < 100:
+                  print(f'  MISSING KEYS: {len(stats[\"missing\"])}')
+                  for k in stats['missing'][:10]:
+                      print(f'    - {k}')
+                  failed = True
+          sys.exit(1 if failed else 0)
+          "
+        shell: bash
+
+  # ========================================
+  # Job 3: 单元测试
+  # ========================================
+  test:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-timeout
+        shell: bash
+
+      - name: Run tests (Ubuntu/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          python -m pytest tests/ --tb=short -q --timeout=60 -p no:cacheprovider --no-header
+        shell: bash
+
+      - name: Run tests (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          python -m pytest tests/ --tb=short -q --timeout=60 -p no:cacheprovider --no-header
+        shell: pwsh
+
+  # ========================================
+  # Job 4: 整体汇总（PR 评论区输出）
+  # ========================================
+  summary:
+    name: Lint Summary
+    runs-on: ubuntu-latest
+    needs: [i18n-audit, i18n-coverage, test]
+    if: always()
+
+    steps:
+      - name: All checks passed?
+        run: |
+          if [ "${{ needs.i18n-audit.result }}" != "success" ] || \
+             [ "${{ needs.i18n-coverage.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ]; then
+            echo "## :x: Lint & i18n Failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "i18n-audit: ${{ needs.i18n-audit.result }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "i18n-coverage: ${{ needs.i18n-coverage.result }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "test: ${{ needs.test.result }}" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "## :white_check_mark: All Lint & i18n Checks Passed" >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
