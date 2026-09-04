@@ -1,0 +1,100 @@
+# mkdocs.yml — PandaX 双语文档配置
+
+site_name: PandaX
+site_description: AI Agent code audit gateway (PandaX) — OS-level mandatory review
+site_url: https://pandax.github.io/pandax/
+repo_url: https://github.com/pandax/pandax
+repo_name: pandax/pandax
+
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pandax/pandax
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/pandax/
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+
+nav:
+  - 首页 (Home):
+      - 中文: zh/index.md
+      - English: en/index.md
+  - 安装 (Install):
+      - 中文: zh/install.md
+      - English: en/install.md
+  - 快速开始 (Quick Start):
+      - 中文: zh/quickstart.md
+      - English: en/quickstart.md
+  - 7 层防御 (7 Defense Layers):
+      - 中文: zh/defense-layers.md
+      - English: en/defense-layers.md
+  - 命令参考 (Commands):
+      - 中文: zh/commands.md
+      - English: en/commands.md
+  - MCP 集成 (MCP Integration):
+      - 中文: zh/mcp-integration.md
+      - English: en/mcp-integration.md
+  - CI 集成 (CI Integration):
+      - 中文: zh/ci-integration.md
+      - English: en/ci-integration.md
+  - 右键菜单 (Context Menu):
+      - 中文: zh/context-menu.md
+      - English: en/context-menu.md
+  - 国际化 (i18n):
+      - 中文: zh/i18n.md
+      - English: en/i18n.md

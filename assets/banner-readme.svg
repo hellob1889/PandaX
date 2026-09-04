@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="panda" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="xgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 装饰网格点 -->
+  <g fill="#6366f1" opacity="0.15">
+    <circle cx="100" cy="100" r="3"/>
+    <circle cx="300" cy="100" r="3"/>
+    <circle cx="500" cy="100" r="3"/>
+    <circle cx="700" cy="100" r="3"/>
+    <circle cx="900" cy="100" r="3"/>
+    <circle cx="1100" cy="100" r="3"/>
+    <circle cx="100" cy="200" r="3"/>
+    <circle cx="1100" cy="200" r="3"/>
+    <circle cx="100" cy="530" r="3"/>
+    <circle cx="300" cy="530" r="3"/>
+    <circle cx="500" cy="530" r="3"/>
+    <circle cx="700" cy="530" r="3"/>
+    <circle cx="900" cy="530" r="3"/>
+    <circle cx="1100" cy="530" r="3"/>
+  </g>
+
+  <!-- 左侧：熊猫 + X 盾牌 -->
+  <g transform="translate(150, 130)">
+    <!-- 熊猫头 -->
+    <ellipse cx="180" cy="160" rx="130" ry="125" fill="url(#panda)"/>
+    <!-- 耳朵 -->
+    <circle cx="74" cy="50" r="46" fill="#0f172a"/>
+    <circle cx="74" cy="50" r="22" fill="url(#panda)"/>
+    <circle cx="286" cy="50" r="46" fill="#0f172a"/>
+    <circle cx="286" cy="50" r="22" fill="url(#panda)"/>
+    <!-- 眼斑 -->
+    <ellipse cx="136" cy="140" rx="26" ry="34" fill="#0f172a" transform="rotate(-15 136 140)"/>
+    <ellipse cx="224" cy="140" rx="26" ry="34" fill="#0f172a" transform="rotate(15 224 140)"/>
+    <!-- 眼睛 -->
+    <circle cx="136" cy="138" r="8" fill="#f8fafc"/>
+    <circle cx="224" cy="138" r="8" fill="#f8fafc"/>
+    <!-- 鼻子 -->
+    <ellipse cx="180" cy="195" rx="14" ry="10" fill="#0f172a"/>
+    <!-- 嘴 -->
+    <path d="M 180 195 Q 164 222 150 215" stroke="#0f172a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M 180 195 Q 196 222 210 215" stroke="#0f172a" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+    <!-- 盾牌 -->
+    <path d="M 180 240 L 250 260 L 250 330 Q 250 360 180 390 Q 110 360 110 330 L 110 260 Z"
+          fill="url(#xgrad)" stroke="#f8fafc" stroke-width="6" stroke-linejoin="round"/>
+    <!-- X -->
+    <path d="M 144 280 L 216 352 M 216 280 L 144 352" stroke="#f8fafc" stroke-width="14" stroke-linecap="round"/>
+  </g>
+
+  <!-- 右侧：文字 -->
+  <g transform="translate(620, 200)">
+    <!-- PandaX 主标 -->
+    <text x="0" y="100" font-family="-apple-system, BlinkMacSystemFont, sans-serif"
+          font-size="120" font-weight="900" fill="#f8fafc">PandaX</text>
+
+    <!-- 副标 -->
+    <text x="0" y="170" font-family="-apple-system, BlinkMacSystemFont, sans-serif"
+          font-size="34" font-weight="500" fill="#a5b4fc">
+      AI Agent 代码审计门禁
+    </text>
+
+    <!-- 标语 -->
+    <text x="0" y="220" font-family="-apple-system, BlinkMacSystemFont, sans-serif"
+          font-size="24" font-style="italic" fill="#cbd5e1" opacity="0.8">
+      Every change leaves a trace.
+    </text>
+  </g>
+
+  <!-- 底部装饰 -->
+  <text x="600" y="580" font-family="-apple-system, sans-serif" font-size="18"
+        fill="#818cf8" text-anchor="middle" opacity="0.6">
+    7 layers · 17+24 formats · 140 tests · MIT License
+  </text>
+</svg>

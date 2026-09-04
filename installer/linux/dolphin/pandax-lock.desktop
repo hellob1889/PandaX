@@ -1,0 +1,40 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory;application/x-python;text/x-python;text/plain;text/x-shellscript;
+X-KDE-Priority=TopLevel
+X-KDE-StartupNotify=false
+X-KDE-Submenu=PandaX
+X-KDE-Icon=pandax
+Comment=PandaX audit tools (PandaX 审计工具)
+Comment[zh_CN]=PandaX 审计工具
+Comment[en]=PandaX audit tools
+Actions=Init;Lock;Unlock;Status;
+
+[Desktop Action Init]
+Name=PandaX 初始化此目录 (Init)
+Name[zh_CN]=PandaX 初始化此目录 (Init)
+Name[en]=PandaX Init
+Icon=pandax
+Exec=konsole -e bash -c "cd '%d' && pandax --silent --trust-default init --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Lock]
+Name=PandaX 锁定此目录 (Lock)
+Name[zh_CN]=PandaX 锁定此目录 (Lock)
+Name[en]=PandaX Lock
+Icon=pandax
+Exec=konsole -e bash -c "cd '%d' && pandax --silent --trust-default lock --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Unlock]
+Name=PandaX 解锁此目录 (Unlock)
+Name[zh_CN]=PandaX 解锁此目录 (Unlock)
+Name[en]=PandaX Unlock
+Icon=pandax
+Exec=konsole -e bash -c "cd '%d' && pandax --silent --trust-default unlock --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Status]
+Name=PandaX 查看状态 (Status)
+Name[zh_CN]=PandaX 查看状态 (Status)
+Name[en]=PandaX Status
+Icon=pandax
+Exec=konsole -e bash -c "cd '%d' && pandax --silent --trust-default status --root '%d'; echo; echo '--- Done ---'; read"

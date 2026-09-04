@@ -1,0 +1,118 @@
+name: PandaX CI
+
+# Phase 7 — GitHub Actions 集成
+#
+# 触发条件：
+#   - PR 打开/同步/重新打开
+#   - push 到 main
+# 作用：
+#   - 安装 pandax
+#   - 跑 pandax ci 验证所有变更都有审计
+#   - 失败则不合并
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "**/*.py"
+      - "**/*.md"
+      - "**/*.json"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "**/*.html"
+      - "**/*.css"
+      - "**/*.js"
+      - "**/*.sh"
+      - "**/*.png"
+      - "**/*.pdf"
+      - "**/*.docx"
+      - "**/*.xlsx"
+  push:
+    branches: [main, master]
+
+# 取消重复运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: PandaX 审计验证
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要 git 历史做 diff
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 安装 pandax
+        run: |
+          pip install --upgrade pip
+          pip install pandax
+
+      - name: 探测/安装 git
+        run: |
+          git --version || (echo "Git 缺失，请先安装" && exit 1)
+
+      - name: 运行 pandax ci 验证
+        id: ci
+        run: |
+          # 在仓库根目录跑 ci，基线是 origin/main（或 origin/master）
+          BASE="origin/main"
+          if ! git rev-parse --verify "$BASE" >/dev/null 2>&1; then
+            BASE="origin/master"
+          fi
+          echo "基线分支: $BASE"
+          pandax ci --root . --base "$BASE"
+
+      - name: 失败时输出审计日志摘要
+        if: failure()
+        run: |
+          echo "::group::审计日志（最近 10 条）"
+          if [ -f .pandax/pandax.jsonl ]; then
+            tail -10 .pandax/pandax.jsonl
+          else
+            echo ".pandax/pandax.jsonl 不存在"
+          fi
+          echo "::endgroup::"
+          echo "::group::二进制快照"
+          if [ -f .pandax/binary_snapshots.json ]; then
+            cat .pandax/binary_snapshots.json | head -30
+          else
+            echo ".pandax/binary_snapshots.json 不存在"
+          fi
+          echo "::endgroup::"
+
+      - name: PR 评论（失败时）
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## ❌ PandaX CI 验证失败\n\n';
+            body += 'PR 中检测到 **未通过 pandax write 审计**的变更。\n\n';
+            body += '### 修复方法\n\n';
+            body += '对每个被标记的文件，在本地执行：\n\n';
+            body += '```bash\n';
+            body += 'pandax write --root . \\\n';
+            body += '  --file <文件路径> \\\n';
+            body += '  --reason "<改动原因>" \\\n';
+            body += '  --problem "<解决的具体问题>" \\\n';
+            body += '  --approach "<采用的方法>" \\\n';
+            body += '  --old "<原内容>" --new "<新内容>"\n';
+            body += '```\n\n';
+            body += '详细说明请查看 README。\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

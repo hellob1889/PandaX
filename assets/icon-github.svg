@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景：深紫渐变 -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="panda" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="x" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角方形背景 -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <!-- 熊猫头（白色圆形） -->
+  <ellipse cx="256" cy="240" rx="140" ry="130" fill="url(#panda)"/>
+
+  <!-- 左耳（黑圆） -->
+  <circle cx="146" cy="130" r="48" fill="#1e1b4b"/>
+  <circle cx="146" cy="130" r="22" fill="url(#panda)"/>
+
+  <!-- 右耳（黑圆） -->
+  <circle cx="366" cy="130" r="48" fill="#1e1b4b"/>
+  <circle cx="366" cy="130" r="22" fill="url(#panda)"/>
+
+  <!-- 左眼斑（黑椭圆） -->
+  <ellipse cx="208" cy="220" rx="26" ry="34" fill="#1e1b4b" transform="rotate(-15 208 220)"/>
+
+  <!-- 右眼斑（黑椭圆） -->
+  <ellipse cx="304" cy="220" rx="26" ry="34" fill="#1e1b4b" transform="rotate(15 304 220)"/>
+
+  <!-- 左眼白 -->
+  <circle cx="208" cy="218" r="8" fill="#f8fafc"/>
+
+  <!-- 右眼白 -->
+  <circle cx="304" cy="218" r="8" fill="#f8fafc"/>
+
+  <!-- 鼻子（黑椭圆） -->
+  <ellipse cx="256" cy="278" rx="14" ry="10" fill="#1e1b4b"/>
+
+  <!-- 嘴（两个弧） -->
+  <path d="M 256 278 Q 240 305 226 298" stroke="#1e1b4b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 256 278 Q 272 305 286 298" stroke="#1e1b4b" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- X 符号（核心品牌符号，叠在盾牌上）-->
+  <!-- 盾牌 -->
+  <path d="M 256 320 L 326 340 L 326 410 Q 326 440 256 470 Q 186 440 186 410 L 186 340 Z"
+        fill="url(#x)" stroke="#f8fafc" stroke-width="6" stroke-linejoin="round"/>
+  <!-- X 字 -->
+  <path d="M 220 360 L 292 432 M 292 360 L 220 432" stroke="#f8fafc" stroke-width="14" stroke-linecap="round"/>
+</svg>

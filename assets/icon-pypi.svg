@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="80" fill="url(#bg)"/>
+  <!-- 熊猫剪影 -->
+  <circle cx="140" cy="170" r="30" fill="#f8fafc"/>
+  <circle cx="260" cy="170" r="30" fill="#f8fafc"/>
+  <circle cx="140" cy="170" r="18" fill="#3730a3"/>
+  <circle cx="260" cy="170" r="18" fill="#3730a3"/>
+  <ellipse cx="200" cy="220" rx="80" ry="70" fill="#f8fafc"/>
+  <ellipse cx="180" cy="225" rx="12" ry="14" fill="#1e1b4b"/>
+  <ellipse cx="220" cy="225" rx="12" ry="14" fill="#1e1b4b"/>
+  <ellipse cx="200" cy="255" rx="8" ry="6" fill="#1e1b4b"/>
+  <!-- X 盾牌 -->
+  <path d="M 200 280 L 250 295 L 250 340 Q 250 360 200 380 Q 150 360 150 340 L 150 295 Z"
+        fill="#fbbf24" stroke="#f8fafc" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M 175 305 L 225 355 M 225 305 L 175 355" stroke="#1e1b4b" stroke-width="10" stroke-linecap="round"/>
+</svg>

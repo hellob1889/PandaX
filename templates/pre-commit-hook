@@ -1,0 +1,58 @@
+#!/bin/sh
+# ============================================================
+# PandaX pre-commit hook (L3 防御)
+# ============================================================
+# 安装方式: pandax install-hook
+# 作用: 阻止未通过 pandax write 的 .py 文件被 git commit
+#
+# 第一性原理:
+#   即使 L1 (文件锁) 和 L2 (watchdog) 都被绕过,
+#   直接 git commit 也应被拒绝, 因为 .pandax/pandax.jsonl
+#   必须同时被 staged 才算"通过审计"。
+# ============================================================
+
+# 检查是否有 .py 文件被 staged
+STAGED_PY=$(git diff --cached --name-only --diff-filter=AM | grep '\.py$' || true)
+
+if [ -z "$STAGED_PY" ]; then
+    # 没有 .py 文件被 staged, 放行
+    exit 0
+fi
+
+# 检查审计日志是否也被 staged
+STAGED_AUDIT=$(git diff --cached --name-only | grep '\.pandax/agent_audit\.jsonl$' || true)
+
+if [ -z "$STAGED_AUDIT" ]; then
+    echo ""
+    echo "================================================================"
+    echo "[PandaX] 拒绝提交: 检测到 .py 修改但审计日志未更新"
+    echo "================================================================"
+    echo ""
+    echo "被修改的文件:"
+    echo "$STAGED_PY" | sed 's/^/  /'
+    echo ""
+    echo "请使用 pandax write 命令代替直接 git commit:"
+    echo "  pandax write \\"
+    echo "    --file <py 文件> \\"
+    echo "    --reason \"改动原因\" \\"
+    echo "    --problem \"解决的问题\" \\"
+    echo "    --approach \"采用的方法\""
+    echo ""
+    echo "如果你确定要绕过审计 (不推荐), 使用: git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+# 检查 audit log 是否有对应的 APPROVED 记录
+LATEST_AUDIT=$(grep '"status":"APPROVED"' .pandax/pandax.jsonl 2>/dev/null | tail -1 || true)
+
+if [ -z "$LATEST_AUDIT" ]; then
+    echo ""
+    echo "================================================================"
+    echo "[PandaX] 拒绝提交: 审计日志中无 APPROVED 记录"
+    echo "================================================================"
+    echo "请先使用 pandax write 完成审计。"
+    exit 1
+fi
+
+exit 0

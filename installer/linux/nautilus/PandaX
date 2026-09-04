@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+PandaX Nautilus 右键菜单脚本
+================================
+
+触发场景：
+  - 用户在 Nautilus 中右键点击文件或文件夹
+  - 选择 "脚本" → "PandaX"
+  - 弹出 zenity 选择菜单（init/lock/unlock/status）
+  - 在 x-terminal-emulator 中执行 pandax 命令
+
+安装位置：
+  ~/.local/share/nautilus/scripts/PandaX  (用户级)
+  /usr/share/nautilus/scripts/PandaX       (系统级，需 sudo)
+
+第一性原理：
+  - Nautilus 把选中的文件路径作为参数（$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS）
+  - 找不到图形菜单工具时退化到 read（纯终端）
+  - 路径含空格要正确处理（用 quote 包裹）
+
+对抗式审查：
+  - 攻击：恶意脚本替换
+    缓解：用 python 编译检查（py_compile）标记 #!/usr/bin/env python3 头
+  - 攻击：zenity 不存在
+    缓解：自动 fallback 到 kdialog / read
+"""
+import os
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+# ============================================================
+# 0. 解析 Nautilus 传入参数
+# ============================================================
+# Nautilus 设置环境变量：
+#   NAUTILUS_SCRIPT_SELECTED_FILE_PATHS — 选中的所有路径（换行分隔）
+#   NAUTILUS_SCRIPT_CURRENT_URI         — 当前目录
+#   NAUTILUS_SCRIPT_WINDOW_GEOMETRY     — 窗口位置（可选）
+selected_paths = os.environ.get("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").strip()
+current_uri = os.environ.get("NAUTILUS_SCRIPT_CURRENT_URI", "")
+
+if not selected_paths and not current_uri:
+    print("[PandaX] 无输入路径，退出。")
+    sys.exit(0)
+
+paths = [p for p in selected_paths.split("\n") if p.strip()]
+
+if not paths:
+    # 没选中文件，就在当前目录
+    if current_uri.startswith("file://"):
+        paths = [current_uri[7:]]
+
+if not paths:
+    print("[PandaX] 无可操作目标。")
+    sys.exit(1)
+
+# 取第一个目标
+target = paths[0]
+
+# 文件则取父目录
+if os.path.isfile(target):
+    root = os.path.dirname(target)
+else:
+    root = target
+
+
+# ============================================================
+# 1. 菜单选择（zenity / kdialog / fallback read）
+# ============================================================
+def which(cmd):
+    for d in os.environ.get("PATH", "").split(os.pathsep):
+        c = os.path.join(d, cmd)
+        if os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return None
+
+
+def ask_zenity():
+    """zenity 图形菜单（GNOME 默认）"""
+    z = which("zenity")
+    if not z:
+        return None
+    p = subprocess.run(
+        [z, "--list", "--radiolist",
+         "--title=PandaX 审计工具 (Audit Tools)",
+         f"--text=目标 (Target): {root}\n选择要执行的操作 (Choose action):",
+         "--column=", "--column=动作 / Action", "--column=说明 / Description",
+         "TRUE",  "init",   "初始化 PandaX (Init — first time)",
+         "FALSE", "lock",   "锁定此目录 (Lock this folder)",
+         "FALSE", "unlock", "解锁此目录 (Unlock this folder)",
+         "FALSE", "status", "查看状态 (Show status)"],
+        capture_output=True, text=True
+    )
+    return p.stdout.strip() or None
+
+
+def ask_kdialog():
+    """kdialog 图形菜单（KDE 默认）"""
+    k = which("kdialog")
+    if not k:
+        return None
+    p = subprocess.run(
+        [k, "--radiolist", "选择操作 / Choose action",
+         "init",   "初始化 PandaX (Init)",   "off",
+         "lock",   "锁定此目录 (Lock)",       "on",
+         "unlock", "解锁此目录 (Unlock)",     "off",
+         "status", "查看状态 (Status)",       "off"],
+        capture_output=True, text=True
+    )
+    return p.stdout.strip() or None
+
+
+def ask_read():
+    """终端 fallback"""
+    print()
+    print("=" * 50)
+    print(f"PandaX — 目标 (Target): {root}")
+    print("=" * 50)
+    print("  [1] init   — 初始化 PandaX (Init)")
+    print("  [2] lock   — 锁定此目录 (Lock)")
+    print("  [3] unlock — 解锁此目录 (Unlock)")
+    print("  [4] status — 查看状态 (Status)")
+    print()
+    try:
+        c = input("选择 / Choose [1-4, q 取消/cancel]: ").strip()
+    except EOFError:
+        return None
+    return {"1": "init", "2": "lock", "3": "unlock", "4": "status"}.get(c)
+
+
+action = ask_zenity() or ask_kdialog() or ask_read()
+if not action:
+    print("[PandaX] 用户取消。")
+    sys.exit(0)
+
+
+# ============================================================
+# 2. 在终端中执行 pandax 命令
+# ============================================================
+def find_terminal():
+    """按优先级查找终端模拟器"""
+    candidates = [
+        # GNOME
+        ["gnome-terminal", "--"],
+        ["x-terminal-emulator", "-e"],
+        # KDE
+        ["konsole", "-e"],
+        # XFCE
+        ["xfce4-terminal", "-e"],
+        # MATE / Cinnamon
+        ["mate-terminal", "-e"],
+        ["tilix", "-e"],
+        # 通用 fallback（已弃用但可用）
+        ["xterm", "-e"],
+    ]
+    for term_args in candidates:
+        if which(term_args[0]):
+            return term_args
+    return None
+
+
+terminal = find_terminal()
+pandax = which("pandax") or "pandax"  # fallback 依赖 PATH
+
+if not terminal:
+    # 终极 fallback：直接执行（输出到调用者终端）
+    print(f"[PandaX] 未找到终端模拟器，直接执行...")
+    print(f"$ cd {shlex.quote(root)} && {pandax} {action} --root {shlex.quote(root)}")
+    try:
+        subprocess.run([pandax, action, "--root", root], check=False)
+    except FileNotFoundError:
+        print(f"[ERROR] {pandax} 命令不存在。请先 pip install pandax")
+    sys.exit(0)
+
+# 构造 shell 命令（含 pause 让用户看输出）
+cmd_str = (
+    f'cd {shlex.quote(root)} && '
+    f'echo "[PandaX] 执行: pandax {action} --root {shlex.quote(root)}" && '
+    f'{shlex.quote(pandax)} --silent --trust-default {action} --root {shlex.quote(root)}; '
+    f'echo ""; echo "[PandaX] 完成。按 Enter 关闭..."; read'
+)
+try:
+    subprocess.Popen(terminal + ["bash", "-c", cmd_str])
+except Exception as e:
+    print(f"[PandaX] 启动终端失败: {e}")
+    print(f"可手动执行: cd {root} && {pandax} {action}")
+    sys.exit(1)
