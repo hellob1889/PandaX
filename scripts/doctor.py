@@ -121,7 +121,10 @@ def _color(s: str, color: str) -> str:
 class CheckResult:
     """单次检查结果"""
 
-    __slots__ = ("name", "status", "message", "fix_hint", "fix_action", "fixable")
+    __slots__ = (
+        "name", "status", "message", "fix_hint",
+        "fix_action", "fix_action_persist", "fixable",
+    )
 
     def __init__(
         self,
@@ -130,6 +133,7 @@ class CheckResult:
         message: str,
         fix_hint: str = "",
         fix_action: "Callable[[], tuple[bool, str]] | None" = None,
+        fix_action_persist: "Callable[[], tuple[bool, str]] | None" = None,
         fixable: bool = False,
     ):
         self.name = name
@@ -139,6 +143,9 @@ class CheckResult:
         # fix_action: callable that returns (success: bool, message: str)
         # None means no automatic fix is available
         self.fix_action = fix_action
+        # fix_action_persist: same but persistent (writes to HKCU / shell rc).
+        # If None, --persist-path will silently fall back to fix_action.
+        self.fix_action_persist = fix_action_persist
         # fixable: whether this check has an auto-fix (UI hint only)
         self.fixable = fixable
 
@@ -339,11 +346,42 @@ def check_pandax_exe_in_path() -> CheckResult:
                 if shutil.which("pandax"):
                     return True, f"added to PATH (current session): {scripts_dir}"
                 return False, "failed to add to PATH"
+
+            def fix_windows_path_persist():
+                """Windows: 持久化到用户级 PATH（用 setx 写 HKCU\Environment）
+
+                setx 写的是 HKEY_CURRENT_USER\Environment\Path，新开的 PowerShell
+                会自动看到（无需重新登录）。返回的限制：进程内 PATH 仍要重启
+                shell 才生效，但 --fix 会同时调用 fix_windows_path 让当前进程也可见。
+                """
+                try:
+                    # setx PATH "%PATH%;<dir>" 会追加到现有 PATH
+                    result = subprocess.run(
+                        ["setx", "PATH", f"%PATH%;{scripts_dir}"],
+                        capture_output=True, timeout=30,
+                    )
+                    if result.returncode != 0:
+                        return False, f"setx failed (exit {result.returncode})"
+                    # 同时让当前进程也能找到
+                    os.environ["PATH"] = str(scripts_dir) + os.pathsep + os.environ.get("PATH", "")
+                    return True, (
+                        f"persisted to user PATH via setx: {scripts_dir}\n"
+                        f"         (open new shell for it to take effect)"
+                    )
+                except FileNotFoundError:
+                    return False, "setx not available on this system"
+                except Exception as e:
+                    return False, f"setx exception: {e}"
+
             return CheckResult(
                 "pandax.exe PATH", "WARN",
                 f"已安装到 {scripts_dir} 但不在 PATH",
-                fix_hint=f"添加 {scripts_dir} 到 PATH（用户级 PATH）",
+                fix_hint=(
+                    f"添加 {scripts_dir} 到 PATH（用户级 PATH）\n"
+                    f"          默认 fix 只对当前进程生效；加 --persist-path 持久化到用户级"
+                ),
                 fix_action=fix_windows_path,
+                fix_action_persist=fix_windows_path_persist,
                 fixable=True,
             )
     else:
@@ -355,11 +393,44 @@ def check_pandax_exe_in_path() -> CheckResult:
                 if shutil.which("pandax"):
                     return True, f"added to PATH (current session): {local_bin.parent}"
                 return False, "failed to add to PATH"
+
+            def fix_unix_path_persist():
+                """Unix: 持久化到 ~/.bashrc 或 ~/.zshrc"""
+                # 检测当前 shell
+                shell_rc_candidates = []
+                if os.environ.get("BASH_VERSION") or Path.home().joinpath(".bashrc").exists():
+                    shell_rc_candidates.append(Path.home() / ".bashrc")
+                if os.environ.get("ZSH_VERSION") or Path.home().joinpath(".zshrc").exists():
+                    shell_rc_candidates.append(Path.home() / ".zshrc")
+                # 至少选一个
+                if not shell_rc_candidates:
+                    shell_rc_candidates.append(Path.home() / ".profile")
+                path_line = f'export PATH="{local_bin.parent}:$PATH"\n'
+                panda_marker = "# Added by PandaX doctor.py\n"
+                try:
+                    for rc in shell_rc_candidates:
+                        existing = rc.read_text(encoding="utf-8") if rc.exists() else ""
+                        if str(local_bin.parent) in existing:
+                            continue  # 已经加过
+                        with rc.open("a", encoding="utf-8") as f:
+                            f.write(panda_marker + path_line)
+                    os.environ["PATH"] = str(local_bin.parent) + os.pathsep + os.environ.get("PATH", "")
+                    return True, (
+                        f"persisted to {', '.join(str(r) for r in shell_rc_candidates)}\n"
+                        f"         (run `source {shell_rc_candidates[0]}` or open new shell)"
+                    )
+                except Exception as e:
+                    return False, f"shell rc write failed: {e}"
+
             return CheckResult(
                 "pandax.exe PATH", "WARN",
                 f"已安装到 {local_bin} 但不在 PATH",
-                fix_hint=f"添加 {local_bin.parent} 到 PATH",
+                fix_hint=(
+                    f"添加 {local_bin.parent} 到 PATH\n"
+                    f"          默认 fix 只对当前进程生效；加 --persist-path 持久化到 ~/.bashrc"
+                ),
                 fix_action=fix_unix_path,
+                fix_action_persist=fix_unix_path_persist,
                 fixable=True,
             )
     return CheckResult(
@@ -512,6 +583,7 @@ def apply_fixes(
     results: list[CheckResult],
     do_apply: bool,
     only_failed: bool = True,
+    persist_path: bool = False,
 ) -> list[FixOutcome]:
     """运行全部可自动修复项
 
@@ -519,16 +591,23 @@ def apply_fixes(
         results: run_all_checks() 的输出
         do_apply: True = 真正执行修复；False = dry-run（仅报告"可修"）
         only_failed: 仅对非 OK 状态尝试修复（推荐）
+        persist_path: True = 对 PATH 类修复用持久化版本（Windows setx / Unix shell rc）
 
     Returns:
         修复动作列表（每个 CheckResult 至多一项 FixOutcome）
     """
     outcomes: list[FixOutcome] = []
+
     for r in results:
         if r.fix_action is None:
             continue
         if only_failed and r.status == "OK":
             continue
+
+        # 选择 fix：persist_path + 有 _persist 变体时用持久化版
+        fix_fn = r.fix_action
+        if persist_path and r.fix_action_persist is not None:
+            fix_fn = r.fix_action_persist
 
         if not do_apply:
             outcomes.append(FixOutcome(
@@ -540,7 +619,7 @@ def apply_fixes(
             continue
 
         try:
-            ok, msg = r.fix_action()
+            ok, msg = fix_fn()
             outcomes.append(FixOutcome(
                 check_name=r.name,
                 applied=True,
@@ -597,6 +676,8 @@ def main() -> int:
                         help="尝试自动修复可修问题（默认仅 dry-run 报告）")
     parser.add_argument("--fix-only", action="store_true",
                         help="只跑修复，跳过详细诊断输出")
+    parser.add_argument("--persist-path", action="store_true",
+                        help="对 PATH 类修复持久化（Win setx / Unix shell rc），需与 --fix 同用")
     parser.add_argument("--yes", "-y", action="store_true",
                         help="非交互模式（用于脚本；当前 doctor 无交互 prompt，保留备用）")
     args = parser.parse_args()
@@ -605,13 +686,21 @@ def main() -> int:
     if args.fix_only:
         args.fix = True
 
+    # --persist-path 隐含启用 --fix（用户没意义在 dry-run 时持久化）
+    if args.persist_path:
+        args.fix = True
+
     # ---- 1) 初次诊断 ----
     initial_results = run_all_checks()
 
     # ---- 2) --fix 时跑修复 ----
     fix_outcomes: list[FixOutcome] = []
     if args.fix:
-        fix_outcomes = apply_fixes(initial_results, do_apply=True)
+        fix_outcomes = apply_fixes(
+            initial_results,
+            do_apply=True,
+            persist_path=args.persist_path,
+        )
 
     # ---- 3) 修复后重测 ----
     if args.fix:

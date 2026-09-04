@@ -77,17 +77,27 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 3. 卸载 site-packages 里可能存在的老 pandax 版本（避免版本冲突）
 4. `pip install -e .` 本地源码 editable 安装
 5. 验证 pandax 可用（`python -m pandax --version`）
-6. 调用 `doctor.py` 给出最终环境诊断
+6. 调用 `doctor.py --fix --persist-path` 自动修复剩余问题（依赖、setuptools、指纹、PATH 持久化到 HKCU）
 
 #### 环境诊断（任何时候都能跑）
 
 ```bash
-python scripts/doctor.py           # 人类可读
-python scripts/doctor.py --json    # CI 用（返回 pass/fail）
-python scripts/doctor.py --quiet   # 只显示 WARN / FAIL
+python scripts/doctor.py                 # 人类可读
+python scripts/doctor.py --json          # CI 用（返回 pass/fail）
+python scripts/doctor.py --quiet         # 只显示 WARN / FAIL
+python scripts/doctor.py --fix           # 自动修复 13 类问题（仅当前会话生效）
+python scripts/doctor.py --fix --persist-path   # 持久化 PATH 到 HKCU（重启 shell 生效）
+python scripts/doctor.py --fix-only      # 只跑修复 + 重测，跳过详细诊断
 ```
 
-检测 9 个项目：Python 版本 / pip / git / pandax 安装位置 / pandax.exe PATH / 指纹污染 / setuptools / 5 个运行时依赖。
+检测 9 个项目 + **自动修复 13 类问题**（pip / git / pandax 装在 site-packages / pandax.exe PATH / 指纹污染 / setuptools / 5 个运行时依赖）。
+
+**`--fix --persist-path` 会做什么**：
+- 卸载 site-packages 老版本 → 重装本地源码
+- 删除污染的 `~/.pandax_fp.txt`
+- 自动 `pip install` 缺失的运行时依赖
+- Windows：用 `setx PATH "%PATH%;<Scripts>"` 持久化到 `HKCU\Environment\Path`（新开的 PowerShell 自动看到）
+- macOS / Linux：追加 `export PATH="..."` 到 `~/.bashrc` / `~/.zshrc`
 
 #### 初始化项目
 
@@ -280,17 +290,27 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 3. Removes stale pandax from site-packages (prevents version conflicts)
 4. `pip install -e .` local source editable install
 5. Verifies pandax works (`python -m pandax --version`)
-6. Runs `doctor.py` for final diagnosis
+6. Runs `doctor.py --fix --persist-path` (auto-fix remaining issues: deps / setuptools / fingerprint / persist PATH to HKCU)
 
 ### Environment diagnostics (run anytime)
 
 ```bash
-python scripts/doctor.py           # human-readable
-python scripts/doctor.py --json    # CI mode (returns pass/fail)
-python scripts/doctor.py --quiet   # only WARN / FAIL
+python scripts/doctor.py                 # human-readable
+python scripts/doctor.py --json          # CI mode (returns pass/fail)
+python scripts/doctor.py --quiet         # only WARN / FAIL
+python scripts/doctor.py --fix           # auto-fix 13 issue classes (session only)
+python scripts/doctor.py --fix --persist-path   # persist PATH to HKCU (new shell)
+python scripts/doctor.py --fix-only      # just fix + re-check, skip detailed diagnosis
 ```
 
-Checks 9 items: Python version / pip / git / pandax install location / pandax.exe PATH / fingerprint pollution / setuptools / 5 runtime dependencies.
+Checks 9 items + **auto-fixes 13 issue classes** (pip / git / pandax-in-site-packages / pandax.exe PATH / fingerprint pollution / setuptools / 5 runtime dependencies).
+
+**What `--fix --persist-path` does**:
+- Uninstall stale site-packages version, reinstall local source
+- Remove polluted `~/.pandax_fp.txt`
+- Auto `pip install` for missing runtime deps
+- Windows: use `setx PATH "%PATH%;<Scripts>"` to persist to `HKCU\Environment\Path` (new PowerShell shells see it automatically)
+- macOS / Linux: append `export PATH="..."` to `~/.bashrc` / `~/.zshrc`
 
 ### Quick start
 

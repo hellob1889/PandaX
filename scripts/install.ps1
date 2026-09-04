@@ -9,7 +9,7 @@
 #   3. Uninstall stale pandax from site-packages
 #   4. python -m pip install -e .  (--no-build-isolation)
 #   5. Verify pandax works (python -m pandax --version)
-#   6. Run doctor.py for final diagnosis
+#   6. Run doctor.py --fix --persist-path
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts/install.ps1
@@ -208,14 +208,16 @@ function Verify-PandaxInstall {
     return $true
 }
 
-function Run-Doctor {
-    Write-Step "6/6 Run doctor.py"
+function Run-DoctorAndFix {
+    Write-Step "6/6 Run doctor.py --fix --persist-path (auto-fix + persist PATH)"
     $doctor = Join-Path $SCRIPTS_DIR "doctor.py"
     if (-not (Test-Path $doctor)) {
         Write-Fail "Missing $doctor"
         return $false
     }
-    python $doctor
+    # Delegate remaining issues (deps / setuptools / fingerprint / PATH persist)
+    # to doctor.py --fix --persist-path so we don't duplicate logic.
+    python $doctor --fix --persist-path
     return ($LASTEXITCODE -eq 0)
 }
 
@@ -293,8 +295,13 @@ if (-not $SkipInstall) {
 }
 
 if (-not $SkipDoctor) {
-    # Step 6: Final diagnosis
-    Run-Doctor
+    # Step 6: Auto-fix via doctor.py + persist PATH
+    $doctorOk = Run-DoctorAndFix
+    if (-not $doctorOk) {
+        Write-Host ""
+        Write-Warn "doctor.py --fix reported remaining issues (see above)"
+        Write-Info "Re-run after addressing them: python scripts/doctor.py"
+    }
 }
 
 $duration = (Get-Date) - $startTime
