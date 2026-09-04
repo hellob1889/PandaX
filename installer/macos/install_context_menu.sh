@@ -140,7 +140,7 @@ fi
 # 4. 创建 Services 目录
 mkdir -p "$SERVICES_DIR"
 
-# 5. 拷贝 workflow
+# 5. 拷贝 workflow + 渲染 {TXT_XXX} 占位符
 echo ""
 echo "$TXT_STEP_1"
 if [ -e "$WORKFLOW_DST" ]; then
@@ -148,6 +148,58 @@ if [ -e "$WORKFLOW_DST" ]; then
     rm -rf "$WORKFLOW_DST"
 fi
 cp -R "$WORKFLOW_SRC" "$WORKFLOW_DST"
+
+# i18n 渲染：用 sed 把 .wflow 内的占位符替换为当前语言文案
+WFLOW_DOC="$WORKFLOW_DST/Contents/document.wflow"
+case "$USER_LANG" in
+    en)
+        WF_COMMENT_INPUT="Receive file/folder paths from Finder selection"
+        WF_COMMENT_STDIN="Standard Automator input: one path per line (stdin)"
+        WF_NO_SELECTION="No file or folder selected"
+        WF_COMMENT_PICK_FIRST="Pick the first selection (Finder multi-select)"
+        WF_COMMENT_PARENT_DIR="If file, use parent directory"
+        WF_COMMENT_MENU_HEADER="Show action menu (init / lock / unlock / status)"
+        WF_MENU_PROMPT="Choose action (target:"
+        WF_COMMENT_CANCELLED="user cancelled"
+        WF_COMMENT_TERMINAL="Execute pandax in Terminal.app"
+        WF_PRESS_ANY_KEY="Press any key to close"
+        ;;
+    *)
+        WF_COMMENT_INPUT="接收 Finder 选中的文件/文件夹路径作为输入"
+        WF_COMMENT_STDIN="标准 Automator 输入：每个路径占一行（stdin）"
+        WF_NO_SELECTION="没有选中任何文件或文件夹"
+        WF_COMMENT_PICK_FIRST="选择第一个作为目标（Finder 多选时取第一个）"
+        WF_COMMENT_PARENT_DIR="如果是文件，取所在目录"
+        WF_COMMENT_MENU_HEADER="显示选择菜单（init / lock / unlock / status）"
+        WF_MENU_PROMPT="选择要执行的操作（目标："
+        WF_COMMENT_CANCELLED="用户取消"
+        WF_COMMENT_TERMINAL="在 Terminal.app 中执行 pandax"
+        WF_PRESS_ANY_KEY="按任意键关闭"
+        ;;
+esac
+
+# 用 python 做安全替换（XML 内容，sed 转义复杂）
+WFLOW_DOC="$WORKFLOW_DST/Contents/document.wflow" python - <<'PYEOF'
+import os, sys, pathlib
+p = pathlib.Path(os.environ["WFLOW_DOC"])
+text = p.read_text(encoding="utf-8")
+replacements = {
+    "{TXT_COMMENT_INPUT}":     os.environ.get("WF_COMMENT_INPUT", ""),
+    "{TXT_COMMENT_STDIN}":     os.environ.get("WF_COMMENT_STDIN", ""),
+    "{TXT_NO_SELECTION}":      os.environ.get("WF_NO_SELECTION", ""),
+    "{TXT_COMMENT_PICK_FIRST}":os.environ.get("WF_COMMENT_PICK_FIRST", ""),
+    "{TXT_COMMENT_PARENT_DIR}":os.environ.get("WF_COMMENT_PARENT_DIR", ""),
+    "{TXT_COMMENT_MENU_HEADER}":os.environ.get("WF_COMMENT_MENU_HEADER", ""),
+    "{TXT_MENU_PROMPT}":       os.environ.get("WF_MENU_PROMPT", ""),
+    "{TXT_COMMENT_CANCELLED}": os.environ.get("WF_COMMENT_CANCELLED", ""),
+    "{TXT_COMMENT_TERMINAL}":  os.environ.get("WF_COMMENT_TERMINAL", ""),
+    "{TXT_PRESS_ANY_KEY}":     os.environ.get("WF_PRESS_ANY_KEY", ""),
+}
+for k, v in replacements.items():
+    text = text.replace(k, v)
+p.write_text(text, encoding="utf-8")
+PYEOF
+
 echo "$TXT_INSTALLED $WORKFLOW_DST"
 
 # 6. 刷新 Launch Services 数据库

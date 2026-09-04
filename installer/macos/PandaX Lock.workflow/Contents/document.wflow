@@ -55,36 +55,36 @@
 				<key>ActionParameters</key>
 				<dict>
 					<key>COMMAND_STRING</key>
-					<string># 接收 Finder 选中的文件/文件夹路径作为输入
-# 标准 Automator 输入：每个路径占一行（stdin）
+				<string># {TXT_COMMENT_INPUT}
+# {TXT_COMMENT_STDIN}
 INPUT_PATHS=$(cat)
 if [ -z "$INPUT_PATHS" ]; then
-  osascript -e 'display alert "PandaX" message "没有选中任何文件或文件夹 (No file or folder selected)" as warning'
+  osascript -e 'display alert "PandaX" message "{TXT_NO_SELECTION}" as warning'
   exit 1
 fi
 
-# 选择第一个作为目标（Finder 多选时取第一个）
+# {TXT_COMMENT_PICK_FIRST}
 TARGET=$(echo "$INPUT_PATHS" | head -1)
 
-# 如果是文件，取所在目录
+# {TXT_COMMENT_PARENT_DIR}
 if [ -f "$TARGET" ]; then
   TARGET_DIR=$(dirname "$TARGET")
 else
   TARGET_DIR="$TARGET"
 fi
 
-# 显示选择菜单（init / lock / unlock / status / write）
-CHOICE=$(osascript -e "choose from list {\"init\", \"lock\", \"unlock\", \"status\"} with title \"PandaX\" with prompt \"选择要执行的操作（目标：$TARGET_DIR）\" default items {\"lock\"}")
+# {TXT_COMMENT_MENU_HEADER}
+CHOICE=$(osascript -e "choose from list {\"init\", \"lock\", \"unlock\", \"status\"} with title \"PandaX\" with prompt \"{TXT_MENU_PROMPT}:$TARGET_DIR\" default items {\"lock\"}")
 
 if [ -z "$CHOICE" ]; then
-  exit 0  # 用户取消
+  exit 0  # {TXT_COMMENT_CANCELLED}
 fi
 
-# 在 Terminal.app 中执行 pandax
+# {TXT_COMMENT_TERMINAL}
 osascript <<EOF
 tell application "Terminal"
     activate
-    do script "cd '$TARGET_DIR' && pandax --silent --trust-default $CHOICE --root '$TARGET_DIR'; echo ''; echo '--- 按任意键关闭 ---'; read -n 1"
+    do script "cd '$TARGET_DIR' && pandax --silent --trust-default $CHOICE --root '$TARGET_DIR'; echo ''; echo '--- {TXT_PRESS_ANY_KEY} ---'; read -n 1"
 end tell
 EOF</string>
 					<key>CheckedForUserDefaultShell</key>
