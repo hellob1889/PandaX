@@ -12,7 +12,7 @@ PandaX — AI Agent 代码审计门禁系统
   - 跨平台: Windows / Linux / macOS
 """
 
-__version__ = "0.6.2"
+__version__ = "0.7.0"
 
 from .cli import main
 

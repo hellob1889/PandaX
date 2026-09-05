@@ -5,7 +5,7 @@ All notable changes to PandaX will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.0] - 2026-09-04
+## [0.7.0] - 2026-09-05
 
 ### Added (Phase 9: OS 右键菜单集成)
 - **Windows 右键菜单**：HKCU 注册表级联菜单（无需管理员权限），覆盖任意文件 / 目录 / 空白处
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`--trust-default` 旗标**：使用默认密码 `0000` 自动处理指纹（右键场景无需手动初始化）
 
 ### Added (Phase 10: 国际化 i18n)
-- **`src/pandax/i18n.py`**：i18n 引擎（149 keys × 2 语言，100% 覆盖）
+- **`src/pandax/i18n.py`**：i18n 引擎（**184 keys** × 2 语言，100% 覆盖）
 - **`--lang=zh-CN|en` 旗标**：CLI 语言切换（覆盖自动检测）
 - **自动检测 OS 语言**：Windows `GetUserDefaultLocaleName` + Unix `LANG` + `locale` 模块
 - **持久化偏好**：`~/.pandax/config.json` 保存用户语言选择
@@ -45,8 +45,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`mkdocs.yml`**：导航加「右键菜单 (Context Menu)」栏目
 
 ### Tests
-- **140 个 pytest 测试全部通过**（覆盖所有现有功能，无回归）
+- **191 个 pytest 测试全部通过**（覆盖所有现有功能，无回归）— 含 140 个原有 + 35 个 i18n + 16 个 audit-CI 集成
 - **新增 i18n 测试**（见 `tests/test_i18n.py`）：检测、自动检测、持久化、覆盖率、t() 占位符
+
+### Added (CI / 自动化 / 环境)
+- **`scripts/audit_i18n.py`**：对抗式审查脚本（扫描 `pandax` 包内硬编码中文字符串 + 检查翻译覆盖率 100%）
+- **`.github/workflows/lint.yml`**：4-job CI（i18n-audit / i18n-coverage / test matrix × 9 / summary）— PR 引入硬编码中文或翻译倒退立即 fail
+- **`scripts/doctor.py`**：环境自检工具（Python / pip / git / pandax 安装位置 / pandax.exe PATH / 指纹 / setuptools / 5 个运行时依赖）
+- **`scripts/doctor.py --fix`**：自动修复 13 类问题（pip 缺失 / git PATH / pandax 装在 site-packages / pandax.exe PATH / 指纹污染 / setuptools / 5 个运行时依赖缺失）
+- **`scripts/doctor.py --fix --persist-path`**：PATH 持久化（Windows `setx` → `HKCU\Environment\Path`；Unix → `~/.bashrc` / `~/.zshrc`）
+- **`scripts/install.sh`** + **`scripts/install.ps1`**：跨平台 bootstrap 安装器（检测 OS / Python / git / 卸载老版本 / `pip install -e .` / 调 `doctor.py --fix --persist-path`）
+- **README badges**：Tests 191 passed / i18n 184/184 keys / Lint & i18n CI passing
+- **9 处硬编码中文字符串迁移到 `t()`**（`watchdog_guard.py` / `exporters.py` / `mcp_server.py` / `cmd_status` / `cmd_log` / `cmd_write` 剩余）
+
+### Changed (右键菜单内容 i18n)
+- **`installer/macos/PandaX Lock.workflow/Contents/document.wflow`**：模板化（11 处硬编码中文 → `{TXT_XXX}` 占位符），安装时 Python 渲染为对应语言
+- **`installer/linux/nautilus/PandaX`**：重写为内嵌双语 dict（17 个文案 → `T[lang][key]`），优先级 PANDAX_LANG > config.json > zh-CN
+- **`installer/macos/install_context_menu.sh`** + **`installer/linux/install_context_menu.sh`**：shell 头部加 `USER_LANG` 解析块 + 全部 `$TXT_*` 变量化
+- **`src/pandax/cli.py` `_run_installer`**：子进程 env 显式传 `PANDAX_LANG=get_lang()`（绕过 Git Bash `$HOME` 异常）
+
+### Documentation
+- **`docs/i18n.md` §10**（NEW）：`install-context --lang` 跨平台右键菜单 i18n 全流程（优先级 / 用法 / 改动覆盖范围 / 限制）
+- **`README.md`**：doctor.py `--fix` / `--fix-only` / `--persist-path` 文档化；版本表加 v0.7.0 完整描述
 
 ## [0.6.2] - 2026-09-04
 

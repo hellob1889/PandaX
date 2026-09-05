@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pandax",
-    version="0.6.2",
+    version="0.7.0",
     description="AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

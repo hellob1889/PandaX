@@ -239,7 +239,7 @@ pytest tests/ -v
 | v0.6.0 | ✅ | GitHub Actions CI |
 | v0.6.1 | ✅ | L3 hook 强化（实战验证） |
 | **v0.6.2** | ✅ | 隐藏文件锁定 bug 修复 |
-| **v0.7.0** | ✅ | Phase 9 OS 右键菜单（Windows HKCU / macOS Quick Action / Linux Nautilus+Dolphin） |
+| **v0.7.0** | ✅ | Phase 9 OS 右键菜单 + Phase 10 i18n（zh-CN/en）+ doctor.py 环境自检 + auto-fix 13 类 + PATH 持久化 |
 
 完整历史：[CHANGELOG.md](CHANGELOG.md)
 
