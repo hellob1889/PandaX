@@ -51,10 +51,25 @@ $keysToRemove = @(
 
 $removed = 0
 foreach ($k in $keysToRemove) {
-    if (Test-Path $k) {
+    # Bug #8 fix: PS5.1 native command glob `*`，reg.exe 不可靠。
+    # 改用 .NET [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey()
+    # — 100% 把 `*` 当字面 key name，无 glob 行为。
+    if ($k -notmatch '^HKCU:\\(.+)$') {
+        Write-Host ($TXT_SKIP -f $k)
+        continue
+    }
+    $subPath = $Matches[1]
+    $key = $null
+    try {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($subPath, $false)
+    } catch {}
+    if ($key) {
+        $key.Close()
         Write-Host "[REMOVE] $k"
-        Remove-Item -Path $k -Recurse -Force
-        $removed++
+        try {
+            [Microsoft.Win32.Registry]::CurrentUser.DeleteSubKeyTree($subPath, $false)
+            $removed++
+        } catch {}
     } else {
         Write-Host ($TXT_SKIP -f $k)
     }
@@ -67,10 +82,20 @@ $legacyKeys = @(
     "HKCU:\Software\Classes\Directory\shell\PandaXInit"
 )
 foreach ($k in $legacyKeys) {
-    if (Test-Path $k) {
+    # Bug #8 fix: 同上 .NET API
+    if ($k -notmatch '^HKCU:\\(.+)$') { continue }
+    $subPath = $Matches[1]
+    $key = $null
+    try {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($subPath, $false)
+    } catch {}
+    if ($key) {
+        $key.Close()
         Write-Host "[REMOVE-LEGACY] $k"
-        Remove-Item -Path $k -Recurse -Force
-        $removed++
+        try {
+            [Microsoft.Win32.Registry]::CurrentUser.DeleteSubKeyTree($subPath, $false)
+            $removed++
+        } catch {}
     }
 }
 

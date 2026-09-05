@@ -447,6 +447,14 @@ def cmd_unlock(args):
     return _apply_readonly(args.root, readonly=False)
 
 
+class _OldNotFoundError(Exception):
+    """Bug #12: 业务拒绝异常 --old 字符串不在文件中。
+    让 write 流程用统一的 try/finally 处理，无需散落的 inline 拒绝代码。"""
+    def __init__(self, snippet: str):
+        super().__init__(snippet)
+        self.snippet = snippet
+
+
 def _effective_suffix(path: Path) -> str:
     """
     Phase 4.6+: 返回文件的有效后缀（正确处理隐藏文件如 .env, .gitignore, .env.local）。
@@ -648,71 +656,92 @@ def cmd_write(args):
     writable_mode = mode | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH
     os.chmod(target, writable_mode)
 
-    # === [4] 写入（Phase 5: 文本 vs 二进制分支）===
-    if is_binary:
-        # 二进制文件：必须用 --from-file 或 --content-base64
-        import base64 as b64
-        if args.from_file:
-            src = Path(args.from_file)
-            if not src.exists():
-                os.chmod(target, mode)
-                token_path.unlink(missing_ok=True)
-                print(f'[REJECTED] {{"status":"REJECTED","reason":"{t("write_reject_from_file_not_found", path=args.from_file)}"}}')
-                return 1
-            new_bytes = src.read_bytes()
-        elif args.content_base64:
-            try:
-                new_bytes = b64.b64decode(args.content_base64)
-            except Exception as e:
-                os.chmod(target, mode)
-                token_path.unlink(missing_ok=True)
-                print(f'[REJECTED] {{"status":"REJECTED","reason":"{t("write_reject_b64_decode", err=e)}"}}')
-                return 1
-        else:
-            os.chmod(target, mode)
-            token_path.unlink(missing_ok=True)
-            print(f'[REJECTED] {{"status":"REJECTED","reason":"{t("write_reject_binary_must_use_content")}"}}')
-            return 1
-        target.write_bytes(new_bytes)
-        # Phase 5: 更新 SHA256 快照
-        import hashlib
-        new_sha = hashlib.sha256(target.read_bytes()).hexdigest()
-        _update_binary_snapshot(root, target_rel, new_sha)
-    elif args.content:
-        # 文本整文件模式
-        original_content = target.read_text(encoding="utf-8")
-        new_content = args.content
-        target.write_text(new_content, encoding="utf-8")
-    elif args.old:
-        # 文本字符串替换模式
-        original_content = target.read_text(encoding="utf-8")
-        if args.old not in original_content:
-            os.chmod(target, mode)
-            token_path.unlink(missing_ok=True)
-            record = {
-                "id": f"audit_{uuid.uuid4().hex[:8]}",
-                "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "status": "REJECTED",
-                "file": target_rel,
-                "rejection_reason": f"--old 字符串不在文件中: {args.old[:30]}...",
-                "files_changed": [],
-            }
-            with audit_path.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
-            print(f'[REJECTED] {{"status":"REJECTED","reason":"{t("write_reject_old_not_found")}"}}')
-            return 1
-        new_content = original_content.replace(args.old, args.new, 1)
-        target.write_text(new_content, encoding="utf-8")
-    else:
-        # 既无 --old 也无 --content：拒绝
-        os.chmod(target, mode)
-        token_path.unlink(missing_ok=True)
-        print(f'[REJECTED] {{"status":"REJECTED","reason":"{t("write_reject_must_specify")}"}}')
-        return 1
+    # 准备 step 4→5 的 try/finally 块：
+    # Bug #12 fix: write_text/write_bytes 在隐藏/系统文件上会抛 PermissionError，
+    # 旧代码没有 try/except，导致文件 mode 永久变为 writable，绕过文件锁。
+    # 用 try/finally 确保无论写入成功或失败都恢复原始 mode。
 
-    # === [5] 重新锁定 ===
-    readonly_mode = writable_mode & ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH
-    os.chmod(target, readonly_mode)
+    # === [4] 写入（Phase 5: 文本 vs 二进制分支）===
+    # Bug #12 fix: 整个 step 4 包在 try/finally 中，确保文件 mode 始终恢复。
+    # 任何 write_text/write_bytes 抛错（hidden/system 文件、磁盘满等），
+    # finally 块都会恢复原始 mode —— 审计门禁不能因 IO 错误绕过文件锁。
+    write_error = None
+    try:
+        if is_binary:
+            # 二进制文件：必须用 --from-file 或 --content-base64
+            import base64 as b64
+            if args.from_file:
+                src = Path(args.from_file)
+                if not src.exists():
+                    raise FileNotFoundError(f"from-file not found: {args.from_file}")
+                new_bytes = src.read_bytes()
+            elif args.content_base64:
+                try:
+                    new_bytes = b64.b64decode(args.content_base64)
+                except Exception as e:
+                    raise ValueError(f"base64 decode error: {e}") from e
+            else:
+                raise ValueError("binary file must use --from-file or --content-base64")
+            target.write_bytes(new_bytes)
+            # Phase 5: 更新 SHA256 快照
+            import hashlib
+            new_sha = hashlib.sha256(target.read_bytes()).hexdigest()
+            _update_binary_snapshot(root, target_rel, new_sha)
+        elif args.content:
+            # 文本整文件模式
+            original_content = target.read_text(encoding="utf-8")
+            new_content = args.content
+            target.write_text(new_content, encoding="utf-8")
+        elif args.old:
+            # 文本字符串替换模式
+            original_content = target.read_text(encoding="utf-8")
+            if args.old not in original_content:
+                # 用专用异常类型让外层识别为业务拒绝（不是 IO 错误）
+                raise _OldNotFoundError(args.old[:30])
+            new_content = original_content.replace(args.old, args.new, 1)
+            target.write_text(new_content, encoding="utf-8")
+        else:
+            raise ValueError("must specify --old/--new or --content")
+    except _OldNotFoundError as e:
+        # 业务拒绝（--old 不在文件中）：记录 audit + 返回 REJECTED
+        # finally 块负责恢复 mode
+        write_error = ("REJECTED", f"--old 字符串不在文件中: {e}...")
+    except Exception as e:
+        # IO 错误或其他异常：记录 audit + 返回 REJECTED
+        write_error = ("REJECTED", f"写入失败: {type(e).__name__}: {e}")
+    finally:
+        # === [5] 重新锁定（恢复原始 mode）===
+        # Bug #12 fix: 不论 write 成功或失败，都恢复原始 mode。
+        # 直接用 step 3 保存的 `mode`（而不是再算 readonly_mode），
+        # 这样能完整恢复 hidden/system/archive 等所有 file attributes。
+        try:
+            os.chmod(target, mode)
+        except Exception as chmod_err:
+            # 如果 chmod 失败（极少见，例如文件被另一进程占用），
+            # 必须明确告知用户 — 这是审计安全 fallback
+            print(f'[WARN] failed to restore file mode for {target_rel}: {chmod_err}')
+            if write_error is None:
+                write_error = ("REJECTED", f"无法恢复文件锁定状态: {chmod_err}")
+
+    if write_error is not None:
+        # 记录 REJECTED audit
+        status, reason = write_error
+        record = {
+            "id": f"audit_{uuid.uuid4().hex[:8]}",
+            "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "REJECTED",
+            "file": target_rel,
+            "rejection_reason": reason,
+            "attempted_reason": args.reason,
+            "attempted_problem": args.problem,
+            "attempted_approach": args.approach,
+            "files_changed": [],
+        }
+        with audit_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+        token_path.unlink(missing_ok=True)
+        print(f'[REJECTED] {{"status":"REJECTED","reason":"{reason}"}}')
+        return 1
 
     # === [6] 清审计令牌 ===
     token_path.unlink(missing_ok=True)

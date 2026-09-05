@@ -103,14 +103,34 @@ function Set-RegValue {
     # 名称为空 → 注册表"默认"值（regedit 显示为 "(Default)"）
     $regName = if ($Name -eq '') { '(Default)' } else { $Name }
     if ($script:DryRun) {
-        Write-Host "  [DRY] Set $Path :: $regName = $Value"
+        Write-Host "  [DRY] Set $Path :: $regName = $Value ($Type)"
         return
     }
-    if (-not (Test-Path $Path)) {
-        New-Item -Path $Path -Force | Out-Null
+    # Bug #8 fix: PS5.1 registry provider 的 New-Item/New-ItemProperty
+    # 不支持 -LiteralPath（Test-Path/Remove-Item 支持），导致
+    # `HKCU:\Software\Classes\*\shell\PandaX` 中 `*` 被当通配符 → 永久阻塞。
+    # 改用 .NET [Microsoft.Win32.Registry] API：原生把 `*` 当字面 key name。
+    # reg.exe / cmd.exe 包装也曾尝试，但 PS5.1 native command 仍会 glob，
+    # 报 "Invalid key name"，不可靠。
+    if ($Path -notmatch '^HKCU:\\(.+)$') {
+        throw "Set-RegValue only supports HKCU:\ paths (got $Path)"
     }
-    # 注意：PowerShell 的 New-ItemProperty 不接受 -Name ""；用 "(Default)"
-    New-ItemProperty -Path $Path -Name $regName -Value $Value -PropertyType $Type -Force | Out-Null
+    $subPath = $Matches[1]
+    $kind = switch ($Type) {
+        'String'       { [Microsoft.Win32.RegistryValueKind]::String }
+        'ExpandString' { [Microsoft.Win32.RegistryValueKind]::ExpandString }
+        'DWord'        { [Microsoft.Win32.RegistryValueKind]::DWord }
+        'Binary'       { [Microsoft.Win32.RegistryValueKind]::Binary }
+        default        { [Microsoft.Win32.RegistryValueKind]::String }
+    }
+    # CreateSubKey 自动创建父 key（即使中间层级不存在）
+    $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($subPath)
+    if ($Name -eq '') {
+        $key.SetValue($null, $Value, $kind)   # null = "(Default)"
+    } else {
+        $key.SetValue($Name, $Value, $kind)
+    }
+    $key.Close()
 }
 
 function Remove-RegTree {
@@ -119,8 +139,19 @@ function Remove-RegTree {
         Write-Host "  [DRY] Remove $Path"
         return
     }
-    if (Test-Path $Path) {
-        Remove-Item -Path $Path -Recurse -Force
+    # Bug #8 fix: 改用 .NET DeleteSubKeyTree，避开 PS provider 通配符 glob
+    if ($Path -notmatch '^HKCU:\\(.+)$') {
+        throw "Remove-RegTree only supports HKCU:\ paths (got $Path)"
+    }
+    $subPath = $Matches[1]
+    try {
+        # throwOnMissingSubKey=$false 让"key 不存在"静默通过（幂等清理）
+        [Microsoft.Win32.Registry]::CurrentUser.DeleteSubKeyTree($subPath, $false)
+    } catch {
+        # .NET 在 key 不存在时抛 IOException；按幂等要求忽略
+        if ($_.Exception.GetType().Name -ne 'IOException') {
+            Write-Warning "DeleteSubKeyTree failed for $Path : $_"
+        }
     }
 }
 
