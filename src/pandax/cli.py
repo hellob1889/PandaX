@@ -494,6 +494,56 @@ def _effective_suffix(path: Path) -> str:
     return path.suffix
 
 
+def _iter_protected_files(root: Path, config: dict) -> list[Path]:
+    """
+    Bug #2 fix: 共享 helper — 列出项目根目录下所有受保护扩展名的文件。
+
+    被 cmd_status（仪表盘）、_apply_readonly（lock/unlock）、cmd_ci 等共用。
+    之前 cmd_status 只看 *.py，忽略了 18 种其它受保护扩展名（.json, .yaml, .env 等），
+    导致 status 报告的"锁定文件数"严重低估，用户看不到 L1 锁的真实覆盖。
+
+    参数：
+      - root: 项目根目录
+      - config: 项目配置 dict（含 protected_extensions + exclude_patterns）
+
+    返回：受保护文件路径列表（排除 __pycache__、.git、exclude_patterns 等）
+    """
+    import fnmatch
+
+    protected_exts = set(config.get("protected_extensions", [".py"]))
+    exclude_patterns = config.get("exclude_patterns", [])
+
+    files = []
+    seen = set()
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        if p in seen:
+            continue
+        if _effective_suffix(p) not in protected_exts:
+            continue
+        seen.add(p)
+
+        # 排除判断
+        try:
+            rel = p.relative_to(root)
+        except ValueError:
+            continue
+        skip = False
+        for pat in exclude_patterns:
+            if any(fnmatch.fnmatch(part, pat) for part in rel.parts):
+                skip = True
+                break
+            if fnmatch.fnmatch(rel.name, pat):
+                skip = True
+                break
+        if skip:
+            continue
+
+        files.append(p)
+    return files
+
+
 def _apply_readonly(root_arg: str, readonly: bool) -> int:
     """
     共享的锁/解锁函数。
@@ -516,35 +566,10 @@ def _apply_readonly(root_arg: str, readonly: bool) -> int:
     # 读取配置（含 protected_extensions + exclude_patterns）
     config = json.loads(config_path.read_text(encoding="utf-8"))
     protected_extensions = config.get("protected_extensions", [".py"])
-    exclude_patterns = config.get("exclude_patterns", [])
 
     count = 0
-    # Phase 4.6+: 单次 rglob("*") + effective_suffix 过滤（避免多次 rglob 开销，
-    # 且能正确处理隐藏文件如 .env, .gitignore, .env.local）
-    seen_paths = set()
-    target_exts = set(protected_extensions)
-    for target_file in root.rglob("*"):
-        if not target_file.is_file():
-            continue
-        if target_file in seen_paths:
-            continue
-        if _effective_suffix(target_file) not in target_exts:
-            continue
-        seen_paths.add(target_file)
-
-        rel = target_file.relative_to(root)
-        # 排除判断
-        skip = False
-        for pat in exclude_patterns:
-            if any(fnmatch.fnmatch(part, pat) for part in rel.parts):
-                skip = True
-                break
-            if fnmatch.fnmatch(rel.name, pat):
-                skip = True
-                break
-        if skip:
-            continue
-
+    # Bug #2 fix: 用 _iter_protected_files 共享 helper（避免与 cmd_status 行为漂移）
+    for target_file in _iter_protected_files(root, config):
         try:
             current_mode = target_file.stat().st_mode
             if readonly:
@@ -992,13 +1017,19 @@ def cmd_status(args):
     print()
 
     # L1: 锁状态
-    py_files = [p for p in root.rglob("*.py") if "__pycache__" not in p.parts]
-    if py_files:
-        locked = sum(1 for p in py_files if not (p.stat().st_mode & stat.S_IWUSR))
-        unlocked = len(py_files) - locked
+    # Bug #2 fix: 之前只看 *.py，忽略 18 种其它受保护扩展名
+    # 用 _iter_protected_files 共享 helper（与 lock/unlock 同源），确保 status
+    # 报告的"锁定文件数"与 lock/unlock 命令实际作用范围一致
+    config = json.loads((pandax_dir / "config.json").read_text(encoding="utf-8"))
+    protected_files = _iter_protected_files(root, config)
+    if protected_files:
+        locked = sum(1 for p in protected_files if not (p.stat().st_mode & stat.S_IWUSR))
+        unlocked = len(protected_files) - locked
+        ext_list = ", ".join(config.get("protected_extensions", [".py"]))
         print(t("status_l1"))
-        print(t("status_total", n=len(py_files)))
+        print(t("status_total", n=len(protected_files)))
         print(t("status_locked_unlocked", n=locked, m=unlocked))
+        print(t("status_extensions", exts=ext_list))  # Bug #2: 显示扫描的扩展名范围
         if unlocked > 0:
             print(t("status_warn_unlock", n=unlocked))
     else:
@@ -1498,7 +1529,9 @@ PLATFORM_HANDLERS = {
     "Windows": {
         "install":   "windows/install_context_menu.ps1",
         "uninstall": "windows/uninstall_context_menu.ps1",
-        "interpreter": ["powershell", "-ExecutionPolicy", "Bypass", "-File"],
+        # Bug #15 fix: 加 -NoProfile（避免 profile.ps1 加载阻塞）
+        # + -NonInteractive（避免 Read-Host 等阻塞调用）
+        "interpreter": ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"],
     },
     "Darwin": {
         "install":   "macos/install_context_menu.sh",
@@ -1562,9 +1595,27 @@ def _run_installer(action: str, force: bool = False):
     print()
 
     try:
-        # Windows 脚本需要 console 可见以弹出确认；macOS/Linux bash 同理
-        rc = subprocess.run(cmd, check=False, env=env).returncode
-        return rc
+        # Bug #15 fix:
+        # 1. timeout=60s：installer 脚本通常几秒完成，但 powershell 在某些场景
+        #    （如 registry provider 阻塞、profile 加载慢）可能挂死。60 秒兜底。
+        # 2. capture_output=True：捕获 stderr 让错误诊断更友好
+        # 3. timeout 抛 TimeoutExpired 时明确告知用户 + 返回 124（标准 timeout exit code）
+        # macOS/Linux bash 同理
+        result = subprocess.run(
+            cmd, check=False, env=env, timeout=60, capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            # 输出 stderr 帮助用户诊断
+            if result.stderr:
+                print(t("warn_installer_stderr", code=result.returncode))
+                for line in result.stderr.strip().splitlines()[-10:]:
+                    print(f"  {line}")
+        return result.returncode
+    except subprocess.TimeoutExpired as e:
+        print(t("err_installer_timeout"))
+        print(f"  cmd: {' '.join(cmd[:5])}...")
+        # Bug #15 fix: 返回 124（标准 timeout exit code），方便脚本/CI 识别
+        return 124
     except FileNotFoundError as e:
         print(f"[ERROR] {t('_interp_unavailable', interp=interpreter[0])}")
         print(f"  {e}")
@@ -1619,10 +1670,39 @@ COMMANDS = {
 def main(argv=None):
     argv_list = argv if argv is not None else sys.argv[1:]
 
+    # Bug #5 fix: 预扫描 --lang，让其支持任意位置（子命令前后都可）
+    # argparse parse_known_args 会把子命令后的 --lang 当作 status 的未知参数，
+    # 导致 `pandax status --lang=en --root .` 不生效。手动预提取后塞回 args.lang。
+    import re as _re
+    cleaned_argv = []
+    lang_override = None
+    i = 0
+    while i < len(argv_list):
+        arg = argv_list[i]
+        m_eq = _re.fullmatch(r"--lang=(\S+)", arg)
+        if m_eq:
+            lang_override = m_eq.group(1)
+            i += 1
+            continue
+        if arg == "--lang" and i + 1 < len(argv_list):
+            lang_override = argv_list[i + 1]
+            i += 2
+            continue
+        cleaned_argv.append(arg)
+        i += 1
+    # 验证 lang_override 值合法（必须是 zh-CN / en）
+    if lang_override is not None and lang_override not in ("zh-CN", "en"):
+        # 不合法的 --lang 值让 argparse 自然报错（用户得到更友好的错误）
+        cleaned_argv.append(f"--lang={lang_override}")
+        lang_override = None
+
     # 0. 解析参数（早期）— 必须在 fingerprint 检查之前拿到 --trust-default / --silent / --lang
     parser = build_parser()
     # parse_known_args 允许子命令后还有遗留 argv（兼容未来扩展）
-    args, _ = parser.parse_known_args(argv)
+    args, _ = parser.parse_known_args(cleaned_argv)
+    # Bug #5 fix: 把预扫描得到的 --lang 应用到 args
+    if lang_override is not None:
+        args.lang = lang_override
 
     # 0-pre. Phase 10: 初始化 i18n（必须在所有 print 之前）
     # 优先级：--lang > 用户偏好 ~/.pandax/config.json > OS 自动检测

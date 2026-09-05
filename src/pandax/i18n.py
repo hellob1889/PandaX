@@ -78,10 +78,11 @@ TRANSLATIONS = {
         # ============ status ============
         "status_header": "PandaX 状态仪表盘 — {root}",
         "status_l1": "[L1 文件锁]",
-        "status_l1_no_py": "[L1 文件锁]  无 .py 文件",
-        "status_total": "  总 .py 文件: {n}",
+        "status_l1_no_py": "[L1 文件锁]  无受保护文件",
+        "status_total": "  总受保护文件: {n}",
         "status_locked_unlocked": "  已锁定: {n}  |  未锁定: {m}",
-        "status_warn_unlock": "  [WARN] 有 {n} 个 .py 未锁定，建议运行 pandax lock",
+        "status_extensions": "  扩展名: {exts}",
+        "status_warn_unlock": "  [WARN] 有 {n} 个受保护文件未锁定，建议运行 pandax lock",
         "status_l2": "[L2 watchdog]",
         "status_watch_on": "  状态: 运行中  (PID: {pid})",
         "status_watch_off": "  状态: 未运行（建议: pandax watch --daemon）",
@@ -151,6 +152,8 @@ TRANSLATIONS = {
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] 脚本不存在: {path}",
         "err_unsupported_platform": "[ERROR] 不支持的平台: {platform}",
+        "err_installer_timeout": "[ERROR] installer 超时 (60s 未返回)。可能是 PowerShell 挂死或注册表 provider 阻塞",
+        "warn_installer_stderr": "[WARN] installer stderr (exit={code}):",
         "info_os_detected": "[INFO] 检测到平台: {os}",
         "info_running": "[INFO] 执行: {cmd}",
 
@@ -297,10 +300,11 @@ TRANSLATIONS = {
         # ============ status ============
         "status_header": "PandaX Status Dashboard — {root}",
         "status_l1": "[L1 File Lock]",
-        "status_l1_no_py": "[L1 File Lock]  No .py files",
-        "status_total": "  Total .py files: {n}",
+        "status_l1_no_py": "[L1 File Lock]  No protected files",
+        "status_total": "  Total protected files: {n}",
         "status_locked_unlocked": "  Locked: {n}  |  Unlocked: {m}",
-        "status_warn_unlock": "  [WARN] {n} .py files unlocked, suggest running: pandax lock",
+        "status_extensions": "  Extensions: {exts}",
+        "status_warn_unlock": "  [WARN] {n} protected files unlocked, suggest running: pandax lock",
         "status_l2": "[L2 watchdog]",
         "status_watch_on": "  Status: running  (PID: {pid})",
         "status_watch_off": "  Status: not running (suggest: pandax watch --daemon)",
@@ -374,6 +378,8 @@ TRANSLATIONS = {
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] Script not found: {path}",
         "err_unsupported_platform": "[ERROR] Unsupported platform: {platform}",
+        "err_installer_timeout": "[ERROR] installer timeout (60s). Possible PowerShell hang or registry provider block",
+        "warn_installer_stderr": "[WARN] installer stderr (exit={code}):",
         "info_os_detected": "[INFO] Detected platform: {os}",
         "info_running": "[INFO] Running: {cmd}",
 
@@ -594,25 +600,35 @@ def _save_user_pref(lang: str) -> None:
 def init(lang: Optional[str] = None) -> str:
     """
     初始化语言环境。
-    优先级：传入参数 > 用户偏好 > OS 自动检测。
+    优先级：传入参数 > PANDAX_LANG 环境变量 > 用户偏好 > OS 自动检测。
 
     返回最终生效的语言代码。
+
+    PANDAX_LANG 环境变量主要用于测试场景（pytest conftest 强制锁定 zh-CN），
+    避免测试断言硬编码中文字符串时受用户/系统设置影响。
     """
     global _CURRENT_LANG
 
     if lang and lang in TRANSLATIONS:
-        # 1. 显式指定
+        # 1. 显式指定（CLI --lang）
         _CURRENT_LANG = lang
         _save_user_pref(lang)
         return lang
 
-    # 2. 用户偏好
+    # 2. PANDAX_LANG 环境变量（测试/CI 场景）
+    import os as _os
+    env_lang = _os.environ.get("PANDAX_LANG")
+    if env_lang and env_lang in TRANSLATIONS:
+        _CURRENT_LANG = env_lang
+        return env_lang
+
+    # 3. 用户偏好
     pref = _load_user_pref()
     if pref:
         _CURRENT_LANG = pref
         return pref
 
-    # 3. OS 自动检测
+    # 4. OS 自动检测
     detected = _detect_os_language()
     _CURRENT_LANG = detected
     return detected

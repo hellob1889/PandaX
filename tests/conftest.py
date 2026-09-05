@@ -70,3 +70,44 @@ def verify_git_available():
     """全局 fixture：测试开始前确认 git 可用，否则 skip"""
     if not shutil.which("git"):
         pytest.skip("git 未安装且未在 PATH 中找到，PandaX 测试需要 git")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def force_zh_cn_for_tests():
+    """全局 fixture：测试期间强制 ~/.pandax/config.json lang=zh-CN。
+
+    第一性原则：测试断言中包含中文字符串（如 '已安装'、'锁定'、'未运行'）。
+    如果某测试改了 lang=config.json=en，这些断言会全部失败，造成 flaky test。
+    强制锁定 zh-CN 让测试行为可预测。
+
+    实现策略：直接覆盖用户 ~/.pandax/config.json（不是用 env var）。
+    为什么不用 env var：test_i18n.py::test_init_loads_existing_preference 用 monkeypatch
+    改 HOME 后调用 init()，验证从 config.json 读取偏好。如果用 env var 覆盖，
+    init() 会跳过 config.json 读取，测试失败。
+
+    副作用：测试结束后会恢复用户原始 lang（如果之前存在）。
+    """
+    cfg_path = Path.home() / ".pandax" / "config.json"
+    backup = None
+    backup_existed = cfg_path.exists()
+
+    if backup_existed:
+        try:
+            backup = cfg_path.read_text(encoding="utf-8")
+            cfg = json.loads(backup)
+            cfg["lang"] = "zh-CN"
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            backup = None
+
+    yield
+
+    # 恢复
+    if backup is not None:
+        try:
+            cfg_path.write_text(backup, encoding="utf-8")
+        except Exception:
+            pass
+    elif backup_existed and not cfg_path.exists():
+        # 用户原本有但我们没备份成功——尽量恢复（保守处理）
+        pass
