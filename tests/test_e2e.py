@@ -97,6 +97,7 @@ def test_full_workflow_e2e(tmp_path):
         "--approach", "将返回值改为完整hello字符串并使用str类型明确标注",
         "--old", "return 'hi'",
         "--new", "return 'hello'",
+        "--force-write",  # Bug #12 v2: 锁定文件需显式 force
     ], cwd=tmp_path)
     assert r.returncode == 0, f"应 APPROVED 但失败: stdout={r.stdout[-500:]}"
     assert "APPROVED" in r.stdout

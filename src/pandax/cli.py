@@ -232,6 +232,14 @@ def build_parser():
     write_p.add_argument("--content", default="", help="整文件文本内容（模式 2）")
     write_p.add_argument("--content-base64", default="", help="整文件二进制内容（base64 编码）")
     write_p.add_argument("--from-file", default="", help="从本地文件读取内容（二进制或文本均可）")
+    write_p.add_argument(
+        "--force-write",
+        action="store_true",
+        help=(
+            "允许覆盖 L1 锁定的文件（默认拒绝 ReadOnly 文件以确保审计门禁，"
+            "加此标志走完整 unlock-write-lock 流程并审计记录 force_write=true）"
+        ),
+    )
 
     # Phase 9: OS 右键菜单集成
     ic_p = sub.add_parser("install-context", help="安装 OS 右键菜单（自动检测 Windows / macOS / Linux）")
@@ -627,6 +635,13 @@ def cmd_write(args):
     if not reject_reason and is_binary and (args.old or args.new):
         reject_reason = "二进制文件不支持 --old/--new 模式，请用 --content-base64 或 --from-file"
 
+    # === Bug #12 v2: L1 文件锁 ReadOnly 前置检查 ===
+    # 默认拒绝修改 OS ReadOnly 文件（pandax lock 设的）。仅 --force-write 才放行。
+    # 对抗式审查：如果允许 write 默认解锁，恶意 Agent 可绕过用户意图。
+    if not reject_reason and target.exists() and not os.access(target, os.W_OK):
+        if not getattr(args, "force_write", False):
+            reject_reason = t("write_reject_readonly_need_force", file=target_rel)
+
     if reject_reason:
         # 写拒绝记录
         audit_path = root / ".pandax" / "pandax.jsonl"
@@ -757,6 +772,7 @@ def cmd_write(args):
         "problem": problem,
         "approach": approach,
         "commit_hash": "",  # 稍后填充
+        "force_write": bool(getattr(args, "force_write", False)),
         "files_changed": [target_rel],
     }
     with audit_path.open("a", encoding="utf-8") as f:

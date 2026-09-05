@@ -81,17 +81,33 @@ target.write_text(new_content, encoding="utf-8")  # 抛 PermissionError → 文�
 # 写入失败也不会恢复 mode
 ```
 
-**修复方案**（已实施 commit）：
-1. 整个 step 4 包在 try/except/finally 中
-2. finally 块 `os.chmod(target, mode)` 用 step 3 保存的**原始 mode** 恢复
-3. 业务拒绝（`--old` 不在文件）通过专用异常 `_OldNotFoundError` 区分
-4. IO 错误记录 audit REJECTED + 恢复 mode
+**修复方案 v1**（commit b520357）：try/except/finally + 恢复原始 mode
+**修复方案 v2**（commit TBD）：新增 --force-write flag + ReadOnly 前置检查
 
-**关键变更**：
-- `cli.py` 第 645-744 行：`cmd_write` 重写为 try/except/finally 结构
-- 新增 `_OldNotFoundError` 异常类（line 451-457）
+### Bug #12 v2 — write 默认严格，需 --force-write 显式覆盖锁定文件
 
-**验证**：`test_write_lock_robustness.py` ADVERSARIAL 1+2 全过，`tests/test_write.py` 8/8 全过，191/191 测试套件零回归。
+**新增风险点**：v1 修复只保证"写完后 mode 恢复"，但**没有阻止 write 主动解锁**。如果某个脚本/Agent 调用 `pandax write`，会自动 unlock→write→lock，**绕过用户意图**。
+
+**改进设计**（第一性原则 + 对抗式审查）：
+1. **写命令默认严格**：检测目标文件 `os.access(W_OK)=False` → REJECTED
+2. **显式 --force-write** 才放行，走完整 unlock-write-lock 流程
+3. **审计记录 `force_write` 字段**，让审计可追溯
+
+**验证**：
+- `test_write_rejects_readonly_without_force`: 锁定文件不带 --force-write → REJECTED
+- `test_write_accepts_readonly_with_force`: 锁定文件带 --force-write → APPROVED + 审计 force_write=true
+- `test_write_no_force_for_unlocked_file`: 未锁定文件不需要 --force-write 也能正常 write
+- E2E（`D:\pandax-test`）：5/5 检查全过（exit=0, file updated, file RE-LOCKED, force_write=true, commit_hash）
+
+**关键变更**（commit TBD）：
+- `src/pandax/cli.py` line 236-242: argparse `--force-write` flag
+- `src/pandax/cli.py` line 638-644: cmd_write step 1.5 ReadOnly 前置检查
+- `src/pandax/cli.py` line 776: APPROVED audit 记录 `force_write` 字段
+- `src/pandax/i18n.py` line 112/332: 新增 `write_reject_readonly_need_force` 双语言 key
+- `tests/test_write.py`: 现有 3 个 write 测试加 `--force-write` + 新增 3 个 v2 测试用例
+- `tests/test_e2e.py` + `tests/test_phase2_e2e.py`: 加 `--force-write` 适配新语义
+
+**回归测试**：194/194 全过（比 v1 多 3 个新用例）
 
 ---
 

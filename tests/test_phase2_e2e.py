@@ -96,6 +96,7 @@ def test_full_defense_chain(tmp_path):
         "--approach", "改为单引号并保持语义完全一致",
         "--old", 'ORIGINAL = "v1"',
         "--new", "ORIGINAL = 'v1'",
+        "--force-write",  # Bug #12 v2: 锁定文件需显式 force
     ], cwd=project)
     assert r.returncode == 0, f"合法写入失败: {r.stdout}"
 
