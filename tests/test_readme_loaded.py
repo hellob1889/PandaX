@@ -84,5 +84,62 @@ def test_cli_shows_completed_steps():
     )
 
 
+# ============================================================
+# Bug #4 fix: README summary 应显示最新活跃阶段，不应停在旧状态
+# ============================================================
+def test_summary_shows_latest_phase_not_old_step13():
+    """Bug #4 fix: 当前阶段显示最新活跃 Phase（不再停在 Step 13）
+
+    第一性原则：CLI 启动必须反映项目的真实最新状态，而不是 README 的旧版本。
+    实现：load_readme_summary 取最后一个 "**Phase" 行（最新活跃阶段）。
+    """
+    # 直接 import load_readme_summary 测试（避免 subprocess 启动开销）
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "pandax_cli", ROOT / "src" / "pandax" / "cli.py"
+    )
+    pandax_cli = importlib.util.module_from_spec(spec)
+    # 加载前需要 pandax 包可导入
+    sys.path.insert(0, str(ROOT / "src"))
+    spec.loader.exec_module(pandax_cli)
+    summary = pandax_cli.load_readme_summary()
+    text = "\n".join(summary)
+
+    # Phase 6 是最新活跃阶段（README 维护者按时间顺序写在最后）
+    assert "Phase 6" in text, f"应含 Phase 6 最新阶段"
+
+    # 不应再显示 Phase 2 / Step 13 作为"当前阶段"
+    # （已修复前显示 "Phase 2: 监控加固 (P1)" + Step 9-13）
+    # 这里不强求"完全不含 Phase 2"，只确认最新阶段是 Phase 6
+
+
+def test_summary_includes_actual_completed_bugfixes():
+    """Bug #4 fix: 已完成步骤列表必须含真实 bug 修复（不只是 Step 9-13）
+
+    第一性原则：README 段落必须反映真实修复历史，否则 CLI 启动信息误导用户。
+    """
+    sys.path.insert(0, str(ROOT / "src"))
+    from pandax.cli import load_readme_summary
+    summary = load_readme_summary()
+    text = "\n".join(summary)
+
+    # 11 个 P0/P1/P2/P3 bug 修复必须出现
+    must_contain = [
+        "P0 #8 + #7",
+        "P0 #12 v1",
+        "P0 #12 v2",
+        "P1 #2",
+        "P1 #5",
+        "P1 #15",
+        "P2 #21",
+        "P2 #6",
+        "P2 #20",
+        "P2 #9 / #10",
+        "P3 #13",
+    ]
+    for label in must_contain:
+        assert label in text, f"应含 {label}"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

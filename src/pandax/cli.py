@@ -135,12 +135,23 @@ def load_readme_summary():
             if "[x]" in stripped:
                 completed_steps.append(stripped.lstrip())
 
-    # 输出【当前阶段】（只显示阶段标题行，Phase 1: ...）
+    # 输出【当前阶段】
+    # Bug #4 fix: 取最后一个 **Phase 行（最新活跃阶段），而不是第一个
+    # 第一性原则：README 段落里会列多个已完成 Phase + 当前进行中 Phase。
+    # 当前活跃阶段 = 最后出现的 "**Phase X" 标题（README 维护者按时间顺序写）
     out.append(t("current_phase"))
+    last_phase_line = None
     for ln in phase_lines:
         if ln.startswith("**Phase"):
-            out.append("  " + ln)
-            break
+            last_phase_line = ln
+    if last_phase_line:
+        out.append("  " + last_phase_line)
+    else:
+        # 兼容：README 段落里没有 **Phase 标题（罕见），回退到第一个有效行
+        for ln in phase_lines:
+            if ln:
+                out.append("  " + ln)
+                break
 
     # 输出【已完成步骤】
     if completed_steps:
@@ -191,7 +202,9 @@ def build_parser():
     unlock_p.add_argument("--root", default=".", help="项目根目录路径")
     log_p = sub.add_parser("log", help="查看审计历史")
     log_p.add_argument("--root", default=".", help="项目根目录路径")
-    log_p.add_argument("--recent", type=int, default=20, help="最近 N 条（默认 20）")
+    # Bug #13 fix: -n 是 --recent 的短选项别名，方便 `pandax log -n 5`
+    log_p.add_argument("-n", "--recent", type=int, default=20,
+                       help="最近 N 条（默认 20）。短选项 -n 仅 log 命令可用")
     log_p.add_argument("--file", default="", help="按文件过滤")
     log_p.add_argument("--session", default="", help="按 session 过滤")
     log_p.add_argument("--rejected", action="store_true", help="只看拒绝记录")

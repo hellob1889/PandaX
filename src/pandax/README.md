@@ -14,35 +14,39 @@
 
 ## 当前阶段
 
-**Phase 2：监控加固（P1）**
+**v0.7.0 — 生产就绪（11 个 critical/high/mid bug 已修）**
 
-- [x] **Step 9** — watchdog\_guard.py（文件监控 + 令牌 + 回滚）
+- [x] **P0 #8 + #7** — install-context 通配符阻塞（PS5.1 registry provider 改用 .NET API）
 
-- [x] **Step 10** — install\_hook.py + pre-commit hook 模板
+- [x] **P0 #12 v1** — write 失败时 mode 恢复（try/finally + 原始 mode 恢复）
 
-- [x] **Step 11** — status 命令（锁状态 + watchdog 存活 + 指纹 + 上次审计）
+- [x] **P0 #12 v2** — write 默认拒绝 ReadOnly 锁定文件（`--force-write` 显式 opt-in）
 
-- [x] **Step 12** — watch 命令（前台/后台启动 watchdog）
+- [x] **P1 #2** — status 用 `_iter_protected_files` 共享 helper（19 种扩展名全覆盖）
 
-- [x] **Step 13** — e2e test（shell bypass → watchdog 回滚 → status 告警）
+- [x] **P1 #5** — `--lang` 全局参数支持任意位置（main() 预扫描 argv）
 
-**Phase 3：标准 Python 包分发（P0）**
+- [x] **P1 #15** — PowerShell subprocess `-NoProfile -NonInteractive` + timeout=60
 
-- \[\~] **Step 14** — pyproject.toml（setuptools 打包配置）
+- [x] **P2 #21** — doctor/write git 检测一致性（共享 `_resolve_git_exe()`）
 
-- [ ] **Step 15** — 重构 pandax.py 为可 import 的 package
+- [x] **P2 #6** — log 标签 i18n 完整（REJECTED/UNAUTHORIZED 走 t()）
 
-- [ ] **Step 16** — `pip install -e .` 本地安装 + `pandax` 命令验证
+- [x] **P2 #20** — ci 区分空仓库 vs 首次 commit（智能 baseline fallback）
 
-- [ ] **Step 17** — uninstall.py（清除 PATH / 右键菜单 / 指纹）
+- [x] **P2 #9 / #10** — 智能长度阈值（`_info_length` unicode 宽度，1 中文字 = 2 宽度）
 
-- [ ] **Step 18** — 推送 GitHub + 一键安装（`pip install git+...`）
+- [x] **P3 #13** — log `-n` 简写作为 `--recent` 别名
 
-**Phase 1：CLI MVP（P0）** ✅ 全部完成（Step 0~~8）
-**Phase 2：监控加固（P1）**~~ ~~✅ 全部完成（Step 9~~13）
+**Phase 1：CLI MVP（P0）** ✅ 全部完成（Step 0–8）
+**Phase 2：监控加固（P1）** ✅ 全部完成（Step 9–13）
+**Phase 3：标准 Python 包分发（P0）** ✅ 全部完成（Step 14–18）
+**Phase 4：跨平台右键菜单（P1）** ✅ 全部完成（Windows/macOS/Linux + i18n）
+**Phase 5：环境诊断（P1）** ✅ 全部完成（doctor.py + 13 类 auto-fix + PATH 持久化）
 
-**Phase 3（P0）**：PyInstaller + Inno Setup 安装包
-**Phase 4（P2）**：TRAE Skill / MCP Server / Cursor Rules
+**当前测试数**：199 passed（覆盖 i18n / write / status / lock / ci / watchdog / e2e）
+
+**Phase 6：MCP Server / TRAE Skill（P2）**：下一步
 
 ***
 

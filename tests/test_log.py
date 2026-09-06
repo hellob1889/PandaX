@@ -92,6 +92,33 @@ def test_log_recent_n(tmp_path):
     assert "audit_001" not in r.stdout
 
 
+def test_log_short_n_equals_recent(tmp_path):
+    """Bug #13 fix: log -n N 与 --recent N 行为一致（短选项别名）"""
+    setup_with_records(tmp_path)
+    # 用 -n 简写
+    r_short = run(["log", "--root", str(tmp_path), "-n", "2"], cwd=tmp_path)
+    # 用 --recent 全称
+    r_long = run(["log", "--root", str(tmp_path), "--recent", "2"], cwd=tmp_path)
+
+    assert r_short.returncode == 0
+    assert r_long.returncode == 0
+    # 输出应一致（除 banner / 标识差异外，主要内容相同）
+    # 验证 -n 真的过滤到 2 条
+    assert "audit_005" in r_short.stdout
+    assert "audit_004" in r_short.stdout
+    assert "audit_001" not in r_short.stdout
+
+
+def test_log_short_n_in_middle(tmp_path):
+    """Bug #13 fix: log -n N 在中间位置也生效"""
+    setup_with_records(tmp_path)
+    r = run(["log", "-n", "3", "--root", str(tmp_path)], cwd=tmp_path)
+    assert r.returncode == 0
+    assert "audit_005" in r.stdout
+    assert "audit_003" in r.stdout
+    assert "audit_001" not in r.stdout
+
+
 def test_log_filter_by_file(tmp_path):
     """log --file X 只显示某文件的记录"""
     setup_with_records(tmp_path)
