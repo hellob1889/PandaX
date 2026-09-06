@@ -41,6 +41,13 @@ try:
 except ImportError:
     HAS_WATCHDOG = False
 
+try:
+    from .i18n import t as _t
+except ImportError:
+    def _t(key, **kwargs):
+        # 无 i18n 时回退到 key 本身,避免崩溃
+        return key
+
 
 # ============================================================
 # 核心:审计事件队列 + 文件监视器
@@ -386,11 +393,12 @@ def start_server(root: Path, port: int = 8765, host: str = "127.0.0.1",
 
     url = f"http://{host}:{actual_port}"
 
-    print(f"[OK] PandaX 仪表盘启动: {url}")
-    print(f"  项目根: {root}")
-    print(f"  监视文件: {root / '.pandax' / 'pandax.jsonl'}")
-    print(f"  watchdog: {'启用' if has_watchdog else '未安装或审计文件缺失'}")
-    print(f"  按 Ctrl+C 停止")
+    print(_t("serve_ok_url", url=url))
+    print(_t("serve_info_root", root=root))
+    print(_t("serve_info_watch", path=root / '.pandax' / 'pandax.jsonl'))
+    wd_state = _t("_serve_wd_on") if has_watchdog else _t("_serve_wd_off")
+    print(_t("serve_info_watchdog", state=wd_state))
+    print(_t("serve_info_stop_hint"))
 
     if open_browser:
         def _open():
@@ -412,7 +420,7 @@ def run_blocking(root: Path, port: int = 8765) -> int:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\n[INFO] 收到 Ctrl+C,正在关闭...")
+        print(_t("serve_info_shutdown"))
         monitor.stop()
         server.shutdown()
         server.server_close()

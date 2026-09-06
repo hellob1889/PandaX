@@ -101,6 +101,10 @@ Exit codes: 0 = all audited, 1 = unaudited changes found.
 pandax --update-fingerprint <CODE>
 ```
 
+Default password is `0000` (single-user / local). For production / CI / multi-user
+deployments, override via the `PANDAX_FP_PASSWORD` environment variable — the
+source no longer hard-codes a privileged password.
+
 ## MCP
 
 `pandax-mcp` — Start MCP server (stdio JSON-RPC).

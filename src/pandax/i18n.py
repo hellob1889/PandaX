@@ -144,6 +144,16 @@ TRANSLATIONS = {
         "write_warn_git_add": "[WARN] git add 失败: {err}",
         "write_warn_no_git": "[WARN] git 未安装，跳过 git commit（审计记录已保存）",
 
+        # ============ serve (Web 仪表盘) ============
+        "serve_ok_url": "[OK] PandaX 仪表盘启动: {url}",
+        "serve_info_root": "  项目根: {root}",
+        "serve_info_watch": "  监视文件: {path}",
+        "serve_info_watchdog": "  watchdog: {state}",
+        "_serve_wd_on": "启用",
+        "_serve_wd_off": "未安装或审计文件缺失",
+        "serve_info_stop_hint": "  按 Ctrl+C 停止",
+        "serve_info_shutdown": "[INFO] 收到 Ctrl+C,正在关闭...",
+
         # ============ log ============
         "log_header": "审计历史（共 {n} 条）",
         "log_no_records": "[INFO] 无审计记录",
@@ -358,6 +368,7 @@ TRANSLATIONS = {
         "gitignore_added": "[OK] .gitignore updated, added: {names}",
         "gitignore_already_ok": "[OK] .gitignore already contains PandaX entries",
         "gitignore_skip": "[SKIP] Not a git repo, skipping .gitignore maintenance",
+        "warn_gitignore_failed": "[WARN] .gitignore maintenance failed (does not affect init): {err}",
         "status_fp_mismatch": "  Status: [WARN] mismatch! Stored={stored} Current={current}",
         "status_fp_uninit": "  Status: not generated (will be generated on first run)",
         "status_audit_stats": "[Audit Stats]",
@@ -407,6 +418,16 @@ TRANSLATIONS = {
         "write_reject_reason_required": "Please provide --reason",
         "write_warn_git_add": "[WARN] git add failed: {err}",
         "write_warn_no_git": "[WARN] git not installed, skipping git commit (audit record saved)",
+
+        # ============ serve (Web dashboard) ============
+        "serve_ok_url": "[OK] PandaX dashboard started: {url}",
+        "serve_info_root": "  Project root: {root}",
+        "serve_info_watch": "  Watching file: {path}",
+        "serve_info_watchdog": "  watchdog: {state}",
+        "_serve_wd_on": "enabled",
+        "_serve_wd_off": "not installed or audit file missing",
+        "serve_info_stop_hint": "  Press Ctrl+C to stop",
+        "serve_info_shutdown": "[INFO] Received Ctrl+C, shutting down...",
 
         # ============ log ============
         "log_header": "Audit history ({n} records total)",

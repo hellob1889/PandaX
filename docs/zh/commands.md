@@ -145,6 +145,9 @@ pandax --update-fingerprint <CODE>
 
 合法更新 CLI 后调用，需要用户传入 4 位确认码（防误操作）。
 
+默认密码为 `0000`（本地单用户场景）。生产 / CI / 多用户环境可通过环境变量
+`PANDAX_FP_PASSWORD` 覆盖默认密码，源码不再含"权威"明文。
+
 ---
 
 ## MCP 命令

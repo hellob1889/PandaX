@@ -314,7 +314,22 @@ def build_parser():
 # ============================================================
 # 自指纹保护（L5 防御）
 # ============================================================
-FINGERPRINT_PASSWORD = "0000"  # 默认密码（本地使用）
+# 默认密码(本地使用)。生产/CI 可通过环境变量 PANDAX_FP_PASSWORD 覆盖
+# ——源码不再含"权威"明文。
+_DEFAULT_FP_PASSWORD = "0000"
+
+
+def get_fingerprint_password() -> str:
+    """读取 CLI 自指纹更新密码。
+
+    优先级:
+      1. 环境变量 PANDAX_FP_PASSWORD(生产 / CI / 多用户场景可覆盖)
+      2. 默认值 "0000"(本地单用户)
+
+    说明:返回动态值而非常量,目的是在不改 API 的前提下让"密码走变量"。
+    后续如需更复杂策略(配置文件 / 命令行 / KMS)只需改本函数。
+    """
+    return os.environ.get("PANDAX_FP_PASSWORD", _DEFAULT_FP_PASSWORD)
 
 
 def compute_fingerprint() -> str:
@@ -498,7 +513,7 @@ def cmd_init(args):
     except ImportError:
         pass
     except Exception as e:
-        print(f"  [WARN] .gitignore 维护失败(不影响 init): {e}")
+        print(f"  {t('warn_gitignore_failed', err=e)}")
 
     return 0
 
@@ -2119,7 +2134,8 @@ def main(argv=None):
     # 4. --update-fingerprint（先于一切处理）
     if getattr(args, "update_fingerprint", None):
         pwd = args.update_fingerprint
-        if pwd != FINGERPRINT_PASSWORD:
+        expected = get_fingerprint_password()
+        if pwd != expected:
             print(t("err_password_wrong"))
             return 1
         new_fp = compute_fingerprint()
