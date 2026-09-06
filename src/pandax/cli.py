@@ -116,8 +116,9 @@ def load_readme_summary():
     out.append("")
 
     phase_lines = []      # 当前阶段段落的所有有效行
-    completed_steps = []  # 已完成的 [x] Step 行
+    completed_steps = []  # 已完成的 [x] Step 行（带 P0/P1/P2/P3 分组前缀）
     section = None
+    current_group = None  # 当前 H3 分组标题（如 "P0 安全 (5)"），用于附加到 step 行
 
     for line in lines:
         stripped = line.strip()
@@ -132,7 +133,20 @@ def load_readme_summary():
 
         if section == "phase" and stripped:
             phase_lines.append(stripped)
-            if "[x]" in stripped:
+            if stripped.startswith("### "):
+                group_raw = stripped[4:].strip()
+                m_grp = _RE_GROUP.match(group_raw)
+                current_group = m_grp.group(1) if m_grp else None
+            elif "[x]" in stripped and current_group:
+                step_line = stripped.lstrip()
+                m_step = _RE_STEP.search(step_line)
+                if m_step:
+                    rest = step_line.split("—", 1)[1].strip() if "—" in step_line else step_line
+                    new_step = f"{current_group} {m_step.group(1).strip()} — {rest}"
+                    completed_steps.append(new_step)
+                else:
+                    completed_steps.append(step_line)
+            elif "[x]" in stripped:
                 completed_steps.append(stripped.lstrip())
 
     # 输出【当前阶段】
