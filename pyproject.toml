@@ -64,7 +64,14 @@ include = ["pandax*", "pandax_guard*", "pandax_mcp*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-pandax = ["templates/*.sh", "templates/pre-commit-hook", "README.md", "banner.txt"]
+pandax = [
+    "templates/*.sh",
+    "templates/pre-commit-hook",
+    "README.md",
+    "banner.txt",
+    "pandax_locked.ico",
+    "pandax_unlocked.ico",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
