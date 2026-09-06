@@ -1,0 +1,11 @@
+# 全局 .gitattributes — Bug #22 防御
+# 用户 core.autocrlf=true 会把所有 LF 文本转成 CRLF，破坏 shell 脚本
+# 用 .gitattributes 强制关键文件保持 LF
+*.sh            text eol=lf
+*.py            text eol=lf
+pre-commit-hook text eol=lf
+*.bat           text eol=crlf
+*.md            text eol=lf
+*.json          text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf

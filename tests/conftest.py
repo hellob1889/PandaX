@@ -13,6 +13,7 @@ pytest 全局配置：自动探测 git 路径并加入 PATH。
   - 找到第一个存在的 git.exe 加到 PATH
   - 测试用 subprocess 启动时就会继承此 PATH
 """
+import json
 import os
 import shutil
 import subprocess
@@ -72,42 +73,53 @@ def verify_git_available():
         pytest.skip("git 未安装且未在 PATH 中找到，PandaX 测试需要 git")
 
 
-@pytest.fixture(scope="session", autouse=True)
-def force_zh_cn_for_tests():
-    """全局 fixture：测试期间强制 ~/.pandax/config.json lang=zh-CN。
+@pytest.fixture(autouse=True)
+def force_zh_cn_for_tests(request):
+    """全局 fixture（function-scope）：每个测试前后强制 ~/.pandax/config.json lang=zh-CN。
 
-    第一性原则：测试断言中包含中文字符串（如 '已安装'、'锁定'、'未运行'）。
-    如果某测试改了 lang=config.json=en，这些断言会全部失败，造成 flaky test。
-    强制锁定 zh-CN 让测试行为可预测。
+    第一性原则（对抗式审查）：
+      - 测试断言中包含中文字符串（如 '已安装'、'锁定'、'未运行'）。
+      - test_i18n.py 多处调 i18n.set_lang("en") / _save_user_pref("en") 污染 config.json。
+      - 早期实现用 session-scope，只在首尾各设一次，导致中途被污染后所有后续测试 flaky。
+      - 改为 function-scope + 前后双保险，确保每个测试看到 lang=zh-CN。
 
-    实现策略：直接覆盖用户 ~/.pandax/config.json（不是用 env var）。
-    为什么不用 env var：test_i18n.py::test_init_loads_existing_preference 用 monkeypatch
-    改 HOME 后调用 init()，验证从 config.json 读取偏好。如果用 env var 覆盖，
-    init() 会跳过 config.json 读取，测试失败。
+    实现策略：
+      - setup：读取 backup，强制写入 lang=zh-CN
+      - yield
+      - teardown：恢复 backup（无论测试是否改了 lang）
 
-    副作用：测试结束后会恢复用户原始 lang（如果之前存在）。
+    性能：~200 测试 × 1ms 文件 IO = 0.2s，可接受。
     """
     cfg_path = Path.home() / ".pandax" / "config.json"
-    backup = None
     backup_existed = cfg_path.exists()
-
+    backup_text = None
     if backup_existed:
         try:
-            backup = cfg_path.read_text(encoding="utf-8")
-            cfg = json.loads(backup)
+            backup_text = cfg_path.read_text(encoding="utf-8")
+        except Exception:
+            backup_text = None
+
+    def _set_zh_cn():
+        try:
+            if backup_text is not None:
+                cfg = json.loads(backup_text)
+            else:
+                cfg = {}
             cfg["lang"] = "zh-CN"
             cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception:
-            backup = None
+            pass
 
+    _set_zh_cn()
     yield
 
-    # 恢复
-    if backup is not None:
+    # teardown：恢复原始内容（如果测试期间被改成 en，下次测试前 setup 会再设回 zh-CN；
+    # 但用户希望测完后状态也恢复，所以这里也写回原始 backup）
+    if backup_existed and backup_text is not None:
         try:
-            cfg_path.write_text(backup, encoding="utf-8")
+            cfg_path.write_text(backup_text, encoding="utf-8")
         except Exception:
             pass
-    elif backup_existed and not cfg_path.exists():
-        # 用户原本有但我们没备份成功——尽量恢复（保守处理）
+    elif not backup_existed and cfg_path.exists():
+        # 用户原本没有 config.json，但测试创建了——保守起见保留（避免破坏用户数据）
         pass

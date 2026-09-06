@@ -84,6 +84,45 @@ def test_install_hook_creates_git_hook(tmp_path):
     assert "pandax" in content.lower() or "PandaX" in content
 
 
+def test_install_hook_normalizes_to_lf(tmp_path):
+    """Bug #22 RED：安装后 hook 必须 LF-only（bash 在 *nix 上不支持 CRLF）
+
+    对抗式审查：仅靠 shutil.copy(TEMPLATE, hook) 在 Windows git checkout 后会保留 CRLF，
+    导致 hook 完全失效（L3 防御被绕过）。
+    修复：install_hook 必须 read_bytes + 替换 \\r\\n → \\n 后 write_bytes。
+    """
+    project = setup_git(tmp_path)
+
+    # 先把模板写成 CRLF（模拟 Windows git checkout 污染）
+    template = ROOT / "templates" / "pre-commit-hook"
+    raw = template.read_bytes()
+    if b"\r\n" not in raw:
+        # 临时注入 CRLF（不影响 fixture 之后的使用——teardown 自动还原）
+        polluted = raw.replace(b"\n", b"\r\n")
+        template.write_bytes(polluted)
+        try:
+            r = run([str(INSTALL_HOOK), "--root", str(project)], cwd=project)
+            assert r.returncode == 0
+            hook_path = project / ".git" / "hooks" / "pre-commit"
+            hook_bytes = hook_path.read_bytes()
+            assert b"\r\n" not in hook_bytes, (
+                "Bug #22 回归：hook 含 CRLF，bash 在 *nix 上无法解析，L3 防御完全失效"
+            )
+            assert b"\r" not in hook_bytes, "hook 不应含裸 \\r"
+            # 内容完整性
+            assert b"PandaX" in hook_bytes
+            assert b"#!/bin/sh" in hook_bytes
+        finally:
+            template.write_bytes(raw)  # 还原
+    else:
+        # 模板本来就是 CRLF（极少见），直接验证修复
+        r = run([str(INSTALL_HOOK), "--root", str(project)], cwd=project)
+        assert r.returncode == 0
+        hook_path = project / ".git" / "hooks" / "pre-commit"
+        hook_bytes = hook_path.read_bytes()
+        assert b"\r\n" not in hook_bytes, "Bug #22: install_hook 未规范化 CRLF"
+
+
 def test_pre_commit_blocks_manual_py_change(tmp_path):
     """直接修改 .py 后 git commit 应被 pre-commit 拒绝"""
     project = setup_git(tmp_path)

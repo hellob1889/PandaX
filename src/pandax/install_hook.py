@@ -49,7 +49,12 @@ def install_hook(root: Path) -> int:
         shutil.copy(hook_path, backup)
         print(t("_hook_backed_up", backup=backup))
 
-    shutil.copy(TEMPLATE, hook_path)
+    # Bug #22 fix: 强制 LF 换行（bash 在 *nix 上不支持 CRLF）
+    # 背景：Windows git checkout 会把 .gitattributes 没声明 LF 的模板转成 CRLF，
+    #       shutil.copy 会原样保留，导致 hook 完全失效（L3 防御被绕过）。
+    content = TEMPLATE.read_bytes()
+    content = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    hook_path.write_bytes(content)
 
     # 添加可执行权限（Unix）
     current = hook_path.stat().st_mode
