@@ -13,12 +13,12 @@
 [![PyPI version](https://img.shields.io/pypi/v/pandax?color=blue)](https://pypi.org/project/pandax/)
 [![Python](https://img.shields.io/pypi/pyversions/pandax)](https://pypi.org/project/pandax/)
 [![License](https://img.shields.io/pypi/l/pandax)](https://github.com/pandax/pandax/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-243%20passed-brightgreen)](https://github.com/pandax/pandax)
-[![Bugs](https://img.shields.io/badge/bugs-25%20fixed-success)](https://github.com/pandax/pandax/releases)
+[![Tests](https://img.shields.io/badge/tests-298%20passed-brightgreen)](https://github.com/pandax/pandax)
+[![Bugs](https://img.shields.io/badge/bugs-28%20fixed-success)](https://github.com/pandax/pandax/releases)
 [![i18n](https://img.shields.io/badge/i18n-200%2B%20keys%20100%25-blueviolet)](https://github.com/pandax/pandax/blob/main/docs/i18n.md)
 [![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/pandax/pandax/blob/main/.github/workflows/lint.yml)
 [![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax/)
-[![Phase](https://img.shields.io/badge/status-v0.7.0%20production--ready-success)](https://github.com/pandax/pandax/releases)
+[![Phase](https://img.shields.io/badge/status-v0.7.1%20production--ready-success)](https://github.com/pandax/pandax/releases)
 
 [English](#english) | [中文](#中文)
 
@@ -227,7 +227,7 @@ pip install -e .[dev]
 pytest tests/ -v
 ```
 
-当前测试数：**243 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e）
+当前测试数：**298 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
 
 ### 路线图
 
