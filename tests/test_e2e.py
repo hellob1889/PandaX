@@ -124,8 +124,8 @@ def test_full_workflow_e2e(tmp_path):
     assert r.returncode == 0
     assert "REJECTED" in r.stdout
     # 应只显示拒绝记录（不应显示 APPROVED 的 reason/problem/approach 详情）
-    # 简化检查：包含 attempted 字段
-    assert "attempted" in r.stdout
+    # 简化检查：包含 attempted/尝试 字段（Bug #6 i18n 修复后 zh 用"尝试"，en 用 "Attempted"）
+    assert ("attempted" in r.stdout.lower()) or ("尝试" in r.stdout)
 
     # ============ Step 9: log --export HTML ============
     html_path = tmp_path / "report.html"

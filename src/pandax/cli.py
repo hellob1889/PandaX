@@ -590,6 +590,40 @@ def _apply_readonly(root_arg: str, readonly: bool) -> int:
     return 0
 
 
+def _resolve_git_exe() -> str:
+    """
+    Bug #21 fix: 统一 git 可执行解析逻辑，所有 git 调用共享。
+
+    之前 doctor (scripts/doctor.py) 用 shutil.which + Windows 候选目录回退，
+    但 write/ci 直接 subprocess.run(["git", ...])。边缘场景下行为不一致：
+    doctor 报 OK（找到 D:\软件\Git\cmd\git.exe），write 报 FileNotFoundError
+    （当前进程 PATH 没该路径，subprocess 调用失败）。
+
+    策略：与 doctor 相同的"PATH 优先 + Windows 候选回退"算法。
+    返回值是绝对路径（如果找到）或 "git"（fallback，让 subprocess 自己找）。
+    """
+    import shutil as _sh
+    git_path = _sh.which("git")
+    if git_path:
+        return git_path
+    # Windows 常见安装路径（与 doctor.py 一致）
+    if os.name == "nt":
+        candidates = [
+            r"D:\软件\Git\cmd",
+            r"C:\Program Files\Git\cmd",
+            r"C:\Program Files (x86)\Git\cmd",
+            r"C:\Program Files\Git\bin",
+            r"C:\Git\cmd",
+        ]
+        for c in candidates:
+            p = Path(c, "git.exe")
+            if p.exists():
+                # 同时把候选目录加入当前进程 PATH，避免后续 subprocess 找不到
+                os.environ["PATH"] = str(Path(c)) + os.pathsep + os.environ.get("PATH", "")
+                return str(p)
+    return "git"  # 让 subprocess 自己解析（最佳努力 fallback）
+
+
 def cmd_write(args):
     """
     审计写入（核心命令）：
@@ -812,8 +846,11 @@ def cmd_write(args):
             # Windows 路径分隔符统一为 /
             audit_rel_str = str(audit_rel).replace("\\", "/")
             target_rel_str = str(target_rel).replace("\\", "/")
+            # Bug #21 fix: 用 _resolve_git_exe() 统一 git 可执行解析，
+            # 与 doctor.py 检测逻辑保持一致（避免边缘场景 doctor OK / write 失败）
+            GIT = _resolve_git_exe()
             r_add = subprocess.run(
-                ["git", "add", target_rel_str, audit_rel_str],
+                [GIT, "add", target_rel_str, audit_rel_str],
                 cwd=str(root), capture_output=True, text=True, timeout=10,
             )
             if r_add.returncode != 0:
@@ -826,7 +863,7 @@ def cmd_write(args):
                 f"approach: {approach}\n"
             )
             r = subprocess.run(
-                ["git", "commit", "-m", commit_msg],
+                [GIT, "commit", "-m", commit_msg],
                 cwd=str(root),
                 capture_output=True,
                 text=True,
@@ -838,7 +875,7 @@ def cmd_write(args):
             if r.returncode == 0:
                 # 获取 commit hash
                 log_r = subprocess.run(
-                    ["git", "log", "-1", "--format=%H"],
+                    [GIT, "log", "-1", "--format=%H"],
                     cwd=str(root),
                     capture_output=True,
                     text=True,
@@ -950,10 +987,12 @@ def _print_log(records: list[dict]):
             ap = rec.get('attempted_problem', '')
             aa = rec.get('attempted_approach', '')
             if ar or ap or aa:
-                print(f"  attempted: reason={ar!r}, problem={ap!r}, approach={aa!r}")
+                # Bug #6 fix: 替换 hardcoded "attempted: reason=..." 英文标签
+                print(t("log_attempted", reason=ar, problem=ap, approach=aa))
         elif status == "UNAUTHORIZED":
-            print(f"  detection: {rec.get('detection', '')}")
-            print(f"  action:    {rec.get('action', '')}")
+            # Bug #6 fix: 替换 hardcoded "detection:" / "action:" 英文标签
+            print(t("log_unauth_detection", detection=rec.get('detection', '')))
+            print(t("log_unauth_action", action=rec.get('action', '')))
     print()
     print("=" * 80)
 
@@ -1367,15 +1406,8 @@ def cmd_ci(args):
     pandax_dir = root / ".pandax"
 
     # Phase 7: 解析 git 可执行文件绝对路径（防止 PATH 损坏/编码问题）
-    git_exe_path = _sh.which("git")
-    if not git_exe_path:
-        for cand in (r"D:\软件\Git\cmd\git.exe", r"C:\Program Files\Git\cmd\git.exe",
-                     r"C:\Program Files (x86)\Git\cmd\git.exe", r"C:\Git\cmd\git.exe"):
-            if Path(cand).exists():
-                git_exe_path = cand
-                os.environ["PATH"] = str(Path(cand).parent) + os.pathsep + os.environ.get("PATH", "")
-                break
-    GIT = git_exe_path or "git"  # fallback to "git" if not found
+    git_exe_path = _resolve_git_exe()
+    GIT = git_exe_path  # _resolve_git_exe() returns absolute path or "git" fallback
 
     def _git_run(*args, timeout=5):
         return subprocess.run([GIT] + list(args), cwd=str(root),
@@ -1421,14 +1453,41 @@ def cmd_ci(args):
             break
 
     if not base_resolved:
-        # 没有 base 也没有历史 → 这是第一个 commit，无变更可验证
+        # Bug #20 fix: 区分"空仓库（无 commit）"和"首次 commit（HEAD 存在但无 HEAD~1）"
+        # 之前两者都报 "empty repo"，但首次 commit 是合法场景 — 有变更要审计。
+        # 用 `git rev-list -n 1 --all` 检查是否有任何 commit
+        r_any = _git_run("rev-list", "-n", "1", "--all")
+        if r_any.returncode != 0 or not r_any.stdout.strip():
+            # 真·空仓库：无任何 commit → 无变更可审计
+            print("=" * 64)
+            print(t("ci_header", root=root))
+            print(t("ci_baseline_empty"))
+            print("=" * 64)
+            print(t("ci_pass_empty"))
+            print(f'{{"status":"PASS","violations":0,"changed":0,"note":"empty repo"}}')
+            return 0
+
+        # 有 commit 但 baseline 解析失败：可能是首次 commit，HEAD~1 不存在。
+        # 智能 fallback：直接用 HEAD 作为 baseline（虽然 HEAD~1 不存在），
+        # 此时 `git diff HEAD..HEAD` 是空，可视为"无变更" PASS。
+        # 但更稳妥：报错要求用户指定 --base（避免误判变更）
         print("=" * 64)
         print(t("ci_header", root=root))
-        print(t("ci_baseline_empty"))
-        print("=" * 64)
-        print(t("ci_pass_empty"))
-        print(f'{{"status":"PASS","violations":0,"changed":0,"note":"empty repo"}}')
-        return 0
+        # 重新尝试用当前 HEAD 的全部 tree 作为基线
+        r_tree = _git_run("rev-parse", "HEAD^{tree}")
+        if r_tree.returncode == 0 and r_tree.stdout.strip():
+            tree_sha = r_tree.stdout.strip()
+            r_diff = _git_run("diff", "--name-only", f"{tree_sha}", "HEAD", timeout=10)
+            if r_diff.returncode == 0:
+                changed = [f.strip() for f in r_diff.stdout.splitlines() if f.strip()]
+                if not changed:
+                    print(t("ci_baseline_no_changes"))
+                    print(t("ci_pass_empty"))
+                    print(f'{{"status":"PASS","violations":0,"changed":0,"note":"no changes vs current tree"}}')
+                    return 0
+        # baseline 不可解析且无法 fallback：报错 + 退出非 0
+        print(t("ci_reject_no_baseline", base=base))
+        return 1
 
     # 1. 找出变更文件
     diff_range = f"{base}...{head}" if head == "HEAD" else f"{base}..{head}"

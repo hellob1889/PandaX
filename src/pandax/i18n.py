@@ -148,6 +148,9 @@ TRANSLATIONS = {
         "log_action_rejected": "拒绝",
         "log_action_unauthorized": "非授权",
         "log_field_commit": "commit",
+        "log_attempted": "  尝试: reason={reason}, problem={problem}, approach={approach}",
+        "log_unauth_detection": "  检测: {detection}",
+        "log_unauth_action": "  操作: {action}",
 
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] 脚本不存在: {path}",
@@ -225,6 +228,8 @@ TRANSLATIONS = {
         "ci_changed_n": "变更文件: {n} 个",
         "ci_ext_stats": "受保护扩展: 文本 {t} 种 / 二进制 {b} 种",
         "ci_pass_empty": "[OK] PASS — 仓库为空（无变更可审计）",
+        "ci_baseline_no_changes": "基线: 当前 tree（首次 commit，无 HEAD~1）— 无变更",
+        "ci_reject_no_baseline": "[FAIL] 无法解析 baseline ({base})。首次 commit 请显式指定 --base 或先创建 main 分支",
         "ci_pass_all": "[OK] PASS — 所有变更均有审计记录",
         "ci_pass_json": '{{"status":"PASS","violations":0,"changed":{n}}}',
         "ci_pass_empty_json": '{{"status":"PASS","violations":0,"changed":0,"note":"empty repo"}}',
@@ -374,6 +379,9 @@ TRANSLATIONS = {
         "log_action_rejected": "reject",
         "log_action_unauthorized": "unauthorized",
         "log_field_commit": "commit",
+        "log_attempted": "  Attempted: reason={reason}, problem={problem}, approach={approach}",
+        "log_unauth_detection": "  Detection: {detection}",
+        "log_unauth_action": "  Action: {action}",
 
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] Script not found: {path}",
@@ -452,6 +460,8 @@ TRANSLATIONS = {
         "ci_changed_n": "Changed files: {n}",
         "ci_ext_stats": "Protected extensions: {t} text / {b} binary",
         "ci_pass_empty": "[OK] PASS — repository is empty (no changes to audit)",
+        "ci_baseline_no_changes": "Baseline: current tree (first commit, no HEAD~1) — no changes",
+        "ci_reject_no_baseline": "[FAIL] cannot resolve baseline ({base}). First commit needs --base or pre-existing main branch",
         "ci_pass_all": "[OK] PASS — all changes have audit records",
         "ci_pass_json": '{{"status":"PASS","violations":0,"changed":{n}}}',
         "ci_pass_empty_json": '{{"status":"PASS","violations":0,"changed":0,"note":"empty repo"}}',
