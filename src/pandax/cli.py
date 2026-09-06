@@ -267,6 +267,10 @@ def build_parser():
     watch_p.add_argument("--root", default=".", help="项目根目录路径")
     watch_p.add_argument("--daemon", action="store_true", help="后台运行")
 
+    serve_p = sub.add_parser("serve", help="启动 Web 仪表盘(浏览器访问,实时推送)")
+    serve_p.add_argument("--root", default=".", help="项目根目录路径")
+    serve_p.add_argument("--port", type=int, default=8765, help="HTTP 端口(默认 8765)")
+
     # Phase 7: CI 子命令（GitHub Actions 集成）
     ci_p = sub.add_parser("ci", help="CI 验证：检查 PR 所有变更都有审计")
     ci_p.add_argument("--root", default=".", help="项目根目录")
@@ -1427,6 +1431,33 @@ def cmd_status(args):
     return 0
 
 
+def cmd_serve(args):
+    """
+    启动 Web 仪表盘(本地 HTTP + SSE 实时推送)。
+
+    第一性原理:
+      - 用户需要"实时看到 Agent 修改的内容"
+      - watchdog 监视 .pandax/pandax.jsonl → SSE 推送到浏览器
+      - 浏览器渲染现代明亮仪表盘,Notion/Linear 风格
+
+    用法:
+      pandax serve --root .           # 启动 + 自动打开浏览器
+      pandax serve --port 9000        # 自定义端口
+      pandax serve --no-browser       # 不自动打开(适合远程/CI)
+
+    访问:http://127.0.0.1:<port>
+    按 Ctrl+C 停止。
+    """
+    from pandax.pandax_serve import run_blocking
+    root = Path(args.root).resolve()
+    config_path = root / ".pandax" / "config.json"
+    if not config_path.exists():
+        print(t("err_write_root_not_init", root=root))
+        return 1
+    port = getattr(args, "port", 8765) or 8765
+    return run_blocking(root, port=port)
+
+
 def cmd_install_hook(args):
     """
     安装/卸载 pre-commit hook
@@ -1979,6 +2010,7 @@ COMMANDS = {
     "install-hook": cmd_install_hook,
     "status": cmd_status,
     "watch": cmd_watch,
+    "serve": cmd_serve,
     "ci": cmd_ci,
     "install-context": cmd_install_context,
     "uninstall-context": cmd_uninstall_context,

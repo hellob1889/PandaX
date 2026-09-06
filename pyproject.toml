@@ -71,6 +71,7 @@ pandax = [
     "banner.txt",
     "pandax_locked.ico",
     "pandax_unlocked.ico",
+    "index.html",
 ]
 
 [tool.pytest.ini_options]

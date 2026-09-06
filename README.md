@@ -213,6 +213,7 @@ pandax status --root .
 | `pandax status` | 项目状态仪表盘 |
 | `pandax install-hook` | 安装 L3 pre-commit hook |
 | `pandax watch` | 启动 L2 watchdog 守护进程 |
+| `pandax serve` | **🆕 Web 实时仪表盘**（浏览器打开 `localhost:8765`,watchdog + SSE <100ms 推送）|
 | `pandax install-git` | 自动安装 git |
 | `pandax ci` | L7 CI 验证（git diff vs audit log）|
 | `pandax-mcp` | 启动 MCP server（stdio JSON-RPC） |
