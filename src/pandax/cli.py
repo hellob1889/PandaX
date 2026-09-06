@@ -751,6 +751,20 @@ def _apply_readonly(args, readonly: bool) -> int:
         print(t("ok_locked_n", n=count, exts=ext_list))
     else:
         print(t("ok_unlocked_n", n=count, exts=ext_list))
+
+    try:
+        from pandax.desktop_icon import apply_desktop_icon, remove_desktop_icon
+        if readonly:
+            ok, msg = apply_desktop_icon(root, "locked")
+        else:
+            ok, msg = remove_desktop_icon(root)
+        if msg and "[SKIP]" not in msg:
+            print(msg)
+    except ImportError:
+        pass
+    except Exception as e:
+        print("[WARN] icon toggle failed (lock/unlock still ok): " + str(e))
+
     return 0
 
 
