@@ -215,6 +215,21 @@ def build_parser():
     log_p.add_argument("--output", "-o", default="", help="导出文件路径（与 --format 一起使用）")
     log_p.add_argument("--from", dest="from_date", default="", help="起始日期 YYYY-MM-DD")
     log_p.add_argument("--to", dest="to_date", default="", help="截止日期 YYYY-MM-DD")
+    # Bug #25 fix: 独立 export 子命令（语义清晰，不再借用 log）
+    export_p = sub.add_parser(
+        "export",
+        help="导出审计记录为文件（支持 html/json/csv/md/xlsx/docx/pdf/rst/asciidoc 等）",
+    )
+    export_p.add_argument("--root", default=".", help="项目根目录路径")
+    export_p.add_argument("--format", "-f", required=True,
+                         help="导出格式: html, json, csv, md, xlsx, docx, pdf, text, yaml, sqlite, rst, asciidoc")
+    export_p.add_argument("--output", "-o", required=True, help="导出文件路径")
+    export_p.add_argument("--file", default="", help="按文件过滤")
+    export_p.add_argument("--session", default="", help="按 session 过滤")
+    export_p.add_argument("--rejected", action="store_true", help="只看拒绝记录")
+    export_p.add_argument("--unauthorized", action="store_true", help="只看非授权写入")
+    export_p.add_argument("--from", dest="from_date", default="", help="起始日期 YYYY-MM-DD")
+    export_p.add_argument("--to", dest="to_date", default="", help="截止日期 YYYY-MM-DD")
     install_git_p = sub.add_parser("install-git", help="探测/安装 git")
     install_git_p.add_argument("--probe-only", action="store_true", help="只探测不下载")
     install_git_p.add_argument("--auto-download", action="store_true", help="自动下载 portable git")
@@ -939,11 +954,11 @@ def cmd_write(args):
     return 0
 
 
-def cmd_log(args):
+def _query_records(args) -> tuple[list[dict], Path | None]:
     """
-    查询审计历史。
-    支持过滤：recent N / file / session / rejected / unauthorized
-    支持导出：--export PATH（HTML）
+    共享 query + filter 逻辑（cmd_log 和 cmd_export 共用）。
+    第一性原则：log 和 export 本质都是"按条件查 audit 记录"，
+    只是输出目标不同（stdout vs 文件），过滤逻辑应共享。
     """
     import json
 
@@ -952,7 +967,7 @@ def cmd_log(args):
 
     if not audit_path.exists():
         print(f'[ERROR] {{"status":"ERROR","reason":"{t("_log_no_init", root=root)}"}}')
-        return 1
+        return [], None
 
     # 读所有记录
     records = []
@@ -966,22 +981,32 @@ def cmd_log(args):
 
     # 过滤
     filtered = records
-    if args.file:
+    if getattr(args, "file", ""):
         filtered = [r for r in filtered if r.get("file") == args.file]
-    if args.session:
+    if getattr(args, "session", ""):
         filtered = [r for r in filtered if r.get("session_id") == args.session]
-    if args.rejected:
+    if getattr(args, "rejected", False):
         filtered = [r for r in filtered if r.get("status") == "REJECTED"]
-    if args.unauthorized:
+    if getattr(args, "unauthorized", False):
         filtered = [r for r in filtered if r.get("status") == "UNAUTHORIZED"]
 
-    # 取最近 N 条
-    if args.recent and args.recent > 0:
+    if getattr(args, "recent", 0) and getattr(args, "recent", 0) > 0:
         filtered = filtered[-args.recent:]
 
-    # 输出：兼容旧 --export（HTML），新 --format + --output
-    if args.export:
-        # 旧接口兼容：直接导出 HTML
+    return filtered, root
+
+
+def cmd_log(args):
+    """
+    查询审计历史（stdout 输出）。
+    导出请用 `pandax export --format <fmt> --output <path>`。
+    """
+    filtered, root = _query_records(args)
+    if root is None:
+        return 1
+
+    # 兼容旧 --export（HTML）
+    if getattr(args, "export", ""):
         from .exporters import export_html
         out_path = Path(args.export)
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -989,15 +1014,16 @@ def cmd_log(args):
         print(t("log_export_ok", n=len(filtered), path=out_path))
         return 0
 
-    if args.format or args.output:
-        # 新接口：--format + --output
-        if not args.format:
+    if getattr(args, "format", "") or getattr(args, "output", ""):
+        if not getattr(args, "format", ""):
             print(t("err_format_without_format"))
             return 1
-        if not args.output:
+        if not getattr(args, "output", ""):
             print(t("err_format_without_output"))
             return 1
+        print(t("warn_log_export_use_export_subcommand"))
 
+    if getattr(args, "format", "") and getattr(args, "output", ""):
         from .exporters import export_records
         out_path = Path(args.output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1008,6 +1034,33 @@ def cmd_log(args):
         return 0
 
     _print_log(filtered)
+    return 0
+
+
+def cmd_export(args):
+    """
+    Bug #25 fix: 独立 export 子命令，语义清晰。
+    用法: pandax export --format html --output report.html
+         pandax export --format json -o data.json --rejected
+    """
+    filtered, root = _query_records(args)
+    if root is None:
+        return 1
+
+    if not getattr(args, "format", ""):
+        print(t("export_err_no_format"))
+        return 1
+    if not getattr(args, "output", ""):
+        print(t("export_err_no_output"))
+        return 1
+
+    from .exporters import export_records
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    ok = export_records(filtered, args.format, out_path)
+    if not ok:
+        return 1
+    print(t("export_ok", n=len(filtered), fmt=args.format, path=out_path))
     return 0
 
 
@@ -1776,6 +1829,7 @@ COMMANDS = {
     "unlock": cmd_unlock,
     "write": cmd_write,
     "log": cmd_log,
+    "export": cmd_export,
     "install-git": cmd_install_git,
     "install-hook": cmd_install_hook,
     "status": cmd_status,

@@ -392,6 +392,12 @@ TRANSLATIONS = {
         "log_export_err_output": "[ERROR] --format requires --output",
         "log_export_no_records": "[INFO] No matching records, output file not generated",
 
+        # Bug #25 fix: standalone export subcommand + deprecation warning for log path
+        "export_ok": "[OK] Exported {n} records as {fmt}: {path}",
+        "export_err_no_format": "[ERROR] Missing --format (try: pandax export --format html --output report.html)",
+        "export_err_no_output": "[ERROR] Missing --output (try: pandax export --format html --output report.html)",
+        "warn_log_export_use_export_subcommand": "[WARN] pandax log --format/--output is deprecated, prefer: pandax export --format <fmt> --output <path>",
+
         # Bug #26 fix: export report labels i18n (html/md/text)
         "export_title": "PandaX Audit Report",
         "export_summary": "Records: {n}",
