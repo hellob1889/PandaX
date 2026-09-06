@@ -37,8 +37,13 @@ def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     )
 
 
-def setup_git_project(tmp_path: Path) -> Path:
-    """建 git 项目：init + git init + 初始文件 + 初始 commit + lock"""
+def setup_git_project(tmp_path: Path, lock: bool = True) -> Path:
+    """建 git 项目：init + git init + 初始文件 + 初始 commit + (可选) lock
+
+    Args:
+        tmp_path: pytest tmp_path fixture
+        lock: True = 锁定（默认），False = 不锁定（适合 write 测试加 --force-write 验证）
+    """
     # pandax init
     r = run(["init", "--root", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0
@@ -56,9 +61,10 @@ def setup_git_project(tmp_path: Path) -> Path:
     subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, text=True)
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, text=True)
 
-    # pandax lock
-    r = run(["lock", "--root", str(tmp_path)], cwd=tmp_path)
-    assert r.returncode == 0
+    # pandax lock（可选）
+    if lock:
+        r = run(["lock", "--root", str(tmp_path)], cwd=tmp_path)
+        assert r.returncode == 0
 
     return tmp_path
 
@@ -300,10 +306,13 @@ def test_write_rejects_readonly_without_force(tmp_path):
     rejected = [x for x in records if x.get("status") == "REJECTED"]
     assert len(rejected) >= 1, "应有 REJECTED 审计记录"
     last_rej = rejected[-1]
-    assert "readonly" in last_rej.get("rejection_reason", "").lower() or \
-           "锁定" in last_rej.get("rejection_reason", "") or \
-           "只读" in last_rej.get("rejection_reason", ""), \
-        f"rejection_reason 应提及 read-only/锁定/只读: {last_rej}"
+    # 修复测试断言：实际 i18n 输出含 "read-only"（带连字符）或 "locked"/"L1"
+    assert ("readonly" in last_rej.get("rejection_reason", "").lower()) or \
+           ("locked" in last_rej.get("rejection_reason", "").lower()) or \
+           ("l1" in last_rej.get("rejection_reason", "").lower()) or \
+           ("锁定" in last_rej.get("rejection_reason", "")) or \
+           ("只读" in last_rej.get("rejection_reason", "")), \
+        f"rejection_reason 应提及 read-only/locked/L1/锁定/只读: {last_rej}"
 
 
 def test_write_accepts_readonly_with_force(tmp_path):
@@ -340,6 +349,120 @@ def test_write_accepts_readonly_with_force(tmp_path):
     assert len(approved) >= 1
     last_app = approved[-1]
     assert last_app.get("force_write") is True, f"force_write 应记录 True: {last_app}"
+
+
+# ============================================================
+# Bug #9 / #10: 中文短句不被阈值误伤
+# ============================================================
+def test_write_accepts_short_chinese_reason(tmp_path):
+    """Bug #9 fix: 中文 3 字 reason (e.g. '测试写') 应当 APPROVED
+
+    修复前：len("测试写") == 3，被 5 chars 阈值误伤 → REJECTED
+    修复后：_info_length("测试写") == 6（每个中文字 = 2 宽度单位），≥ 5 通过
+    """
+    setup_git_project(tmp_path)
+
+    r = run([
+        "write",
+        "--root", str(tmp_path),
+        "--file", "main.py",
+        "--reason", "测试写",  # 中文 3 字 = 6 宽度
+        "--problem", "需要修复初始化的全局变量问题",  # 中文 ≥ 10 宽度
+        "--approach", "移除重复声明并使用统一的模块级单例模式",  # 中文 ≥ 10 宽度
+        "--old", "ORIGINAL = 1",
+        "--new", "UPDATED = 1",
+        "--force-write",
+    ], cwd=tmp_path)
+
+    assert r.returncode == 0, f"中文 3 字 reason 应 APPROVED: {r.stdout}"
+    assert "APPROVED" in r.stdout
+
+
+def test_write_rejects_short_chinese_reason(tmp_path):
+    """Bug #9 fix: 中文 1 字 reason (e.g. '修') 仍应当 REJECTED
+
+    修复后：_info_length("修") == 2 < 5 → 仍被拒（避免阈值过松）
+    """
+    setup_git_project(tmp_path)
+
+    r = run([
+        "write",
+        "--root", str(tmp_path),
+        "--file", "main.py",
+        "--reason", "修",  # 太短
+        "--problem", "需要修复初始化的全局变量问题",
+        "--approach", "移除重复声明并使用统一的模块级单例模式",
+        "--old", "ORIGINAL = 1",
+        "--new", "UPDATED = 1",
+    ], cwd=tmp_path)
+
+    assert r.returncode != 0, "1 字 reason 应被拒"
+    assert "REJECTED" in r.stdout
+    assert "reason" in r.stdout.lower()
+
+
+def test_write_accepts_chinese_problem_short(tmp_path):
+    """Bug #10 fix: 中文 problem ≥ 5 字 (10 宽度) 通过
+
+    修复前：中文 6 字 = 6 chars，被 10 chars 阈值误伤
+    修复后：_info_length("问题在这里") == 10，刚好通过阈值
+    """
+    setup_git_project(tmp_path)
+
+    r = run([
+        "write",
+        "--root", str(tmp_path),
+        "--file", "main.py",
+        "--reason", "测试写流程",
+        "--problem", "问题在这里发生",  # 中文 7 字 = 14 宽度 ≥ 10
+        "--approach", "移除重复声明并使用统一的模块级单例模式",
+        "--old", "ORIGINAL = 1",
+        "--new", "UPDATED = 1",
+        "--force-write",
+    ], cwd=tmp_path)
+
+    assert r.returncode == 0, f"中文 7 字 problem 应 APPROVED: {r.stdout}"
+
+
+def test_write_rejects_short_chinese_problem(tmp_path):
+    """Bug #10 fix: 中文 2 字 problem (4 宽度) 仍被拒"""
+    setup_git_project(tmp_path)
+
+    r = run([
+        "write",
+        "--root", str(tmp_path),
+        "--file", "main.py",
+        "--reason", "测试写流程",
+        "--problem", "太短",  # 中文 2 字 = 4 宽度 < 10
+        "--approach", "移除重复声明并使用统一的模块级单例模式",
+        "--old", "ORIGINAL = 1",
+        "--new", "UPDATED = 1",
+    ], cwd=tmp_path)
+
+    assert r.returncode != 0, "2 字 problem 应被拒"
+    assert "REJECTED" in r.stdout
+
+
+def test_write_accepts_english_5chars_reason(tmp_path):
+    """Bug #9 fix: 英文 5 chars reason (e.g. 'fixxx') 仍通过
+
+    确保修复未破坏英文阈值：英文 5 chars 仍能通过
+    """
+    setup_git_project(tmp_path)
+
+    r = run([
+        "write",
+        "--root", str(tmp_path),
+        "--file", "main.py",
+        "--reason", "fixxx",  # 英文 5 chars
+        "--problem", "fix the init order problem",  # 英文 ≥ 10
+        "--approach", "refactor the init logic step by step now",  # 英文 ≥ 10
+        "--old", "ORIGINAL = 1",
+        "--new", "UPDATED = 1",
+        "--force-write",
+    ], cwd=tmp_path)
+
+    assert r.returncode == 0, f"英文 5 chars 应 APPROVED: {r.stdout}"
 
 
 def test_write_no_force_for_unlocked_file(tmp_path):

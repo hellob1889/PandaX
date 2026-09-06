@@ -463,6 +463,40 @@ class _OldNotFoundError(Exception):
         self.snippet = snippet
 
 
+def _info_length(s: str) -> int:
+    """
+    Bug #9/#10 fix: 计算字符串的"信息长度"（unicode 显示宽度）。
+
+    第一性原则：阈值应当反映"内容是否有足够语义价值"，而不是字符数。
+    - 1 个 CJK 字符（中文/日文/韩文）= 2 宽度单位（信息密度 ≈ 2 个英文字符）
+    - 1 个 Fullwidth 字符（全角标点）= 2 宽度单位
+    - 1 个 ASCII/拉丁字符 = 1 宽度单位
+    - 控制字符 = 0
+
+    修复前：len("测试") == 2，被 reason 阈值 (5 chars) 误伤
+    修复后：info_len("测试") == 4，仍然 < 5 阈值 — 仍可能被误伤
+           所以同时降低阈值到合理水平（reason 5、problem/approach 10）
+
+    典型用例：
+    - "fix" (3 chars) → 3，< 5 拒绝（合理）
+    - "测试" (2 chars) → 4，< 5 拒绝（仍然）
+    - "测试写" (3 chars) → 6，≥ 5 通过（中文短句 OK）
+    - "fix bug" (7 chars) → 7，≥ 5 通过
+    - "需要修复初始化函数" (9 chars) → 18，≥ 5 通过
+    """
+    import unicodedata as _ud
+    n = 0
+    for ch in s:
+        if not ch.isprintable():
+            continue  # 跳过控制字符（不计入信息量）
+        width = _ud.east_asian_width(ch)
+        if width in ("W", "F"):  # Wide / Fullwidth
+            n += 2
+        else:  # Na / H / A / N
+            n += 1
+    return n
+
+
 def _effective_suffix(path: Path) -> str:
     """
     Phase 4.6+: 返回文件的有效后缀（正确处理隐藏文件如 .env, .gitignore, .env.local）。
@@ -664,16 +698,19 @@ def cmd_write(args):
     reject_reason = None
     if not reason:
         reject_reason = "reason 字段为空"
-    elif len(reason) < min_reason:
-        reject_reason = f"reason 长度 < {min_reason}"
+    # Bug #9 fix: 用 _info_length() 计算 unicode 宽度，1 中文字 = 2 宽度单位，
+    # 避免"测试"（2 中文字 = 4 宽度）被 5 字符阈值误伤（修复前 len=2 < 5）
+    elif _info_length(reason) < min_reason:
+        reject_reason = f"reason 长度不足（< {min_reason} 宽度单位，含 CJK 字符按 2 计）"
     elif not problem:
         reject_reason = "problem 字段为空"
-    elif len(problem) < min_problem:
-        reject_reason = f"problem 长度 < {min_problem}"
+    # Bug #10 fix: 同上，problem/approach 也用 _info_length()
+    elif _info_length(problem) < min_problem:
+        reject_reason = f"problem 长度不足（< {min_problem} 宽度单位，含 CJK 字符按 2 计）"
     elif not approach:
         reject_reason = "approach 字段为空"
-    elif len(approach) < min_approach:
-        reject_reason = f"approach 长度 < {min_approach}"
+    elif _info_length(approach) < min_approach:
+        reject_reason = f"approach 长度不足（< {min_approach} 宽度单位，含 CJK 字符按 2 计）"
 
     target_rel = args.file
     target = root / target_rel
