@@ -22,10 +22,15 @@ import argparse
 import fnmatch
 import hashlib
 import os
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+# README summary 用的分组正则
+_RE_GROUP = re.compile(r"^(P[0-3]|UX)(?:\b| )")
+_RE_STEP = re.compile(r"\*\*([^*]+)\*\*")
 
 # Phase 10: i18n（国际化）— t() 函数 + 语言包
 from pandax import i18n as _i18n
