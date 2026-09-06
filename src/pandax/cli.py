@@ -1933,6 +1933,17 @@ def main(argv=None):
     # argparse parse_known_args 会把子命令后的 --lang 当作 status 的未知参数，
     # 导致 `pandax status --lang=en --root .` 不生效。手动预提取后塞回 args.lang。
     import re as _re
+    # Bug #48 fix: 预扫描 --trust-default / --silent（位置不敏感，类似 --lang）
+    # 根因：argparse 的 --trust-default 必须在子命令前才能被顶级 parser 识别
+    #       否则 parse_known_args 把 --trust-default 当作子命令的未知参数
+    has_trust_default = any(
+        a == "--trust-default" or a.startswith("--trust-default=")
+        for a in argv_list
+    )
+    has_silent = any(
+        a == "--silent" or a.startswith("--silent=")
+        for a in argv_list
+    )
     cleaned_argv = []
     lang_override = None
     i = 0
@@ -1947,8 +1958,20 @@ def main(argv=None):
             lang_override = argv_list[i + 1]
             i += 2
             continue
+        # Bug #48 fix: 从 cleaned_argv 中移除（移到最前面）
+        if arg == "--trust-default" or arg.startswith("--trust-default="):
+            i += 1
+            continue
+        if arg == "--silent" or arg.startswith("--silent="):
+            i += 1
+            continue
         cleaned_argv.append(arg)
         i += 1
+    # 强制加到 cleaned_argv 最前面（确保顶级 parser 看到）
+    if has_silent:
+        cleaned_argv.insert(0, "--silent")
+    if has_trust_default:
+        cleaned_argv.insert(0, "--trust-default")
     # 验证 lang_override 值合法（必须是 zh-CN / en）
     if lang_override is not None and lang_override not in ("zh-CN", "en"):
         # 不合法的 --lang 值让 argparse 自然报错（用户得到更友好的错误）
@@ -1971,10 +1994,10 @@ def main(argv=None):
     if "--update-fingerprint" in argv_list:
         pass  # 走下面 4. 分支
     elif getattr(args, "trust_default", False):
-        # Phase 9+ --trust-default：使用默认密码 0000 自动初始化/更新指纹（右键场景）
+        # Bug #48 fix: --trust-default 自动接受新指纹（pip install --upgrade 场景）
         # 目的：让普通用户不需要手动跑 `pandax --update-fingerprint 0000`
         if not check_fingerprint(silent=True):
-            # 指纹不匹配 → 不要阻断命令，而是用 0000 自动重写
+            # 指纹不匹配 → 自动重写（用真实 cli.py 哈希）
             new_fp = compute_fingerprint()
             FP_PATH.parent.mkdir(parents=True, exist_ok=True)
             FP_PATH.write_text(new_fp, encoding="utf-8")
