@@ -94,11 +94,14 @@ def test_lock_reports_count(tmp_path):
 
 
 def test_lock_without_init_fails_gracefully(tmp_path):
-    """未 init 的目录 lock 应优雅处理（不崩溃）"""
-    # tmp_path 没有 .pandax/，应报错但不崩溃
-    result = run_cmd(["lock", "--root", str(tmp_path)], cwd=tmp_path)
-    # 期望：要么 rc != 0，要么有警告信息（取决于设计）
-    # 决策：rc != 0 + stderr 报错
+    """未 init 的目录 lock 应优雅处理（不崩溃）
+
+    Bug #28 (方案 A): 默认 lock 会自动 init（首次使用友好）
+    要测试"未 init 失败"行为，必须显式加 --no-auto-init 禁用自动 init
+    """
+    # tmp_path 没有 .pandax/，应报错但不崩溃（用 --no-auto-init 禁用自动 init）
+    result = run_cmd(["lock", "--root", str(tmp_path), "--no-auto-init"], cwd=tmp_path)
+    # 期望：rc != 0
     assert result.returncode != 0, "未 init 的目录 lock 应失败"
 
 
