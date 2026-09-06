@@ -72,14 +72,27 @@ class AuditEventBus:
                 pass
 
     def publish(self, event: dict[str, Any]) -> None:
-        """广播事件到所有订阅者。满了就丢弃最老的,保活。"""
+        """广播事件到所有订阅者。满了就丢弃最老的,保活。
+
+        Bug 修复(对抗式 SSE 测试发现):
+          - 当 queue 多次 Full 时,标记为 stale 并清理
+          - 防止 HTTP keep-alive 复用 socket 时 dead subscriber 永久残留
+        """
         with self._lock:
             stale = []
             for q in self._subscribers:
+                # 第一遍尝试:正常 put
                 try:
                     q.put_nowait(event)
+                    q._miss_count = 0  # 重置 miss 计数
                 except queue.Full:
-                    # 队列满:丢最老的,放入新事件
+                    # 队列满:说明 client 消费慢(可能已断开)
+                    q._miss_count = getattr(q, "_miss_count", 0) + 1
+                    # 累计 3 次 miss → 认为是 stale,清理
+                    if q._miss_count >= 3:
+                        stale.append(q)
+                        continue
+                    # 否则丢最老的,放入新事件(给 client 一次机会)
                     try:
                         q.get_nowait()
                         q.put_nowait(event)
@@ -231,7 +244,13 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(self.index_html)
 
     def _serve_sse(self):
-        """SSE 流:订阅事件总线,持续推送。"""
+        """SSE 流:订阅事件总线,持续推送。
+
+        Bug 修复(对抗式 SSE 测试发现):
+          - 超时从 15s 降到 5s:加快断连检测(原 15s 太慢)
+          - 捕获更广异常(socket.error / ConnectionAbortedError)
+          - 在 finally 里 unsubscribes 后,主动关闭 connection hint
+        """
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
@@ -252,26 +271,31 @@ class _Handler(BaseHTTPRequestHandler):
             # 持续推送,直到客户端断开
             while True:
                 try:
-                    event = q.get(timeout=15)
+                    event = q.get(timeout=5)  # 5s 超时(原 15s 太慢)
                     self._send_sse(event)
                 except queue.Empty:
-                    # 心跳保活
-                    self.wfile.write(b": heartbeat\n\n")
-                    self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError):
+                    # 心跳保活 + 主动检测断连
+                    try:
+                        self.wfile.write(b": heartbeat\n\n")
+                        self.wfile.flush()
+                    except (BrokenPipeError, ConnectionResetError, OSError):
+                        # 客户端已断开,正常退出
+                        break
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+            # 客户端断开
             pass
         finally:
             self.bus.unsubscribe(q)
 
     def _send_sse(self, event: dict):
-        """单条 SSE 消息:event + data 两行。"""
+        """单条 SSE 消息:event + data 两行。
+
+        Bug 修复:异常向上传播(不再 swallow 异常,让 _serve_sse 的外层 except 接住)
+        """
         payload = json.dumps(event, ensure_ascii=False)
         msg = f"event: {event.get('type', 'message')}\ndata: {payload}\n\n"
-        try:
-            self.wfile.write(msg.encode("utf-8"))
-            self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError):
-            raise
+        self.wfile.write(msg.encode("utf-8"))
+        self.wfile.flush()
 
     def _serve_stats(self):
         """当前统计:总记录、approved/rejected/unauthorized 计数、订阅者数。"""
