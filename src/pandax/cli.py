@@ -1057,7 +1057,7 @@ def _print_log(records: list[dict]):
 
 
 def _export_html(records: list[dict], path: Path):
-    """导出为简单 HTML 报告"""
+    """导出为简单 HTML 报告（Bug #26 修复：标签本地化）"""
     rows = ""
     for r in records:
         status = r.get("status", "?")
@@ -1072,7 +1072,7 @@ def _export_html(records: list[dict], path: Path):
         </tr>"""
 
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>PandaX 审计报告</title>
+<html><head><meta charset="utf-8"><title>{t("export_title")}</title>
 <style>
 body {{ font-family: -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }}
 table {{ width: 100%; border-collapse: collapse; }}
@@ -1080,10 +1080,10 @@ th, td {{ padding: 8px 12px; border: 1px solid #30363d; text-align: left; }}
 th {{ background: #1c2128; color: #f0f6fc; }}
 </style></head>
 <body>
-<h1>PandaX 审计报告</h1>
-<p>共 {len(records)} 条记录</p>
+<h1>{t("export_title")}</h1>
+<p>{t("export_summary", n=len(records))}</p>
 <table>
-<thead><tr><th>时间</th><th>状态</th><th>ID</th><th>文件</th><th>原因</th></tr></thead>
+<thead><tr><th>{t("export_col_time")}</th><th>{t("export_col_status")}</th><th>{t("export_col_id")}</th><th>{t("export_col_file")}</th><th>{t("export_col_reason")}</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
 </body></html>"""

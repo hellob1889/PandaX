@@ -144,6 +144,16 @@ TRANSLATIONS = {
         "log_export_err_format": "[ERROR] --output 需要和 --format 一起使用",
         "log_export_err_output": "[ERROR] --format 需要和 --output 一起使用",
         "log_export_no_records": "[INFO] 无匹配记录，未生成导出文件",
+
+        # Bug #26 fix: export 报告标签本地化（html/md/text）
+        "export_title": "PandaX 审计报告",
+        "export_summary": "记录数: {n}",
+        "export_exported_at": "导出时间: {ts}",
+        "export_col_time": "时间",
+        "export_col_status": "状态",
+        "export_col_id": "ID",
+        "export_col_file": "文件",
+        "export_col_reason": "原因",
         "log_field_file": "文件",
         "log_field_action": "操作",
         "log_field_time": "时间",
@@ -381,6 +391,16 @@ TRANSLATIONS = {
         "log_export_err_format": "[ERROR] --output requires --format",
         "log_export_err_output": "[ERROR] --format requires --output",
         "log_export_no_records": "[INFO] No matching records, output file not generated",
+
+        # Bug #26 fix: export report labels i18n (html/md/text)
+        "export_title": "PandaX Audit Report",
+        "export_summary": "Records: {n}",
+        "export_exported_at": "Exported at: {ts}",
+        "export_col_time": "Time",
+        "export_col_status": "Status",
+        "export_col_id": "ID",
+        "export_col_file": "File",
+        "export_col_reason": "Reason",
         "_export_unsupported": '[ERROR] Unsupported format: "{fmt}"',
         "_export_supported": "[INFO] Supported: {supported}",
         "_log_no_init": "{root} not initialized as PandaX project or no audit records",

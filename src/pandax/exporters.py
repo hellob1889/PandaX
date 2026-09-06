@@ -27,6 +27,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from .i18n import t
+
 # ============================================================
 # 通用工具
 # ============================================================
@@ -92,11 +94,12 @@ def export_json(records: list[dict], path: Path):
 # ============================================================
 
 def export_markdown(records: list[dict], path: Path):
+    # Bug #26 fix: 标题/导出时间/记录数 走 t()
     lines = []
-    lines.append("# PandaX 审计报告")
+    lines.append(f"# {t('export_title')}")
     lines.append("")
-    lines.append(f"- 导出时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append(f"- 记录数：{len(records)}")
+    lines.append(f"- {t('export_exported_at', ts=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}")
+    lines.append(f"- {t('export_summary', n=len(records))}")
     lines.append("")
     # 表头
     lines.append("| " + " | ".join(EXPORT_COLUMNS) + " |")
@@ -136,7 +139,7 @@ def export_html(records: list[dict], path: Path):
         )
 
     html = f"""<!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>PandaX 审计报告</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>{t("export_title")}</title>
 <style>
 body {{ font-family: -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }}
 h1 {{ color: #f0f6fc; }}
@@ -145,10 +148,10 @@ th, td {{ padding: 8px 12px; border: 1px solid #30363d; text-align: left; }}
 th {{ background: #1c2128; color: #f0f6fc; }}
 </style></head>
 <body>
-<h1>PandaX 审计报告</h1>
-<p>导出时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 记录数：{len(records)}</p>
+<h1>{t("export_title")}</h1>
+<p>{t("export_exported_at", ts=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))} | {t("export_summary", n=len(records))}</p>
 <table>
-<thead><tr><th>时间</th><th>状态</th><th>ID</th><th>文件</th><th>原因</th></tr></thead>
+<thead><tr><th>{t("export_col_time")}</th><th>{t("export_col_status")}</th><th>{t("export_col_id")}</th><th>{t("export_col_file")}</th><th>{t("export_col_reason")}</th></tr></thead>
 <tbody>{''.join(rows)}</tbody>
 </table>
 </body></html>"""
@@ -538,10 +541,11 @@ FORMATTERS: dict[str, Callable[[list[dict], Path], None]] = {
 
 def export_text(records: list[dict], path: Path):
     """text 格式：写入文件（不是 stdout）"""
+    # Bug #26 fix: 标题/导出时间本地化（保持 record 行的 id=/file= 后续 #14 单独处理）
     lines = []
     lines.append("=" * 80)
-    lines.append(f"PandaX 审计报告（共 {len(records)} 条）")
-    lines.append(f"导出时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append(f"{t('export_title')} ({len(records)} records)")
+    lines.append(f"{t('export_exported_at', ts=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}")
     lines.append("=" * 80)
     for rec in records:
         lines.append("")
