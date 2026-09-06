@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.1] - 2026-09-06
 
-### Fixed (25 bugs)
+### Fixed (28 bugs)
 
 **P0 安全 (5)**：
 - **#8 + #7** install-context 通配符阻塞（PS5.1 registry provider 改用 .NET API）
@@ -43,15 +43,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **#25** 独立 `pandax export` 子命令（语义清晰，不再借用 log）
 - **#28** `pandax lock` 一键启用（未 init 时自动 init，首次使用友好）
 
+**工程化 (3)**：
+- **#TBD 版本号漂移** `src/pandax/__init__.py` 的 `__version__` 字面量与 `pyproject.toml` 漂移 → 改为 `importlib.metadata.version()` 动态读取 + pyproject.toml fallback
+- **#TBD README 分组标签** `load_readme_summary` 解析 H3 分组标题，把 P0/P1/P2/P3/UX 标签附加到 step 行，CLI 启动 banner 显示完整 23 个 bug 的分组前缀
+- **#TBD 自指纹 CRLF 根因** `python -m build` 在 Windows 上把 cli.py LF 转 CRLF（81694 vs 79644 bytes），导致 SHA256 不匹配；wheel 后处理 normalize LF
+
+### Added
+- **`tests/test_version_single_source.py`**（5 个测试）：版本号单一事实源回归（pyproject → METADATA → importlib.metadata → 源码 import）
+- **`--trust-default`** 在子命令后位置无关生效（#48 注册表右键场景）
+- **右键菜单端到端测试覆盖**：Init/Lock/Status/Unlock + Bug #48 + 路径含空格/中文
+
 ### Changed
 - README summary 自动取最新 Phase 而非旧 Step（#4）
 - 右键菜单加 #28 一键 Lock 流程（自动 init）
 - i18n 字典从 184 keys 增至 200+ keys
+- README badges 同步：Tests 264 / Bugs 28 / Phase v0.7.1
 
 ### Stats
-- **测试**：243 passed（+13 新测试覆盖 #23/#24/#26/#29/#39/#48）
+- **测试**：264 passed（+21 新测试：版本一致性 5 + #48 3 + #29/#39 8 + 其他 5）
 - **零回归**：所有原有测试保持通过
-- **打包**：wheel 71 KB + sdist 146 KB + ZIP 224 KB
+- **打包**：wheel 73 KB + sdist 156 KB + ZIP 235 KB
+- **CLI 启动 banner**：显示 P0/P1/P2/P3/UX 分组标签的 23 个 bug 修复列表
+- **右键菜单**：HKCU 注册表 4 项 + macOS Quick Action + Linux Nautilus/Dolphin（v0.7.0 已有）
 
 ## [0.7.0] - 2026-09-05
 

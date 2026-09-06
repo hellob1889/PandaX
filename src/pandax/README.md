@@ -58,7 +58,7 @@
 **Phase 4：跨平台右键菜单（P1）** ✅ 全部完成（Windows/macOS/Linux + i18n）
 **Phase 5：环境诊断（P1）** ✅ 全部完成（doctor.py + 13 类 auto-fix + PATH 持久化）
 
-**当前测试数**：243 passed（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e）
+**当前测试数**：264 passed（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / version-source-of-truth）
 
 **Phase 6：MCP Server / TRAE Skill（P2）**：下一步
 

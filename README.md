@@ -241,7 +241,7 @@ pytest tests/ -v
 | v0.6.1 | ✅ | L3 hook 强化（实战验证） |
 | **v0.6.2** | ✅ | 隐藏文件锁定 bug 修复 |
 | **v0.7.0** | ✅ | Phase 9 OS 右键菜单 + Phase 10 i18n（zh-CN/en）+ doctor.py 环境自检 + auto-fix 13 类 + PATH 持久化 |
-| **v0.7.1** | ✅ | **25 个 bug 全修**：P0 安全（CRLF/dedupe/watchdog flush）+ UX（一键 lock / 独立 export / init 保留用户配置）+ i18n 完整性（横切 #14/#17/#26/#39）+ 首次使用友好（`pandax lock` 自动 init） |
+| **v0.7.1** | ✅ | **28 个 bug 全修**：P0 安全（#8/#12×2/#22/#23）+ P1（#2/#5/#15/#29）+ P2（#21/#6/#20/#9-#10）+ P3（#13/#4/#26/#39）+ UX（#14/#17/#48/#25/#28）+ 工程化（#版本漂移 / #README 分组标签 / #CRLF 根因），264 测试通过 |
 
 完整历史：[CHANGELOG.md](CHANGELOG.md)
 
