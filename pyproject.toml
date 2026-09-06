@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pandax"
-version = "0.7.0"
+version = "0.7.1"
 description = "AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change"
 readme = "README.md"
 license = {text = "MIT"}

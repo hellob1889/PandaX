@@ -13,8 +13,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/pandax?color=blue)](https://pypi.org/project/pandax/)
 [![Python](https://img.shields.io/pypi/pyversions/pandax)](https://pypi.org/project/pandax/)
 [![License](https://img.shields.io/pypi/l/pandax)](https://github.com/pandax/pandax/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-191%20passed-brightgreen)](https://github.com/pandax/pandax)
-[![i18n](https://img.shields.io/badge/i18n-184%2F184%20keys%20100%25-blueviolet)](https://github.com/pandax/pandax/blob/main/docs/i18n.md)
+[![Tests](https://img.shields.io/badge/tests-243%20passed-brightgreen)](https://github.com/pandax/pandax)
+[![Bugs](https://img.shields.io/badge/bugs-25%20fixed-success)](https://github.com/pandax/pandax/releases)
+[![i18n](https://img.shields.io/badge/i18n-200%2B%20keys%20100%25-blueviolet)](https://github.com/pandax/pandax/blob/main/docs/i18n.md)
 [![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/pandax/pandax/blob/main/.github/workflows/lint.yml)
 [![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax/)
 [![Phase](https://img.shields.io/badge/status-v0.7.0%20production--ready-success)](https://github.com/pandax/pandax/releases)
@@ -225,7 +226,7 @@ pip install -e .[dev]
 pytest tests/ -v
 ```
 
-当前测试数：**140 passed**
+当前测试数：**243 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e）
 
 ### 路线图
 
@@ -240,6 +241,7 @@ pytest tests/ -v
 | v0.6.1 | ✅ | L3 hook 强化（实战验证） |
 | **v0.6.2** | ✅ | 隐藏文件锁定 bug 修复 |
 | **v0.7.0** | ✅ | Phase 9 OS 右键菜单 + Phase 10 i18n（zh-CN/en）+ doctor.py 环境自检 + auto-fix 13 类 + PATH 持久化 |
+| **v0.7.1** | ✅ | **25 个 bug 全修**：P0 安全（CRLF/dedupe/watchdog flush）+ UX（一键 lock / 独立 export / init 保留用户配置）+ i18n 完整性（横切 #14/#17/#26/#39）+ 首次使用友好（`pandax lock` 自动 init） |
 
 完整历史：[CHANGELOG.md](CHANGELOG.md)
 

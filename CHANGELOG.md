@@ -5,6 +5,54 @@ All notable changes to PandaX will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-09-06
+
+### Fixed (25 bugs)
+
+**P0 安全 (5)**：
+- **#8 + #7** install-context 通配符阻塞（PS5.1 registry provider 改用 .NET API）
+- **#12 v1** write 失败时 mode 恢复（try/finally + 原始 mode 恢复）
+- **#12 v2** write 默认拒绝 ReadOnly 锁定文件（`--force-write` 显式 opt-in）
+- **#22** pre-commit hook CRLF→LF（bash 在 *nix 上不支持 CRLF，P0 安全）
+- **#23** watchdog dedupe（1 次写入只产 1 条审计，2 秒去重窗口）
+
+**P1 (4)**：
+- **#2** status 用 `_iter_protected_files` 共享 helper（19 种扩展名全覆盖）
+- **#5** `--lang` 全局参数支持任意位置（main() 预扫描 argv）
+- **#15** PowerShell subprocess `-NoProfile -NonInteractive` + timeout=60
+- **#29** `pandax init` merge-preserve（不再覆盖用户自定义 config.json）
+
+**P2 (5)**：
+- **#21** doctor/write git 检测一致性（共享 `_resolve_git_exe()`）
+- **#6** log 标签 i18n 完整（REJECTED/UNAUTHORIZED 走 t()）
+- **#20** ci 区分空仓库 vs 首次 commit（智能 baseline fallback）
+- **#9 / #10** 智能长度阈值（`_info_length` unicode 宽度，1 中文字 = 2 宽度）
+
+**P3 (4)**：
+- **#13** log `-n` 简写作为 `--recent` 别名
+- **#4** README summary 显示最新 Phase 而非旧 Step
+- **#26** export html/md/text 报告标签本地化
+- **#39** cmd_write 4 处硬编码中文改为 i18n
+
+**UX + 横切 i18n (3)**：
+- **#14** log 在 lang=en 时 Reason 字段本地化
+- **#17** status i18n 完整性
+- **#48** `--trust-default` 自动接受新指纹（pip install --upgrade 场景）
+
+**UX (2)**：
+- **#25** 独立 `pandax export` 子命令（语义清晰，不再借用 log）
+- **#28** `pandax lock` 一键启用（未 init 时自动 init，首次使用友好）
+
+### Changed
+- README summary 自动取最新 Phase 而非旧 Step（#4）
+- 右键菜单加 #28 一键 Lock 流程（自动 init）
+- i18n 字典从 184 keys 增至 200+ keys
+
+### Stats
+- **测试**：243 passed（+13 新测试覆盖 #23/#24/#26/#29/#39/#48）
+- **零回归**：所有原有测试保持通过
+- **打包**：wheel 71 KB + sdist 146 KB + ZIP 224 KB
+
 ## [0.7.0] - 2026-09-05
 
 ### Added (Phase 9: OS 右键菜单集成)

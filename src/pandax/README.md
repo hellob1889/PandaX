@@ -14,29 +14,43 @@
 
 ## 当前阶段
 
-**v0.7.0 — 生产就绪（11 个 critical/high/mid bug 已修）**
+**v0.7.0 — 生产就绪（25 个 bug 全修，243 测试通过）**
 
-- [x] **P0 #8 + #7** — install-context 通配符阻塞（PS5.1 registry provider 改用 .NET API）
+### P0 安全 (5)
+- [x] **#8 + #7** — install-context 通配符阻塞（PS5.1 registry provider 改用 .NET API）
+- [x] **#12 v1** — write 失败时 mode 恢复（try/finally + 原始 mode 恢复）
+- [x] **#12 v2** — write 默认拒绝 ReadOnly 锁定文件（`--force-write` 显式 opt-in）
+- [x] **#22** — pre-commit hook CRLF→LF（bash 在 *nix 上不支持 CRLF，P0 安全）
+- [x] **#23** — watchdog dedupe（1 次写入只产 1 条审计，2 秒去重窗口）
 
-- [x] **P0 #12 v1** — write 失败时 mode 恢复（try/finally + 原始 mode 恢复）
+### P1 (4)
+- [x] **#2** — status 用 `_iter_protected_files` 共享 helper（19 种扩展名全覆盖）
+- [x] **#5** — `--lang` 全局参数支持任意位置（main() 预扫描 argv）
+- [x] **#15** — PowerShell subprocess `-NoProfile -NonInteractive` + timeout=60
+- [x] **#29** — pandax init merge-preserve（不再覆盖用户自定义 config.json）
 
-- [x] **P0 #12 v2** — write 默认拒绝 ReadOnly 锁定文件（`--force-write` 显式 opt-in）
+### P2 (5)
+- [x] **#21** — doctor/write git 检测一致性（共享 `_resolve_git_exe()`）
+- [x] **#6** — log 标签 i18n 完整（REJECTED/UNAUTHORIZED 走 t()）
+- [x] **#20** — ci 区分空仓库 vs 首次 commit（智能 baseline fallback）
+- [x] **#9 / #10** — 智能长度阈值（`_info_length` unicode 宽度，1 中文字 = 2 宽度）
 
-- [x] **P1 #2** — status 用 `_iter_protected_files` 共享 helper（19 种扩展名全覆盖）
+### P3 (4)
+- [x] **#13** — log `-n` 简写作为 `--recent` 别名
+- [x] **#4** — README summary 显示最新 Phase 而非旧 Step
+- [x] **#26** — export html/md/text 报告标签本地化
+- [x] **#39** — cmd_write 4 处硬编码中文改为 i18n
 
-- [x] **P1 #5** — `--lang` 全局参数支持任意位置（main() 预扫描 argv）
+### UX + 横切 i18n (3)
+- [x] **#14** — log 在 lang=en 时 Reason 字段本地化
+- [x] **#17** — status i18n 完整性
+- [x] **#48** — `--trust-default` 自动接受新指纹（pip install --upgrade 场景）
 
-- [x] **P1 #15** — PowerShell subprocess `-NoProfile -NonInteractive` + timeout=60
+### UX (2)
+- [x] **#25** — 独立 `pandax export` 子命令（语义清晰，不再借用 log）
+- [x] **#28** — `pandax lock` 一键启用（未 init 时自动 init，首次使用友好）
 
-- [x] **P2 #21** — doctor/write git 检测一致性（共享 `_resolve_git_exe()`）
-
-- [x] **P2 #6** — log 标签 i18n 完整（REJECTED/UNAUTHORIZED 走 t()）
-
-- [x] **P2 #20** — ci 区分空仓库 vs 首次 commit（智能 baseline fallback）
-
-- [x] **P2 #9 / #10** — 智能长度阈值（`_info_length` unicode 宽度，1 中文字 = 2 宽度）
-
-- [x] **P3 #13** — log `-n` 简写作为 `--recent` 别名
+### Phase 进度
 
 **Phase 1：CLI MVP（P0）** ✅ 全部完成（Step 0–8）
 **Phase 2：监控加固（P1）** ✅ 全部完成（Step 9–13）
@@ -44,7 +58,7 @@
 **Phase 4：跨平台右键菜单（P1）** ✅ 全部完成（Windows/macOS/Linux + i18n）
 **Phase 5：环境诊断（P1）** ✅ 全部完成（doctor.py + 13 类 auto-fix + PATH 持久化）
 
-**当前测试数**：199 passed（覆盖 i18n / write / status / lock / ci / watchdog / e2e）
+**当前测试数**：243 passed（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e）
 
 **Phase 6：MCP Server / TRAE Skill（P2）**：下一步
 
