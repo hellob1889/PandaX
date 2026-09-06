@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **#TBD README 分组标签** `load_readme_summary` 解析 H3 分组标题，把 P0/P1/P2/P3/UX 标签附加到 step 行，CLI 启动 banner 显示完整 23 个 bug 的分组前缀
 - **#TBD 自指纹 CRLF 根因** `python -m build` 在 Windows 上把 cli.py LF 转 CRLF（81694 vs 79644 bytes），导致 SHA256 不匹配；wheel 后处理 normalize LF
 - **#TBD 方案 A 文件夹图标** `pandax lock` 同步切换 Windows 文件夹图标(写入 `desktop.ini` 引用 pandaX 锁 ICO),`unlock` 清理;非 Windows 平台 silent skip;ICO 内置到 wheel(多尺寸 16/32/48/64/128/256);**不影响 TortoiseGit 9 个 overlay 名额**(替换文件夹主图标,不是叠加)
+- **#TBD Git 兼容性** `pandax init` 在 git 仓库中自动维护 `.gitignore`(追加 `.pandax/` + `desktop.ini` 条目,不覆盖用户现有规则);`pandax status` 显示 `[Git 集成]` 检查段;13 个新测试覆盖(幂等 / 保留现有规则 / 跳过非 git / 部分缺失 / 真实 git 验证)
 
 ### Added
 - **`tests/test_version_single_source.py`**（5 个测试）：版本号单一事实源回归（pyproject → METADATA → importlib.metadata → 源码 import）

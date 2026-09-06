@@ -480,6 +480,22 @@ def cmd_init(args):
     print(f"  {t('init_audit', path=audit_path)}")
     if config["binary_protected_extensions"]:
         print(f"  {t('init_binary', path=pandax_dir / 'binary_snapshots.json')}")
+
+    # 方案 A + Git 兼容性: 自动维护 .gitignore,避免 desktop.ini / .pandax/ 被误 commit
+    # 对抗式审查:
+    #   - 只在 git 仓库里操作(非 git 目录不污染)
+    #   - 幂等:已正确配置的不重复添加
+    #   - 保留用户现有 .gitignore 条目
+    try:
+        from pandax.gitignore_helper import ensure_gitignore
+        changed, msg = ensure_gitignore(root)
+        if "[SKIP]" not in msg:
+            print(f"  {msg}")
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"  [WARN] .gitignore 维护失败(不影响 init): {e}")
+
     return 0
 
 
@@ -1311,6 +1327,19 @@ def cmd_status(args):
         print(t("status_watch_on", pid=pid))
     else:
         print(t("status_watch_off"))
+    print()
+    # Git 集成状态(v0.7.1+方案A):检查 .gitignore 是否正确排除 PandaX 自动产物
+    try:
+        from pandax.gitignore_helper import is_git_repo, check_gitignore
+        if is_git_repo(root):
+            ok, missing = check_gitignore(root)
+            if ok:
+                print(t("status_gitignore_ok") if "status_gitignore_ok" in dir(__builtins__) else "[OK] Git 集成:.gitignore 已正确排除 .pandax/ + desktop.ini")
+            else:
+                miss_names = [e for e in missing if not e.startswith("#")]
+                print(t("status_gitignore_missing", miss=", ".join(miss_names)) if "status_gitignore_missing" in dir(__builtins__) else f"[WARN] Git 集成:.gitignore 缺失 {miss_names} → 重跑 pandax init 自动修复")
+    except ImportError:
+        pass
     print()
 
     # L5: 指纹状态
