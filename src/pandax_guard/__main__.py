@@ -38,6 +38,14 @@ from watchdog.observers import Observer
 from pandax.i18n import t, init as i18n_init
 
 
+# Bug #23 fix: 同文件同事件在短时间内重复触发时应去重
+# 对抗式审查：
+#   - 现象：PowerShell Out-File / 一些编辑器对单次写入会触发多次 on_modified
+#   - 后果：1 次未授权改动 → 4 条 UNAUTHORIZED 审计记录（噪音污染 + 误报）
+#   - 解决：维护 (path, event_type) → last_fire_time 字典，window 秒内视为重复
+_DEDUPE_WINDOW_SEC = 2.0
+
+
 def _effective_suffix(path: Path) -> str:
     """
     Phase 4.6+: 与 cli.py 一致——处理隐藏文件如 .env, .gitignore, .env.local。
@@ -65,6 +73,10 @@ class PandaXHandler(FileSystemEventHandler):
         self.token_path = self.root / ".pandax" / ".audit_token"
         self.pid_path = self.root / ".pandax" / ".watchdog_pid"
         self.exclude_dirs = ("__pycache__", ".git", ".pandax")
+
+        # Bug #23 fix: 同文件同事件去重（避免 1 次写入产生多条审计记录）
+        # key = (rel_path_str, event_type) → last_fire_time (time.time())
+        self._recent_events: dict[tuple[str, str], float] = {}
 
         # 从 config.json 读取 protected_extensions（Phase 4.6）
         config_path = self.root / ".pandax" / "config.json"
@@ -159,7 +171,7 @@ class PandaXHandler(FileSystemEventHandler):
             )
             return r.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-            print(t("_guard_git_checkout_fail", err=e))
+            print(t("_guard_git_checkout_fail", err=e), flush=True)
             return False
 
     def _auto_lock(self, file_path: Path):
@@ -168,11 +180,37 @@ class PandaXHandler(FileSystemEventHandler):
             current = file_path.stat().st_mode
             readonly = current & ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH
             os.chmod(file_path, readonly)
-            print(t("_guard_auto_lock", name=file_path.name))
+            print(t("_guard_auto_lock", name=file_path.name), flush=True)
         except OSError as e:
-            print(t("_guard_auto_lock_fail", file=file_path, err=e))
+            print(t("_guard_auto_lock_fail", file=file_path, err=e), flush=True)
 
     # ---------------- watchdog 事件 ----------------
+
+    def _is_duplicate_event(self, path: Path, event_type: str) -> bool:
+        """
+        Bug #23 fix: 判断 (path, event_type) 是否在去重窗口内已触发过。
+
+        返回 True 表示应跳过此次处理（重复事件）。
+        同时更新 last_fire_time 为当前时间。
+        """
+        try:
+            rel = str(path.relative_to(self.root)).replace("\\", "/")
+        except ValueError:
+            rel = str(path)
+
+        key = (rel, event_type)
+        now = time.time()
+        last = self._recent_events.get(key)
+        if last is not None and (now - last) < _DEDUPE_WINDOW_SEC:
+            # 窗口内重复 → 跳过
+            return True
+        self._recent_events[key] = now
+        # 简单清理：超过窗口 10× 的旧条目移除（防内存泄漏）
+        cutoff = now - _DEDUPE_WINDOW_SEC * 10
+        stale = [k for k, t in self._recent_events.items() if t < cutoff]
+        for k in stale:
+            self._recent_events.pop(k, None)
+        return False
 
     def on_modified(self, event):
         if event.is_directory:
@@ -182,13 +220,16 @@ class PandaXHandler(FileSystemEventHandler):
             return
         if self._has_audit_token():
             return  # 合法写入（pandax write 已设令牌）
+        # Bug #23 fix: 窗口内重复事件直接跳过
+        if self._is_duplicate_event(path, "modified"):
+            return
 
         # Phase 5: 二进制文件用 SHA256 对比（不能用 chmod 回滚到旧版本除非 git 有历史）
         if self._is_binary_file(path):
             if self._binary_snapshot_match(path):
                 # 文件 SHA256 与 snapshot 一致 = 未变化 = 不是攻击
                 return
-            print(f"[UNAUTHORIZED] binary on_modified: {path.name} (SHA256 mismatch)")
+            print(f"[UNAUTHORIZED] binary on_modified: {path.name} (SHA256 mismatch)", flush=True)
             reverted = self._git_checkout(path)
             self._log_unauthorized(
                 path,
@@ -198,7 +239,8 @@ class PandaXHandler(FileSystemEventHandler):
             return
 
         # 文本文件路径（原有逻辑）
-        print(f"[UNAUTHORIZED] on_modified: {path.name}")
+        # Bug #24 fix: print 显式 flush（前台 watch 输出不被 Python 缓冲）
+        print(f"[UNAUTHORIZED] on_modified: {path.name}", flush=True)
         reverted = self._git_checkout(path)
         self._log_unauthorized(
             path,
@@ -224,8 +266,11 @@ class PandaXHandler(FileSystemEventHandler):
             return
         if self._has_audit_token():
             return
+        # Bug #23 fix: 窗口内重复事件直接跳过
+        if self._is_duplicate_event(path, "moved"):
+            return
 
-        print(f"[UNAUTHORIZED] on_moved: {path.name}")
+        print(f"[UNAUTHORIZED] on_moved: {path.name}", flush=True)
         reverted = self._git_checkout(path)
         self._log_unauthorized(
             path,
@@ -254,14 +299,15 @@ def run_watchdog(root: Path, daemon: bool = False):
 
     observer.start()
     try:
-        print(t("_guard_started", root=root))
-        print(t("_guard_pid", pid=os.getpid(), path=pid_path))
+        # Bug #24 fix: print 显式 flush（前台 watch 输出不被 Python 缓冲）
+        print(t("_guard_started", root=root), flush=True)
+        print(t("_guard_pid", pid=os.getpid(), path=pid_path), flush=True)
         if daemon:
-            print(t("_guard_daemon_hint"))
+            print(t("_guard_daemon_hint"), flush=True)
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\n" + t("_guard_signaled"))
+        print("\n" + t("_guard_signaled"), flush=True)
         observer.stop()
     finally:
         observer.join()
@@ -291,10 +337,10 @@ def _ensure_git_in_path():
     for cand in candidates:
         if Path(cand, "git.exe").exists():
             os.environ["PATH"] = cand + os.pathsep + os.environ.get("PATH", "")
-            print(t("_guard_git_found", path=cand))
+            print(t("_guard_git_found", path=cand), flush=True)
             return
 
-    print(t("_guard_no_git"))
+    print(t("_guard_no_git"), flush=True)
 
 
 def main():

@@ -71,8 +71,28 @@ def _inject_hardcoded(
 
 @pytest.fixture
 def fresh_cli():
-    """保证 cli.py 在测试结束时恢复到测试前的状态（即使测试失败）"""
-    backup = CLI.read_bytes()
+    """保证 cli.py 在测试结束时恢复到测试前的状态（即使测试失败）
+
+    第一性原理（对抗式审查）：
+      - 多个测试调用 _inject_hardcoded，每次注入会增加 inject block
+      - 如果 fresh_cli 只 backup 一次，后续测试的 backup 已是"已被污染"的状态
+      - 修复：从 git HEAD 读取原始 cli.py 作为 backup 起点
+    """
+    import subprocess
+    # 从 git HEAD 读取原始干净版本（避免被前一个测试污染）
+    try:
+        original = subprocess.run(
+            ["git", "show", "HEAD:src/pandax/cli.py"],
+            cwd=str(REPO_ROOT),
+            capture_output=True, text=True, timeout=10,
+        )
+        if original.returncode == 0:
+            backup = original.stdout.encode("utf-8")
+        else:
+            backup = CLI.read_bytes()
+    except Exception:
+        backup = CLI.read_bytes()
+
     try:
         yield CLI
     finally:
