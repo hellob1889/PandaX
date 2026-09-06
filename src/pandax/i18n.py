@@ -308,6 +308,8 @@ TRANSLATIONS = {
 
         # ============ init ============
         "ok_initialized": "[OK] Initialized: {path}",
+        # Bug #28 (Solution A): lock auto-init info
+        "info_lock_auto_init": "[INFO] First use detected: auto-running init for {root}",
         "init_config": "  config: {path}",
         "init_audit": "  audit:  {path}",
         "init_binary": "  binary_snapshots: {path}",

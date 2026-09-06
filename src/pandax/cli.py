@@ -198,6 +198,9 @@ def build_parser():
                         help="禁用二进制保护（不创建 SHA256 快照）")
     lock_p = sub.add_parser("lock", help="锁定所有受保护扩展名的文件")
     lock_p.add_argument("--root", default=".", help="项目根目录路径")
+    # Bug #28 (方案 A): lock 自动 init 开关（默认开 = 首次使用友好；高级用户可关）
+    lock_p.add_argument("--no-auto-init", action="store_true",
+                       help="禁用自动 init（默认: 未初始化时自动调用 init）")
     unlock_p = sub.add_parser("unlock", help="解锁所有受保护扩展名的文件")
     unlock_p.add_argument("--root", default=".", help="项目根目录路径")
     log_p = sub.add_parser("log", help="查看审计历史")
@@ -474,13 +477,20 @@ def _update_binary_snapshot(root: Path, relpath: str, new_sha: str):
 
 
 def cmd_lock(args):
-    """锁定所有 .py 文件（attrib +r / chmod ~0o222）"""
-    return _apply_readonly(args.root, readonly=True)
+    """锁定所有 .py 文件（attrib +r / chmod ~0o222）
+
+    Bug #28 (方案 A): 未初始化时自动调用 cmd_init（首次使用友好）
+    高级用户可加 --no-auto-init 禁用自动 init
+    """
+    return _apply_readonly(args, readonly=True)
 
 
 def cmd_unlock(args):
-    """解锁所有 .py 文件（attrib -r / chmod +0o222）"""
-    return _apply_readonly(args.root, readonly=False)
+    """解锁所有 .py 文件（attrib -r / chmod +0o222）
+
+    Bug #28: unlock 不自动 init（未 init 目录"解锁"无意义）
+    """
+    return _apply_readonly(args, readonly=False)
 
 
 class _OldNotFoundError(Exception):
@@ -606,24 +616,44 @@ def _iter_protected_files(root: Path, config: dict) -> list[Path]:
     return files
 
 
-def _apply_readonly(root_arg: str, readonly: bool) -> int:
+def _apply_readonly(args, readonly: bool) -> int:
     """
     共享的锁/解锁函数。
     Phase 4.6: 遍历 config.json 中所有 protected_extensions（不再只看 .py）。
     跨平台：Windows 用 os.chmod 设只读属性；Linux/Mac 用 0o444。
     排除：__pycache__、*.pyc、_tmp_*.py、_fix*.py
+
+    Bug #28 (方案 A): readonly=True 且未 init 时自动调用 cmd_init
+      - 目的：首次使用"右击 → Lock"一键到位
+      - 反向控制：args.no_auto_init=True 跳过自动 init
+      - 对抗式审查：auto_init 只用于 lock，不用于 unlock
     """
     import json
     import os
     import stat
 
-    root = Path(root_arg).resolve()
+    root = Path(args.root).resolve()
     config_path = root / ".pandax" / "config.json"
 
     # 检查是否 init 过
     if not config_path.exists():
-        print(t("err_write_root_not_init", root=root))
-        return 1
+        # Bug #28 (方案 A): lock 时未 init → 自动调 cmd_init（除非显式 --no-auto-init）
+        if readonly and not getattr(args, "no_auto_init", False):
+            print(t("info_lock_auto_init", root=root))
+            # 构造 init 用的 args（用同 root，保留其他 init 默认值）
+            import argparse
+            init_args = argparse.Namespace(
+                root=str(root),
+                ext=None,            # 用默认 17 种扩展名
+                no_binary=False,     # 启用二进制保护（默认行为）
+            )
+            rc = cmd_init(init_args)
+            if rc != 0:
+                return rc
+            # init 成功 → 继续 lock（不返回）
+        else:
+            print(t("err_write_root_not_init", root=root))
+            return 1
 
     # 读取配置（含 protected_extensions + exclude_patterns）
     config = json.loads(config_path.read_text(encoding="utf-8"))
