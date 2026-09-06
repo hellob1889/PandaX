@@ -43,10 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **#25** 独立 `pandax export` 子命令（语义清晰，不再借用 log）
 - **#28** `pandax lock` 一键启用（未 init 时自动 init，首次使用友好）
 
-**工程化 (3)**：
+**工程化 (4)**：
 - **#TBD 版本号漂移** `src/pandax/__init__.py` 的 `__version__` 字面量与 `pyproject.toml` 漂移 → 改为 `importlib.metadata.version()` 动态读取 + pyproject.toml fallback
 - **#TBD README 分组标签** `load_readme_summary` 解析 H3 分组标题，把 P0/P1/P2/P3/UX 标签附加到 step 行，CLI 启动 banner 显示完整 23 个 bug 的分组前缀
 - **#TBD 自指纹 CRLF 根因** `python -m build` 在 Windows 上把 cli.py LF 转 CRLF（81694 vs 79644 bytes），导致 SHA256 不匹配；wheel 后处理 normalize LF
+- **#TBD 方案 A 文件夹图标** `pandax lock` 同步切换 Windows 文件夹图标(写入 `desktop.ini` 引用 pandaX 锁 ICO),`unlock` 清理;非 Windows 平台 silent skip;ICO 内置到 wheel(多尺寸 16/32/48/64/128/256);**不影响 TortoiseGit 9 个 overlay 名额**(替换文件夹主图标,不是叠加)
 
 ### Added
 - **`tests/test_version_single_source.py`**（5 个测试）：版本号单一事实源回归（pyproject → METADATA → importlib.metadata → 源码 import）
