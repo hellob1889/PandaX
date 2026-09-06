@@ -110,6 +110,7 @@ UX (1):        #25 (独立 export 子命令)
 ```
 
 主要改进：
+- **#28** lock 自动 init（首次使用一键 Lock，不再需先 Init）
 - **#22** pre-commit hook CRLF→LF (P0 安全 bug)
 - **#23** watchdog dedupe (1 次写入只产 1 条审计)
 - **#24** watchdog print flush (前台输出不再被 Python 缓冲)
