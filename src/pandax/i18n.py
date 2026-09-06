@@ -117,6 +117,7 @@ TRANSLATIONS = {
         "write_reject_ext_not_allowed": "只允许修改文本({text_exts})或二进制({binary_exts})保护范围内的文件",
         "write_reject_binary_no_patch": "二进制文件不支持 --old/--new 模式，请用 --content-base64 或 --from-file",
         "write_reject_binary_must_use_content": "二进制文件必须用 --from-file 或 --content-base64",
+        "write_reject_binary_old_new": "二进制文件不支持 --old/--new 模式，请用 --content-base64 或 --from-file",
         "write_reject_old_not_found": "--old 字符串不存在",
         "write_reject_readonly_need_force": "文件 {file} 已锁定 (L1 只读)，请加 --force-write 标志或先运行 `pandax unlock`",
         "write_reject_must_specify": "必须指定 --old/--new 或 --content",
@@ -126,6 +127,13 @@ TRANSLATIONS = {
         "write_reject_problem_required": "请提供 --problem",
         "write_reject_approach_required": "请提供 --approach",
         "write_reject_reason_required": "请提供 --reason",
+        # Bug #39 fix: cmd_write 4 处硬编码中文改为 i18n
+        "write_reject_empty_reason": "reason 字段为空",
+        "write_reject_empty_problem": "problem 字段为空",
+        "write_reject_empty_approach": "approach 字段为空",
+        # Bug #29 fix: init 检测到已有 config 时的提示
+        "warn_init_config_exists": "[WARN] 检测到已存在 config.json（{path}），将保留你的自定义设置",
+        "warn_init_config_corrupted": "[WARN] config.json 已损坏：{err}，将重新生成默认配置",
         "write_warn_git_add": "[WARN] git add 失败: {err}",
         "write_warn_no_git": "[WARN] git 未安装，跳过 git commit（审计记录已保存）",
 
@@ -358,6 +366,14 @@ TRANSLATIONS = {
         # ============ write ============
         "err_write_root_not_init": "[ERROR] {root} not initialized as PandaX project, please run: pandax init --root <path>",
         "err_write_rejected": '[ERROR] {{"status":"REJECTED","reason":"{root} not initialized as PandaX project"}}',
+        # Bug #39 fix: cmd_write 4 hardcoded Chinese strings → i18n
+        "write_reject_empty_reason": "reason field is empty",
+        "write_reject_empty_problem": "problem field is empty",
+        "write_reject_empty_approach": "approach field is empty",
+        "write_reject_binary_old_new": "Binary file does not support --old/--new mode, use --content-base64 or --from-file instead",
+        # Bug #29 fix: init existing config warning
+        "warn_init_config_exists": "[WARN] Detected existing config.json ({path}), preserving your customizations",
+        "warn_init_config_corrupted": "[WARN] config.json is corrupted: {err}, regenerating default config",
         "err_file_ext": "{file} is not a protected extension",
         "err_file_notfound": "File not found: {file}",
         "err_file_read": "File locked, please unlock or write first",

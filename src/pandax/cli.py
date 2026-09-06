@@ -196,6 +196,9 @@ def build_parser():
                         help="自定义受保护扩展名（如 --ext .py .md .json）。不指定则用 17 种默认文本格式")
     init_p.add_argument("--no-binary", action="store_true",
                         help="禁用二进制保护（不创建 SHA256 快照）")
+    # Bug #29 fix: 强制覆盖现有 config（默认保留用户自定义）
+    init_p.add_argument("--force-reset", action="store_true",
+                       help="强制重置 config.json（覆盖所有用户自定义字段，谨慎使用）")
     lock_p = sub.add_parser("lock", help="锁定所有受保护扩展名的文件")
     lock_p.add_argument("--root", default=".", help="项目根目录路径")
     # Bug #28 (方案 A): lock 自动 init 开关（默认开 = 首次使用友好；高级用户可关）
@@ -355,7 +358,17 @@ def cmd_init(args):
         # 脚本
         ".sh", ".bat", ".ps1",
     ]
-    protected_extensions = args.ext if args.ext else DEFAULT_PROTECTED_EXTENSIONS
+    # Bug #29 fix: --ext 支持逗号/空格分隔（argparse nargs='+' 已是 list）
+    if args.ext:
+        raw_exts = []
+        for item in args.ext:
+            # 每个 item 可能含逗号/空格分隔
+            for e in str(item).replace(",", " ").split():
+                if e.strip():
+                    raw_exts.append(e.strip())
+        protected_extensions = raw_exts
+    else:
+        protected_extensions = DEFAULT_PROTECTED_EXTENSIONS
     # 统一规范化：确保每个都以 "." 开头
     protected_extensions = [
         e if e.startswith(".") else f".{e}"
@@ -389,6 +402,46 @@ def cmd_init(args):
     config["binary_protected_extensions"] = [] if args.no_binary else DEFAULT_BINARY_EXTENSIONS
     exclude_patterns = config["exclude_patterns"]  # 提取出来给后续使用
     config_path = pandax_dir / "config.json"
+
+    # Bug #29 fix: 检测已存在 config 时保留用户自定义
+    # 第一性原理：init 不是 idempotent overwrite，而是 merge-preserve
+    # 已知字段：CLI 显式传入才覆盖（--ext, --no-binary）
+    # 未知字段：用户自定义全部保留
+    existing_config = None
+    if config_path.exists():
+        try:
+            existing_config = json.loads(config_path.read_text(encoding="utf-8"))
+            print(t("warn_init_config_exists", path=config_path))
+        except (json.JSONDecodeError, OSError) as e:
+            print(t("warn_init_config_corrupted", err=e))
+            existing_config = None
+
+    # Bug #29 fix: --force-reset 跳过 merge，用全新默认 config
+    force_reset = getattr(args, "force_reset", False)
+
+    if existing_config is not None and not force_reset:
+        # Merge: 保留现有 + 只更新 CLI 显式指定的字段
+        merged = dict(existing_config)
+        # 项目路径和版本总是更新（init 在哪个目录就跑哪个目录）
+        merged["version"] = "1.0"
+        merged["project_root"] = str(root)
+        # protected_extensions: 仅当 CLI 传 --ext 才覆盖
+        if args.ext:
+            raw = []
+            for item in args.ext:
+                for e in str(item).replace(",", " ").split():
+                    if e.strip():
+                        raw.append(e.strip())
+            merged["protected_extensions"] = [
+                e if e.startswith(".") else f".{e}" for e in raw
+            ]
+        # binary_protected_extensions: --no-binary 显式清空，否则保留现有
+        if args.no_binary:
+            merged["binary_protected_extensions"] = []
+        # 其他字段（含 min_reason_length, custom fields）全部保留
+        config = merged
+    # else: 用刚构建的默认 config
+
     config_path.write_text(
         json.dumps(config, indent=2, ensure_ascii=False),
         encoding="utf-8",
@@ -755,18 +808,18 @@ def cmd_write(args):
 
     reject_reason = None
     if not reason:
-        reject_reason = "reason 字段为空"
+        reject_reason = t("write_reject_empty_reason")
     # Bug #9 fix: 用 _info_length() 计算 unicode 宽度，1 中文字 = 2 宽度单位，
     # 避免"测试"（2 中文字 = 4 宽度）被 5 字符阈值误伤（修复前 len=2 < 5）
     elif _info_length(reason) < min_reason:
         reject_reason = f"reason 长度不足（< {min_reason} 宽度单位，含 CJK 字符按 2 计）"
     elif not problem:
-        reject_reason = "problem 字段为空"
+        reject_reason = t("write_reject_empty_problem")
     # Bug #10 fix: 同上，problem/approach 也用 _info_length()
     elif _info_length(problem) < min_problem:
         reject_reason = f"problem 长度不足（< {min_problem} 宽度单位，含 CJK 字符按 2 计）"
     elif not approach:
-        reject_reason = "approach 字段为空"
+        reject_reason = t("write_reject_empty_approach")
     elif _info_length(approach) < min_approach:
         reject_reason = f"approach 长度不足（< {min_approach} 宽度单位，含 CJK 字符按 2 计）"
 
@@ -787,7 +840,7 @@ def cmd_write(args):
 
     # 二进制文件不接受 --old/--new（语义化替换对二进制无意义）
     if not reject_reason and is_binary and (args.old or args.new):
-        reject_reason = "二进制文件不支持 --old/--new 模式，请用 --content-base64 或 --from-file"
+        reject_reason = t("write_reject_binary_old_new")
 
     # === Bug #12 v2: L1 文件锁 ReadOnly 前置检查 ===
     # 默认拒绝修改 OS ReadOnly 文件（pandax lock 设的）。仅 --force-write 才放行。
