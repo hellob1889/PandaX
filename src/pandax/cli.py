@@ -1025,7 +1025,16 @@ def _print_log(records: list[dict]):
         status = rec.get("status", "?")
         rid = rec.get("id", "?")
         file_ = rec.get("file", "?")
-        print(f"\n[{ts}] {status}  id={rid}  file={file_}")
+        # Bug #14 fix: id=/file= 标签本地化（之前硬编码英文）
+        print("\n" + t(
+            "log_record_header",
+            ts=ts,
+            status=status,
+            id_label=t("log_field_id"),
+            rid=rid,
+            file_label=t("log_field_file"),
+            file_=file_,
+        ))
         if status == "APPROVED":
             print(f"  {t('log_field_reason')}:   {rec.get('reason', '')}")
             print(f"  {t('log_field_problem')}:  {rec.get('problem', '')}")
@@ -1166,9 +1175,13 @@ def cmd_status(args):
             counts[s] = counts.get(s, 0) + 1
         total = len(records)
         print(t("status_total_records", n=total))
-        for k, v in counts.items():
-            if v > 0:
-                print(f"  - {k}: {v}")
+        # Bug #17 fix: 审计统计状态计数用本地化标签（之前是裸 APPROVED/REJECTED/UNAUTHORIZED）
+        if counts.get("APPROVED", 0) > 0:
+            print(t("status_count_approved", n=counts["APPROVED"]))
+        if counts.get("REJECTED", 0) > 0:
+            print(t("status_count_rejected", n=counts["REJECTED"]))
+        if counts.get("UNAUTHORIZED", 0) > 0:
+            print(t("status_count_unauthorized", n=counts["UNAUTHORIZED"]))
         # 最近 3 条
         print()
         print(t("status_recent_3"))

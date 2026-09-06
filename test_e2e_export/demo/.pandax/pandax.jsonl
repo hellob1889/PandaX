@@ -1,1 +1,0 @@
-{"id":"audit_070c6be0","timestamp":"2026-09-06 14:26:37","status":"APPROVED","file":"main.py","reason":"测试 E2E export","problem":"验证各格式导出是否含 i18n 问题","approach":"运行 export 后检查中英文标签","commit_hash":"","force_write":false,"files_changed":["main.py"]}

@@ -83,7 +83,7 @@ TRANSLATIONS = {
         "status_locked_unlocked": "  已锁定: {n}  |  未锁定: {m}",
         "status_extensions": "  扩展名: {exts}",
         "status_warn_unlock": "  [WARN] 有 {n} 个受保护文件未锁定，建议运行 pandax lock",
-        "status_l2": "[L2 watchdog]",
+        "status_l2": "[L2 watchdog 看门狗]",
         "status_watch_on": "  状态: 运行中  (PID: {pid})",
         "status_watch_off": "  状态: 未运行（建议: pandax watch --daemon）",
         "status_l5": "[L5 自指纹]",
@@ -97,6 +97,14 @@ TRANSLATIONS = {
         "status_binary_tracked": "  跟踪文件数: {n}",
         "status_binary_ok": "  所有跟踪文件 SHA256 匹配 OK",
         "status_binary_fail": "  [FAIL] {n} 个文件 SHA256 不匹配",
+
+        # Bug #17 fix: 审计统计状态计数用本地化标签
+        "status_count_approved": "  - 已批准: {n}",
+        "status_count_rejected": "  - 已拒绝: {n}",
+        "status_count_unauthorized": "  - 未授权: {n}",
+
+        # Bug #14 fix: log 输出中硬编码的 id=/file= 标签本地化
+        "log_record_header": "[{ts}] {status}  {id_label}={rid}  {file_label}={file_}",
 
         # ============ write ============
         "err_write_root_not_init": "[ERROR] {root} 未初始化 PandaX，请先运行: pandax init --root <path>",
@@ -144,6 +152,7 @@ TRANSLATIONS = {
         "log_field_problem": "问题",
         "log_field_approach": "方法",
         "log_field_size": "大小",
+        "log_field_id": "ID",
         "log_action_written": "写入",
         "log_action_rejected": "拒绝",
         "log_action_unauthorized": "非授权",
@@ -326,6 +335,14 @@ TRANSLATIONS = {
         "status_binary_fail": "  [FAIL] {n} files SHA256 mismatch",
         "_status_binary_disabled": "Binary protection not enabled (used --no-binary or init was before Phase 5)",
 
+        # Bug #17 fix: 审计统计状态计数用本地化标签（不再是裸 APPROVED/REJECTED/UNAUTHORIZED）
+        "status_count_approved": "  - Approved: {n}",
+        "status_count_rejected": "  - Rejected: {n}",
+        "status_count_unauthorized": "  - Unauthorized: {n}",
+
+        # Bug #14 fix: log 输出中硬编码的 id=/file= 标签本地化
+        "log_record_header": "[{ts}] {status}  {id_label}={rid}  {file_label}={file_}",
+
         # ============ write ============
         "err_write_root_not_init": "[ERROR] {root} not initialized as PandaX project, please run: pandax init --root <path>",
         "err_write_rejected": '[ERROR] {{"status":"REJECTED","reason":"{root} not initialized as PandaX project"}}',
@@ -378,6 +395,7 @@ TRANSLATIONS = {
         "log_action_written": "write",
         "log_action_rejected": "reject",
         "log_action_unauthorized": "unauthorized",
+        "log_field_id": "ID",
         "log_field_commit": "commit",
         "log_attempted": "  Attempted: reason={reason}, problem={problem}, approach={approach}",
         "log_unauth_detection": "  Detection: {detection}",
