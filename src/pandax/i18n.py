@@ -93,8 +93,9 @@ TRANSLATIONS = {
         "status_gitignore_missing": "  [WARN] .gitignore 缺失 {miss} → 重跑 pandax init 自动修复",
         "status_git_not_repo": "  非 git 仓库,跳过检查",
         "gitignore_added": "[OK] .gitignore 已更新,新增: {names}",
-        "gitignore_already_ok": "[OK] .gitignore 已正确包含 PandaX 条目",
-        "gitignore_skip": "[SKIP] 非 git 仓库,跳过 .gitignore 维护",
+        "gitignore_already_ok": "[OK] .gitignore 已正确包含 PandaX 条目,无需改动",
+        "gitignore_skip": "[SKIP] {root} 不是 git 仓库,跳过 .gitignore 维护",
+        "gitignore_write_err": "[ERR] 写 .gitignore 失败: {err_type}: {err}",
         "status_fp_mismatch": "  状态: [WARN] 不匹配！存储={stored} 当前={current}",
         "status_fp_uninit": "  状态: 未生成（首次运行后会自动生成）",
         "status_audit_stats": "[审计统计]",
@@ -104,6 +105,7 @@ TRANSLATIONS = {
         "status_binary_tracked": "  跟踪文件数: {n}",
         "status_binary_ok": "  所有跟踪文件 SHA256 匹配 OK",
         "status_binary_fail": "  [FAIL] {n} 个文件 SHA256 不匹配",
+        "_status_binary_disabled": "未启用二进制保护(--no-binary 或 init 在 Phase 5 之前)",
 
         # Bug #17 fix: 审计统计状态计数用本地化标签
         "status_count_approved": "  - 已批准: {n}",
@@ -140,9 +142,26 @@ TRANSLATIONS = {
         "write_reject_empty_approach": "approach 字段为空",
         # Bug #29 fix: init 检测到已有 config 时的提示
         "warn_init_config_exists": "[WARN] 检测到已存在 config.json（{path}），将保留你的自定义设置",
+        # Bug #10b fix: 写后恢复 chmod 失败（文件被另一进程占用等极端情况）
+        "warn_chmod_restore_failed": "[WARN] 写后恢复文件锁定失败 {file}: {err} — 文件可能仍可写",
+        "write_reject_chmod_restore_failed": "无法恢复文件锁定状态: {err}",
+        # Bug #11 fix: 移除 cli.py 硬编码中文
+        "err_readme_missing": "[ERROR] README.md 未找到，CLI 无法运行",
+        # Bug #12 fix: 移除 cli.py 硬编码英文
+        "warn_icon_toggle_failed": "[WARN] icon toggle failed (lock/unlock still ok): {err}",
+        # Bug #10 fix: 移除 cli.py 硬编码中文
+        "write_reject_reason_short": "reason 长度不足（< {n} 宽度单位，含 CJK 字符按 2 计）",
         "warn_init_config_corrupted": "[WARN] config.json 已损坏：{err}，将重新生成默认配置",
+        # Bug #16 fix: zh-CN 同步 en 的 err_config_corrupted / err_snapshot_corrupted
+        "err_config_corrupted": "[ERROR] config.json 损坏: {err} → 请运行 `pandax init --force-reset` 修复",
+        "err_snapshot_corrupted": "[ERROR] binary_snapshots.json 损坏: {err}",
+        "warn_gitignore_failed": "[WARN] .gitignore 维护失败(不影响 init): {err}",
+        # Bug #28 (Solution A): lock auto-init info
+        "info_lock_auto_init": "[INFO] 首次使用检测到: 自动为 {root} 运行 init",
         "write_warn_git_add": "[WARN] git add 失败: {err}",
         "write_warn_no_git": "[WARN] git 未安装，跳过 git commit（审计记录已保存）",
+        # Bug #18 fix: zh-CN 同步 en 的 warn_subprocess_timeout
+        "warn_subprocess_timeout": "[WARN] {cmd} 超时 ({timeout}s) — 可能目标进程挂死，已跳过该步骤",
 
         # ============ serve (Web 仪表盘) ============
         "serve_ok_url": "[OK] PandaX 仪表盘启动: {url}",
@@ -169,6 +188,15 @@ TRANSLATIONS = {
         "log_export_err_format": "[ERROR] --output 需要和 --format 一起使用",
         "log_export_err_output": "[ERROR] --format 需要和 --output 一起使用",
         "log_export_no_records": "[INFO] 无匹配记录，未生成导出文件",
+        "_log_no_init": "{root} 未初始化 PandaX 项目或无审计记录",
+
+        # ============ 独立 export 子命令 + log path deprecation ============
+        "export_ok": "[OK] 已导出 {n} 条记录为 {fmt}: {path}",
+        "export_err_no_format": "[ERROR] 缺少 --format (示例: pandax export --format html --output report.html)",
+        "export_err_no_output": "[ERROR] 缺少 --output (示例: pandax export --format html --output report.html)",
+        "warn_log_export_use_export_subcommand": "[WARN] pandax log --format/--output 已弃用,推荐: pandax export --format <fmt> --output <path>",
+        "_export_unsupported": '[ERROR] 不支持的格式: "{fmt}"',
+        "_export_supported": "[INFO] 支持的格式: {supported}",
 
         # Bug #26 fix: export 报告标签本地化（html/md/text）
         "export_title": "PandaX 审计报告",
@@ -264,6 +292,7 @@ TRANSLATIONS = {
         "watch_daemon_log": "  日志: {path}",
         "watch_stop_win": "  停止: taskkill /F /PID {pid}  (Windows)",
         "watch_stop_unix": "  停止: kill {pid}  (Unix/macOS)",
+        "_watch_no_init": "{root} 未初始化 PandaX 项目",
 
         # ============ ci ============
         "ci_header": "PandaX CI 验证 — {root}",
@@ -291,7 +320,14 @@ TRANSLATIONS = {
         "err_unknown_cmd": "[ERROR] 未知子命令: {cmd}",
         "err_format_without_format": "[ERROR] --output 需要和 --format 一起使用",
         "err_format_without_output": "[ERROR] --format 需要和 --output 一起使用",
+        # 同步 en 的 version key
         "version": "pandax v{ver}",
+        # ============ desktop_icon (Bug #20 fix) ============
+        "desktop_icon_skip": "[SKIP] Platform {platform} is not Windows, skipping icon {action}",
+        "desktop_icon_ok": "[OK] Folder icon switched → {state}",
+        "desktop_icon_err": "[ERR] Icon {action} failed: {err_type}: {err}",
+        "desktop_icon_cleaned": "[OK] Cleaned: {items}",
+        "desktop_icon_clean_none": "[OK] No cleanup needed (icon never enabled)",
         "err_no_input": "[PandaX] 无输入路径，退出。",
         "err_no_target": "[PandaX] 无可操作目标。",
         "err_user_cancel": "[PandaX] 用户取消。",
@@ -366,8 +402,9 @@ TRANSLATIONS = {
         "status_gitignore_missing": "  [WARN] .gitignore missing {miss} → re-run pandax init to fix",
         "status_git_not_repo": "  Not a git repo, skipping check",
         "gitignore_added": "[OK] .gitignore updated, added: {names}",
-        "gitignore_already_ok": "[OK] .gitignore already contains PandaX entries",
-        "gitignore_skip": "[SKIP] Not a git repo, skipping .gitignore maintenance",
+        "gitignore_already_ok": "[OK] .gitignore already contains PandaX entries, no change needed",
+        "gitignore_skip": "[SKIP] {root} is not a git repo, skipping .gitignore maintenance",
+        "gitignore_write_err": "[ERR] Failed to write .gitignore: {err_type}: {err}",
         "warn_gitignore_failed": "[WARN] .gitignore maintenance failed (does not affect init): {err}",
         "status_fp_mismatch": "  Status: [WARN] mismatch! Stored={stored} Current={current}",
         "status_fp_uninit": "  Status: not generated (will be generated on first run)",
@@ -398,7 +435,19 @@ TRANSLATIONS = {
         "write_reject_binary_old_new": "Binary file does not support --old/--new mode, use --content-base64 or --from-file instead",
         # Bug #29 fix: init existing config warning
         "warn_init_config_exists": "[WARN] Detected existing config.json ({path}), preserving your customizations",
+        # Bug #11 fix: replace hardcoded Chinese with i18n
+        "err_readme_missing": "[ERROR] README.md not found, CLI cannot run",
+        # Bug #12 fix: replace hardcoded English with i18n
+        "warn_icon_toggle_failed": "[WARN] icon toggle failed (lock/unlock still ok): {err}",
+        # Bug #10 fix: replace hardcoded Chinese with i18n
+        "write_reject_reason_short": "reason length too short (< {n} width units, CJK counts as 2)",
+        # Bug #10b fix: chmod restore failure during write
+        "warn_chmod_restore_failed": "[WARN] Failed to restore file lock after write {file}: {err} — file may still be writable",
+        "write_reject_chmod_restore_failed": "Cannot restore file lock state: {err}",
         "warn_init_config_corrupted": "[WARN] config.json is corrupted: {err}, regenerating default config",
+        # Bug #16 fix: friendly error for corrupted JSON configs
+        "err_config_corrupted": "[ERROR] config.json corrupted: {err} → please run `pandax init --force-reset` to fix",
+        "err_snapshot_corrupted": "[ERROR] binary_snapshots.json corrupted: {err}",
         "err_file_ext": "{file} is not a protected extension",
         "err_file_notfound": "File not found: {file}",
         "err_file_read": "File locked, please unlock or write first",
@@ -418,6 +467,8 @@ TRANSLATIONS = {
         "write_reject_reason_required": "Please provide --reason",
         "write_warn_git_add": "[WARN] git add failed: {err}",
         "write_warn_no_git": "[WARN] git not installed, skipping git commit (audit record saved)",
+        # Bug #18 fix: subprocess.run(timeout=...) friendly timeout message
+        "warn_subprocess_timeout": "[WARN] {cmd} timed out ({timeout}s) — target may be hung, skipping this step",
 
         # ============ serve (Web dashboard) ============
         "serve_ok_url": "[OK] PandaX dashboard started: {url}",
@@ -578,6 +629,12 @@ TRANSLATIONS = {
         "err_format_without_output": "[ERROR] --format requires --output",
         "version": "pandax v{ver}",
         "err_no_input": "[PandaX] No input path, exiting.",
+        # ============ desktop_icon (Bug #20 fix) ============
+        "desktop_icon_skip": "[SKIP] Platform {platform} is not Windows, skipping icon {action}",
+        "desktop_icon_ok": "[OK] Folder icon switched → {state}",
+        "desktop_icon_err": "[ERR] Icon {action} failed: {err_type}: {err}",
+        "desktop_icon_cleaned": "[OK] Cleaned: {items}",
+        "desktop_icon_clean_none": "[OK] No cleanup needed (icon never enabled)",
         "err_no_target": "[PandaX] No target.",
         "err_user_cancel": "[PandaX] User cancelled.",
         "_none": "none",

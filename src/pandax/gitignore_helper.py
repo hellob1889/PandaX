@@ -21,6 +21,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable
 
+# Bug #20 fix: i18n 化(本文件之前所有 [TAG] 消息都是硬编码中文,英文环境也显示中文)
+try:
+    from .i18n import t
+except ImportError:
+    try:
+        from pandax.i18n import t
+    except ImportError:
+        def t(key, **kwargs):
+            return key
+
 
 # 需要确保在 .gitignore 里的条目
 REQUIRED_GITIGNORE_ENTRIES = [
@@ -56,7 +66,8 @@ def ensure_gitignore(root: Path, entries: Iterable[str] = REQUIRED_GITIGNORE_ENT
 
     # 非 git 目录直接跳过
     if not is_git_repo(root):
-        return False, f"[SKIP] {root} 不是 git 仓库,跳过 .gitignore 维护"
+        # Bug #20 fix: 移除硬编码中文
+        return False, t("gitignore_skip", root=root)
 
     gitignore = root / ".gitignore"
 
@@ -85,7 +96,8 @@ def ensure_gitignore(root: Path, entries: Iterable[str] = REQUIRED_GITIGNORE_ENT
             to_add.append(entry)
 
     if not to_add:
-        return False, "[OK] .gitignore 已正确包含 PandaX 条目,无需改动"
+        # Bug #20 fix: 移除硬编码中文
+        return False, t("gitignore_already_ok")
 
     # 确保文件以换行符结尾(避免拼接问题)
     if existing_lines and existing_lines[-1] != "":
@@ -102,10 +114,10 @@ def ensure_gitignore(root: Path, entries: Iterable[str] = REQUIRED_GITIGNORE_ENT
     try:
         gitignore.write_text(new_content, encoding="utf-8")
     except OSError as e:
-        return False, f"[ERR] 写 .gitignore 失败: {type(e).__name__}: {e}"
+        return False, t("gitignore_write_err", err_type=type(e).__name__, err=str(e))
 
     added_names = [e for e in to_add if not e.startswith("#")]
-    return True, f"[OK] .gitignore 已更新,新增: {', '.join(added_names)}"
+    return True, t("gitignore_added", names=", ".join(added_names))
 
 
 def check_gitignore(root: Path) -> tuple[bool, list[str]]:

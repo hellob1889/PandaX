@@ -190,6 +190,76 @@ class TestTranslation:
         result = i18n.t_bilingual("menu_init", "menu_lock")
         assert "Init" in result and "Lock" in result
 
+    # ===== Bug #17 / #20 回归测试：t() 在用户输入含特殊字符时的鲁棒性 =====
+    def test_t_with_backslash_in_placeholder(self):
+        """Bug #17 回归测试：占位符值含反斜杠 → 不应抛异常"""
+        i18n.set_lang("zh-CN")
+        # 反斜杠是 JSON/Windows 路径常见字符
+        result = t("write_warn_git_add", err=r"C:\Users\test\file.py")
+        assert isinstance(result, str)
+        assert "C:\\Users" in result or "C:\\Users\\test\\file.py" in result
+
+    def test_t_with_double_quote_in_placeholder(self):
+        """Bug #17 回归测试：占位符值含双引号 → 不应破坏字符串"""
+        i18n.set_lang("zh-CN")
+        # 双引号是 f-string JSON 注入的攻击载体
+        result = t("warn_init_config_corrupted", err='Expecting value at line 1 column 1 (char 0)')
+        assert isinstance(result, str)
+        assert 'Expecting value' in result
+
+    def test_t_with_cjk_in_placeholder(self):
+        """CJK 字符 → 应正确占位（CJK 是 v0.7.1 主要用户语言）"""
+        i18n.set_lang("zh-CN")
+        result = t("ok_locked_n", n=3, exts=".py,.json")
+        assert "3" in result
+        assert ".py,.json" in result
+
+    def test_t_with_empty_kwargs(self):
+        """空 kwargs → 不抛异常"""
+        i18n.set_lang("zh-CN")
+        # 调用一个无需占位符的 key
+        result = t("err_readme_missing")
+        assert "README" in result
+
+    def test_t_with_extra_kwargs_ignored(self):
+        """多余 kwargs → 应被忽略（不抛 KeyError）"""
+        i18n.set_lang("zh-CN")
+        # ok_locked_n 只需要 n, exts；多传一个 unused 应该安全
+        result = t("ok_locked_n", n=5, exts=".py", unused_param="x")
+        assert "5" in result
+
+    def test_t_with_none_placeholder(self):
+        """占位符值为 None → 应格式化为 'None' 而不是抛异常"""
+        i18n.set_lang("zh-CN")
+        # None 是 Python 中"缺失值"的常见表示
+        result = t("warn_lock_failed", file=None, err="test error")
+        assert isinstance(result, str)
+        assert "test error" in result  # err 仍应被替换
+
+    def test_zh_cn_en_parity(self):
+        """Bug #20 回归测试：zh-CN 与 en 的 keys 完全一致（不能有遗漏）"""
+        zh_keys = set(i18n.TRANSLATIONS["zh-CN"].keys())
+        en_keys = set(i18n.TRANSLATIONS["en"].keys())
+        diff_zh = zh_keys - en_keys
+        diff_en = en_keys - zh_keys
+        assert not diff_zh, f"zh-CN has keys not in en: {diff_zh}"
+        assert not diff_en, f"en has keys not in zh-CN: {diff_en}"
+
+    def test_all_called_keys_are_defined(self):
+        """Bug #20 回归测试：src/pandax 中所有 t() 调用的 key 都必须在 zh-CN/en 中定义"""
+        import re
+        from pathlib import Path
+        src_dir = Path(i18n.__file__).parent
+        pattern = re.compile(r'(?<![a-zA-Z0-9_])t\(\s*["\']([a-zA-Z_][a-zA-Z0-9_]*)["\']')
+        defined = set(i18n.TRANSLATIONS["zh-CN"].keys()) | set(i18n.TRANSLATIONS["en"].keys())
+        undefined = set()
+        for py_file in src_dir.glob("*.py"):
+            for match in pattern.finditer(py_file.read_text(encoding="utf-8")):
+                key = match.group(1)
+                if key not in defined:
+                    undefined.add(key)
+        assert not undefined, f"t() calls undefined keys: {undefined}"
+
 
 class TestCoverageReport:
     """测试 coverage_report()"""

@@ -109,7 +109,9 @@ class TestDesktopIconUnit:
             mock_sys.platform = "win32"
             ok, msg = remove_desktop_icon(tmp_path)
         assert ok is True
-        assert "[OK] 无需清理" in msg or "[SKIP]" in msg
+        # Bug #20 fix: 改用 i18n key 检测（不再硬编码中文）
+        # 期望是 desktop_icon_clean_none 或 desktop_icon_skip
+        assert "No cleanup needed" in msg or "无需清理" in msg or "[SKIP]" in msg
 
     def test_apply_non_windows_skip(self, tmp_path: Path):
         """非 Windows 平台 silent skip。"""
