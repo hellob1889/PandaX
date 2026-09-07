@@ -1889,7 +1889,18 @@ def cmd_ci(args):
 # ============================================================
 # Phase 9: OS 右键菜单集成
 # ============================================================
-INSTALLER_DIR = Path(__file__).resolve().parent.parent.parent / "installer"
+def _find_installer_dir() -> Path:
+    """定位 installer/ 目录(单路径:与 cli.py 同包)。
+
+    自 v0.7.1+ 起,installer/ 已移入 src/pandax/installer/,打包后位于
+    site-packages/pandax/installer/。两种场景使用同一路径:
+        - site-packages 安装:site-packages/pandax/installer/
+        - dev 模式 (PYTHONPATH=src):<project>/src/pandax/installer/
+    """
+    return Path(__file__).resolve().parent / "installer"
+
+
+INSTALLER_DIR = _find_installer_dir()
 
 PLATFORM_HANDLERS = {
     "Windows": {
