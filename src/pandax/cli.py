@@ -573,7 +573,12 @@ def _update_binary_snapshot(root: Path, relpath: str, new_sha: str):
     snap_path = root / ".pandax" / "binary_snapshots.json"
     if not snap_path.exists():
         return
-    snapshots = json.loads(snap_path.read_text(encoding="utf-8"))
+    # Bug #16 fix: 捕获 JSONDecodeError
+    try:
+        snapshots = json.loads(snap_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(t("err_snapshot_corrupted", err=e))
+        return
     # 统一为正斜杠
     relpath_normalized = relpath.replace("\\", "/")
     snapshots[relpath_normalized] = new_sha
@@ -763,7 +768,12 @@ def _apply_readonly(args, readonly: bool) -> int:
             return 1
 
     # 读取配置（含 protected_extensions + exclude_patterns）
-    config = json.loads(config_path.read_text(encoding="utf-8"))
+    # Bug #16 fix
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(t("err_config_corrupted", err=e))
+        return 1
     protected_extensions = config.get("protected_extensions", [".py"])
 
     count = 0
@@ -864,7 +874,12 @@ def cmd_write(args):
         print(t("err_write_rejected", root=root))
         return 1
 
-    config = json.loads(config_path.read_text(encoding="utf-8"))
+    # Bug #16 fix
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(t("err_config_corrupted", err=e))
+        return 1
 
     # === [1] 水质检测 ===
     reason = args.reason.strip()
@@ -1065,12 +1080,16 @@ def cmd_write(args):
             # Bug #21 fix: 用 _resolve_git_exe() 统一 git 可执行解析，
             # 与 doctor.py 检测逻辑保持一致（避免边缘场景 doctor OK / write 失败）
             GIT = _resolve_git_exe()
-            r_add = subprocess.run(
-                [GIT, "add", target_rel_str, audit_rel_str],
-                cwd=str(root), capture_output=True, text=True, timeout=10,
-            )
-            if r_add.returncode != 0:
-                print(t("write_warn_git_add", err=r_add.stderr.strip()))
+            # Bug #18 fix
+            try:
+                r_add = subprocess.run(
+                    [GIT, "add", target_rel_str, audit_rel_str],
+                    cwd=str(root), capture_output=True, text=True, timeout=10,
+                )
+                if r_add.returncode != 0:
+                    print(t("write_warn_git_add", err=r_add.stderr.strip()))
+            except subprocess.TimeoutExpired:
+                print(t("warn_subprocess_timeout", cmd="git add", timeout=10))
             commit_msg = (
                 f"audit: {reason} [APPROVED]\n\n"
                 f"file: {target_rel}\n"
@@ -1322,7 +1341,12 @@ def cmd_status(args):
     # Bug #2 fix: 之前只看 *.py，忽略 18 种其它受保护扩展名
     # 用 _iter_protected_files 共享 helper（与 lock/unlock 同源），确保 status
     # 报告的"锁定文件数"与 lock/unlock 命令实际作用范围一致
-    config = json.loads((pandax_dir / "config.json").read_text(encoding="utf-8"))
+    # Bug #16 fix
+    try:
+        config = json.loads((pandax_dir / "config.json").read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        print(t("err_config_corrupted", err=e))
+        return 1
     protected_files = _iter_protected_files(root, config)
     if protected_files:
         locked = sum(1 for p in protected_files if not (p.stat().st_mode & stat.S_IWUSR))
@@ -1416,7 +1440,12 @@ def cmd_status(args):
     snap_path = pandax_dir / "binary_snapshots.json"
     print(t("status_binary_section"))
     if snap_path.exists():
-        snapshots = json.loads(snap_path.read_text(encoding="utf-8"))
+        # Bug #16 fix
+        try:
+            snapshots = json.loads(snap_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(t("err_snapshot_corrupted", err=e))
+            snapshots = {}
         print(t("status_binary_tracked", n=len(snapshots)))
         if snapshots:
             print(t("_status_example", n=5))
@@ -1485,11 +1514,16 @@ def cmd_install_hook(args):
     if getattr(args, "uninstall", False):
         cmd.append("--uninstall")
 
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-    print(r.stdout, end="")
-    if r.stderr:
-        print(r.stderr, end="", file=sys.stderr)
-    return r.returncode
+    # Bug #18 fix
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        print(r.stdout, end="")
+        if r.stderr:
+            print(r.stderr, end="", file=sys.stderr)
+        return r.returncode
+    except subprocess.TimeoutExpired:
+        print(t("warn_subprocess_timeout", cmd="pandax.install_hook", timeout=10))
+        return 1
 
 
 def cmd_install_git(args):
@@ -1717,8 +1751,13 @@ def cmd_ci(args):
     GIT = git_exe_path  # _resolve_git_exe() returns absolute path or "git" fallback
 
     def _git_run(*args, timeout=5):
-        return subprocess.run([GIT] + list(args), cwd=str(root),
-                              capture_output=True, text=True, timeout=timeout)
+        # Bug #18 fix
+        try:
+            return subprocess.run([GIT] + list(args), cwd=str(root),
+                                  capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            print(t("warn_subprocess_timeout", cmd=" ".join(args), timeout=timeout))
+            return None
 
     if not pandax_dir.exists():
         print(t("ci_reject_no_init", root=root))
@@ -1726,7 +1765,12 @@ def cmd_ci(args):
 
     # 读取 config
     config_path = pandax_dir / "config.json"
-    config = _json.loads(config_path.read_text(encoding="utf-8"))
+    # Bug #16 fix
+    try:
+        config = _json.loads(config_path.read_text(encoding="utf-8"))
+    except (_json.JSONDecodeError, OSError) as e:
+        print(t("err_config_corrupted", err=e))
+        return 1
     text_exts = set(config.get("protected_extensions", [".py"]))
     binary_exts = set(config.get("binary_protected_extensions", []))
 
@@ -1737,7 +1781,7 @@ def cmd_ci(args):
     # 检查 git
     try:
         r = _git_run("rev-parse", "--is-inside-work-tree")
-        if r.returncode != 0:
+        if r is None or r.returncode != 0:
             print(t("ci_reject_no_git_repo", root=root))
             return 1
     except FileNotFoundError:
@@ -1747,7 +1791,7 @@ def cmd_ci(args):
     # 检查 base 分支是否存在（HEAD 或分支名）
     def _resolve_ref(ref):
         r = _git_run("rev-parse", "--verify", ref)
-        return r.returncode == 0
+        return r is not None and r.returncode == 0
 
     base_resolved = False
     # Phase 7: 优先顺序——HEAD~1（最可靠，PR base 经常缺失）
@@ -1764,7 +1808,7 @@ def cmd_ci(args):
         # 之前两者都报 "empty repo"，但首次 commit 是合法场景 — 有变更要审计。
         # 用 `git rev-list -n 1 --all` 检查是否有任何 commit
         r_any = _git_run("rev-list", "-n", "1", "--all")
-        if r_any.returncode != 0 or not r_any.stdout.strip():
+        if r_any is None or r_any.returncode != 0 or not r_any.stdout.strip():
             # 真·空仓库：无任何 commit → 无变更可审计
             print("=" * 64)
             print(t("ci_header", root=root))
@@ -1782,10 +1826,10 @@ def cmd_ci(args):
         print(t("ci_header", root=root))
         # 重新尝试用当前 HEAD 的全部 tree 作为基线
         r_tree = _git_run("rev-parse", "HEAD^{tree}")
-        if r_tree.returncode == 0 and r_tree.stdout.strip():
+        if r_tree is not None and r_tree.returncode == 0 and r_tree.stdout.strip():
             tree_sha = r_tree.stdout.strip()
             r_diff = _git_run("diff", "--name-only", f"{tree_sha}", "HEAD", timeout=10)
-            if r_diff.returncode == 0:
+            if r_diff is not None and r_diff.returncode == 0:
                 changed = [f.strip() for f in r_diff.stdout.splitlines() if f.strip()]
                 if not changed:
                     print(t("ci_baseline_no_changes"))
@@ -1799,8 +1843,9 @@ def cmd_ci(args):
     # 1. 找出变更文件
     diff_range = f"{base}...{head}" if head == "HEAD" else f"{base}..{head}"
     r = _git_run("diff", "--name-only", diff_range, timeout=10)
-    if r.returncode != 0:
-        print(t("ci_reject_diff_fail", err=r.stderr.strip()))
+    if r is None or r.returncode != 0:
+        err_msg = r.stderr.strip() if r is not None else "(timeout)"
+        print(t("ci_reject_diff_fail", err=err_msg))
         return 1
 
     changed_files = [f.strip().replace("\\", "/") for f in r.stdout.splitlines() if f.strip()]
