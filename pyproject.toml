@@ -72,6 +72,11 @@ pandax = [
     "pandax_locked.ico",
     "pandax_unlocked.ico",
     "index.html",
+    # Bug fix (右键菜单验证发现): installer/ 目录没被打包,
+    # 导致 site-packages/pandax/ 下缺 installer/,`pandax install-context` 报脚本不存在
+    "installer/windows/*.ps1",
+    "installer/macos/*.sh",
+    "installer/linux/*.sh",
 ]
 
 [tool.pytest.ini_options]

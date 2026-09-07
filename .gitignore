@@ -52,6 +52,10 @@ Thumbs.db
 installer/staging/
 installer/Output/
 
+# Release artifacts(用户级输出,不入仓库 — 重新打包请跑 scripts/release.py)
+PandaX-*-install.zip
+PandaX-*.exe
+
 # ============================================================
 # Workspace 临时产物（本次工作 session 产生，不入仓库）
 # ============================================================
