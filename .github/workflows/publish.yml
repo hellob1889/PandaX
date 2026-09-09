@@ -3,20 +3,23 @@ name: Publish to PyPI
 # ============================================================
 # Trusted Publishing (OIDC) — 无需 API token
 # ============================================================
-# 在 PyPI 项目页面配置 Trusted Publisher:
-#   1. https://pypi.org/manage/project/pandax/settings/publishing/
-#   2. Add a new pending publisher
-#   3. 选择 "GitHub Actions"
-#   4. Owner: pandax
-#      Repository: pandax
-#      Workflow: publish.yml
-#      Environment: pypi
+# PyPI 端已配 pending publisher:
+#   Owner: hellob1889
+#   Repository: PandaX
+#   Workflow: publish.yml
+#   Environment: pypi
+#
+# 触发规则 (按 tag 前缀):
+#   v*.*.*-test  → TestPyPI (例: v0.7.1-test)
+#   v*.*.*       → Production PyPI (例: v0.7.1)
+#
+# 也支持 workflow_dispatch 手动触发。
 # ============================================================
 
 on:
   push:
     tags:
-      - "v*.*.*"  # 触发: v0.6.3, v1.0.0 等
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       target:
@@ -80,13 +83,13 @@ jobs:
         run: pytest tests/ -v
 
   publish:
-    name: Publish to ${{ github.event.inputs.target || 'PyPI' }}
+    name: Publish
     needs: [build, test]
     runs-on: ubuntu-latest
-    environment: pypi  # 与 PyPI Trusted Publisher 配置一致
+    environment: pypi
     permissions:
-      id-token: write   # OIDC 必须
-      contents: write   # 创建 GitHub Release
+      id-token: write
+      contents: write
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -94,21 +97,36 @@ jobs:
           name: dist
           path: dist/
 
-      # PyPA 官方 action，自动用 Trusted Publishing
-      - name: Publish to PyPI
+      - name: Decide target (push)
+        id: target
         if: github.event_name == 'push'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        # 不需要 password / token —— OIDC 自动认证
+        run: |
+          if [[ "${{ github.ref_name }}" == *-test ]]; then
+            echo "target=testpypi" >> "$GITHUB_OUTPUT"
+            echo "→ TestPyPI (tag suffix -test)"
+          else
+            echo "target=pypi" >> "$GITHUB_OUTPUT"
+            echo "→ Production PyPI"
+          fi
 
-      # 手动触发时可选 TestPyPI
-      - name: Publish to TestPyPI (manual trigger)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'testpypi'
+      - name: Decide target (dispatch)
+        id: target-dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "target=${{ github.event.inputs.target }}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to TestPyPI
+        if: ${{ steps.target.outputs.target == 'testpypi' || steps.target-dispatch.outputs.target == 'testpypi' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
 
+      - name: Publish to Production PyPI
+        if: ${{ steps.target.outputs.target == 'pypi' || steps.target-dispatch.outputs.target == 'pypi' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && !endsWith(github.ref_name, '-test')
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
