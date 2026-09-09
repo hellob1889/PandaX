@@ -13,12 +13,14 @@
 [![PyPI version](https://img.shields.io/pypi/v/pandax?color=blue)](https://pypi.org/project/pandax/)
 [![Python](https://img.shields.io/pypi/pyversions/pandax)](https://pypi.org/project/pandax/)
 [![License](https://img.shields.io/pypi/l/pandax)](https://github.com/pandax/pandax/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-298%20passed-brightgreen)](https://github.com/pandax/pandax)
-[![Bugs](https://img.shields.io/badge/bugs-28%20fixed-success)](https://github.com/pandax/pandax/releases)
-[![i18n](https://img.shields.io/badge/i18n-200%2B%20keys%20100%25-blueviolet)](https://github.com/pandax/pandax/blob/main/docs/i18n.md)
+[![Tests](https://img.shields.io/badge/tests-340%20passed-brightgreen)](https://github.com/pandax/pandax/actions/workflows/audit.yml)
+[![Bugs](https://img.shields.io/badge/bugs-11%20fixed%20(v0.7.1)-success)](https://github.com/hellob1889/PandaX/releases/tag/v0.7.1)
+[![i18n](https://img.shields.io/badge/i18n-248%20keys%20zh%2Den%20%E2%89%88%20en-blueviolet)](https://github.com/hellob1889/PandaX/blob/main/src/pandax/i18n.py)
 [![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/pandax/pandax/blob/main/.github/workflows/lint.yml)
 [![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax/)
 [![Phase](https://img.shields.io/badge/status-v0.7.1%20production--ready-success)](https://github.com/pandax/pandax/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/audit.yml?branch=main&label=CI&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/lint.yml)
 
 [English](#english) | [中文](#中文)
 
