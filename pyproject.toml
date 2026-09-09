@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pandax"
 version = "0.7.1"
 description = "AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change"
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 license = {text = "MIT"}
 authors = [
     {name = "PandaX Project", email = "pandax@example.com"},
@@ -50,10 +50,10 @@ pandax-guard = "pandax_guard:main"
 pandax-mcp = "pandax_mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/pandax/pandax"
-Documentation = "https://github.com/pandax/pandax/blob/main/README.md"
-Repository = "https://github.com/pandax/pandax"
-Issues = "https://github.com/pandax/pandax/issues"
+Homepage = "https://github.com/hellob1889/PandaX"
+Documentation = "https://github.com/hellob1889/PandaX/blob/main/README.md"
+Repository = "https://github.com/hellob1889/PandaX"
+Issues = "https://github.com/hellob1889/PandaX/issues"
 
 [tool.setuptools]
 include-package-data = true

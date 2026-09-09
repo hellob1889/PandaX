@@ -17,13 +17,13 @@ from setuptools import setup, find_packages
 
 setup(
     name="pandax",
-    version="0.7.0",
+    version="0.7.1",
     description="AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="PandaX Project",
     author_email="pandax@example.com",
-    url="https://github.com/pandax/pandax",
+    url="https://github.com/hellob1889/PandaX",
     license="MIT",
     python_requires=">=3.8",
     packages=find_packages(where="src"),
