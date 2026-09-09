@@ -99,9 +99,18 @@ def check_version_sync(target_version: str):
     if su_ver != target_version:
         die(f"setup.py version={su_ver} ≠ {target_version}")
 
-    # __init__.py
-    init_ver = re.search(r'__version__\s*=\s*"([^"]+)"',
-                         INIT.read_text(encoding="utf-8")).group(1)
+    # __init__.py — 动态检查（版本号运行时从 importlib.metadata 或 pyproject.toml 派生）
+    sys.path.insert(0, str(ROOT / "src"))
+    try:
+        import pandax as _pandax_pkg
+        init_ver = _pandax_pkg.__version__
+    except Exception as _exc:
+        die(f"__init__.py __version__ 无法解析（{_exc}）")
+    finally:
+        try:
+            sys.path.pop(0)
+        except IndexError:
+            pass
     if init_ver != target_version:
         die(f"__init__.py __version__={init_ver} ≠ {target_version}")
 
