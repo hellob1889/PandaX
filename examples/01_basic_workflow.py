@@ -49,7 +49,6 @@ def find_git():
     """跨平台查找 git"""
     candidates = [
         "git",  # PATH
-        r"D:\软件\Git\cmd\git.exe",
         r"C:\Program Files\Git\cmd\git.exe",
         r"C:\Program Files (x86)\Git\cmd\git.exe",
         "/usr/bin/git",  # Git Bash

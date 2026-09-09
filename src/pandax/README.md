@@ -663,7 +663,7 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 ## 文件结构
 
 ```
-d:\绿联云办公\项目 水龙头项目 PandaX_项目文档\
+<your-project-path>\
 ├── README.md                           # 本文件（实施日志 + CLI 启动读取）
 ├── PandaX_项目文档.html             # 原始设计文档（v2.0）
 ├── pandax.py                        # 主 CLI（待创建）
@@ -692,7 +692,7 @@ d:\绿联云办公\项目 水龙头项目 PandaX_项目文档\
 ## 运行测试
 
 ```powershell
-cd d:\绿联云办公\项目 水龙头项目 PandaX_项目文档
+cd <your-project-path>
 python -m pytest tests/ -v
 ```
 

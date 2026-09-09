@@ -42,8 +42,7 @@ def find_src():
 
 
 def find_git():
-    for c in ["git", r"D:\软件\Git\cmd\git.exe",
-              r"C:\Program Files\Git\cmd\git.exe", "/usr/bin/git"]:
+    for c in ["git", r"C:\Program Files\Git\cmd\git.exe", "/usr/bin/git"]:
         if shutil.which(c) or Path(c).exists():
             return c if Path(c).exists() else shutil.which(c)
     return None

@@ -40,6 +40,9 @@ env/
 # PandaX 自身产物
 test_project/
 
+# PandaX 运行时状态目录（init 后生成）
+.codeaudit/
+
 # OS
 .DS_Store
 Thumbs.db

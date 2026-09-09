@@ -12,8 +12,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SRC = Path(r"D:\绿联云办公\项目 水龙头项目 PandaX_项目文档\src")
-GIT = r"D:\软件\Git\cmd\git.exe"
+SRC = Path(__file__).resolve().parent.parent / "src"
+GIT = shutil.which("git") or "git"  # 自动检测；避免硬编码用户安装路径
 
 
 def banner(msg):
