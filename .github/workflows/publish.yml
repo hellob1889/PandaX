@@ -49,23 +49,11 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
+          # setuptools 80.x raises Remove on deprecations we can't fix yet
           python -m pip install "setuptools==79.6.0" "wheel" "build" "twine"
-          pip show setuptools | head -3
 
       - name: Build
-        run: |
-          echo "=== DEBUG START ==="
-          python --version
-          python -c "import setuptools; print('setuptools:', setuptools.__version__)"
-          python -c "import sys; print('python path:', sys.executable)"
-          pip show setuptools
-          echo "=== PYPROJECT LICENSE LINE ==="
-          grep '^license' pyproject.toml
-          echo "=== TRY: import setup.py ==="
-          cd "$GITHUB_WORKSPACE" && python -c "import setup; print('setup.py imports OK')"
-          echo "=== TRY: build isolated ==="
-          python -m build
-          echo "=== END ==="
+        run: python -m build --no-isolation
 
       - name: Verify metadata
         run: python -m twine check dist/*
