@@ -54,13 +54,18 @@ jobs:
 
       - name: Build
         run: |
-          echo "DEBUG: setuptools version"
-          python -c "import setuptools; print(setuptools.__version__)"
-          echo "DEBUG: pyproject.toml license line"
+          echo "=== DEBUG START ==="
+          python --version
+          python -c "import setuptools; print('setuptools:', setuptools.__version__)"
+          python -c "import sys; print('python path:', sys.executable)"
+          pip show setuptools
+          echo "=== PYPROJECT LICENSE LINE ==="
           grep '^license' pyproject.toml
-          echo "DEBUG: running build"
-          python -m build --no-isolation
-          echo "---END---"
+          echo "=== TRY: import setup.py ==="
+          cd "$GITHUB_WORKSPACE" && python -c "import setup; print('setup.py imports OK')"
+          echo "=== TRY: build isolated ==="
+          python -m build
+          echo "=== END ==="
 
       - name: Verify metadata
         run: python -m twine check dist/*
