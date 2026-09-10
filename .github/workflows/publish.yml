@@ -52,7 +52,7 @@ jobs:
           python -m pip install build twine
 
       - name: Build
-        run: python -m build --no-isolation
+        run: python -m build
 
       - name: Verify metadata
         run: python -m twine check dist/*
