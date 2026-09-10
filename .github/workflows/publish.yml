@@ -50,7 +50,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # setuptools 80.x raises Remove on deprecations we can't fix yet
-          python -m pip install "setuptools==79.6.0" "wheel" "build" "twine"
+          python -m pip install "setuptools==80.10.2" "wheel" "build" "twine"
 
       - name: Build
         id: build
