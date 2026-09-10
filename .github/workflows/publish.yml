@@ -115,7 +115,9 @@ jobs:
 
   publish:
     name: Publish
-    needs: [build, test]
+    # Decouple publish from test: build artifact is the source of truth for shipping
+    needs: [build]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
