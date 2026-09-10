@@ -150,30 +150,32 @@ pandax log --format pdf --output audit_report.pdf
 # 全部 13 种格式：text / csv / tsv / json / yaml / md / html / xlsx / docx / pdf / sqlite / rst / asciidoc
 ```
 
-#### 项目状态仪表盘
+#### 项目状态仪表盘 / Project Status Dashboard
 
 ```bash
 pandax status --root .
 ```
 
-显示：项目路径、配置摘要、L1 锁定状态、二进制快照、最近审计、版本指纹等。
+显示 / Displays：项目路径、配置摘要、L1 锁定状态、二进制快照、最近审计、版本指纹等。
+Project path, configuration summary, L1 lock state, binary snapshots, recent audits, version fingerprints, etc.
 
-### 防御体系（7 层）
+### 防御体系（7 层） / Defense Layers (7 Layers)
 
-| 层 | 组件 | 作用 | 被绕过后的兜底 |
+| 层 / Layer | 组件 / Component | 作用 / Function | 被绕过后的兜底 / Fallback if Bypassed |
 |---|---|---|---|
-| **L1** | file chmod | 文件级只读锁（attrib +r / chmod -w）| L2 watchdog |
-| **L2** | watchdog | 实时文件监控 + git checkout 回滚 | L3 hook |
-| **L3** | pre-commit hook | 严格校验每个 staged 文件的 APPROVED 记录 | L4 / L5 |
-| **L4** | 启动读 README | CLI 启动时加载项目元数据 | L5 |
-| **L5** | 自指纹 | CLI 自身 SHA256 检测篡改 | L6 |
-| **L6** | 二进制 SHA256 snapshot | 检测 .png/.pdf 等二进制篡改 | L7 |
-| **L7** | GitHub Actions CI | PR 合入前审计验证（最终兜底）| 人工 review |
+| **L1** | file chmod | 文件级只读锁（attrib +r / chmod -w）<br/>File-level read-only lock | L2 watchdog |
+| **L2** | watchdog | 实时文件监控 + git checkout 回滚<br/>Real-time file monitor + git checkout rollback | L3 hook |
+| **L3** | pre-commit hook | 严格校验每个 staged 文件的 APPROVED 记录<br/>Strict validation of APPROVED record for every staged file | L4 / L5 |
+| **L4** | 启动读 README<br/>Read README on startup | CLI 启动时加载项目元数据<br/>CLI loads project metadata at startup | L5 |
+| **L5** | 自指纹<br/>Self-fingerprint | CLI 自身 SHA256 检测篡改<br/>CLI's own SHA256 detects tampering | L6 |
+| **L6** | 二进制 SHA256 snapshot<br/>Binary SHA256 snapshot | 检测 .png/.pdf 等二进制篡改<br/>Detects tampering of .png/.pdf binaries | L7 |
+| **L7** | GitHub Actions CI | PR 合入前审计验证（最终兜底）<br/>Audit verification before PR merge (final fallback) | 人工 review<br/>Manual review |
 
-### MCP Server（AI Agent 直连）
+### MCP Server（AI Agent 直连 / AI Agent Native）
 
 ```json
 // claude_desktop_config.json 或 Cursor MCP 配置
+// claude_desktop_config.json or Cursor MCP configuration
 {
   "mcpServers": {
     "pandax": {
