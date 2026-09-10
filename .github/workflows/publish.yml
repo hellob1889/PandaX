@@ -49,10 +49,11 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build twine
+          # Pin setuptools <80: latest 80.x raises Remove on deprecations we don't have time to fix
+          python -m pip install "setuptools<80" "wheel" "build" "twine"
 
       - name: Build
-        run: python -m build
+        run: python -m build --no-isolation
 
       - name: Verify metadata
         run: python -m twine check dist/*
