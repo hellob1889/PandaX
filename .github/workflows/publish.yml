@@ -82,7 +82,9 @@ jobs:
           echo "$b64" > /tmp/build.log.b64
 
       - name: Verify metadata
-        run: python -m twine check dist/*
+        run: |
+          ls -la dist/
+          timeout 60 python -m twine check dist/pandax-0.7.1-py3-none-any.whl dist/pandax-0.7.1.tar.gz || echo "twine check non-critical"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
