@@ -26,31 +26,31 @@
 
 ---
 
-## 中文
+## 中文 / Chinese
 
-### 是什么？
+### 是什么？ / What is it?
 
 PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）写代码前必须经过审计：
 任何受保护文件的修改都必须通过 `pandax write` 命令，留下 reason / problem / approach 三段式审计记录。
 
-**适用场景**：
+**适用场景 / Use Cases**：
 - 🤖 AI Agent 开发：防止 Agent 绕过审查直接改代码
 - 🏢 企业合规：满足 SOC2 / ISO 27001 等代码变更审计要求
 - 👥 团队协作：所有 PR 必须有审计记录才能合入
 
-### 核心特性
+### 核心特性 / Core Features
 
 - **17 种文本格式 + 24 种二进制格式保护**（`.py` / `.md` / `.json` / `.yml` / `.env` / `.png` / `.pdf` / ...）
-- **7 层防御体系**（详见 [防御体系](#防御体系)）
+- **7 层防御体系** / **7-Layer Defense System** (see [Defense Layers](#防御体系))
 - **MCP Server 原生支持** — Claude / Cursor / Trae 等 AI IDE 直连
 - **13 种审计日志导出格式**（Excel / Word / PDF / SQLite / ...）
 - **纯 Python** — Windows / macOS / Linux 通吃，**无 C 扩展**
 - **右键菜单集成** — 一行命令在 3 大平台安装原生右键菜单（HKCU / Quick Action / Nautilus + Dolphin）
 - **i18n 国际化** — `zh-CN` / `en` 双语 CLI 自动检测 + `--lang` 强制 + 持久化偏好
 
-### 快速开始
+### 快速开始 / Quick Start
 
-#### 安装
+#### 安装 / Installation
 
 **方式 A：从 PyPI 安装（最简单）**
 
@@ -74,7 +74,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 ./scripts/install.sh
 ```
 
-**安装脚本自动做**：
+**安装脚本自动做 / Install script auto-handles**：
 1. 检测 Python ≥ 3.10
 2. 探测 git（不在 PATH 时尝试常见安装路径）
 3. 卸载 site-packages 里可能存在的老 pandax 版本（避免版本冲突）
@@ -82,7 +82,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 5. 验证 pandax 可用（`python -m pandax --version`）
 6. 调用 `doctor.py --fix --persist-path` 自动修复剩余问题（依赖、setuptools、指纹、PATH 持久化到 HKCU）
 
-#### 环境诊断（任何时候都能跑）
+#### 环境诊断（任何时候都能跑）/ Environment Diagnostics (run anytime)
 
 ```bash
 python scripts/doctor.py                 # 人类可读
@@ -102,7 +102,7 @@ python scripts/doctor.py --fix-only      # 只跑修复 + 重测，跳过详细�
 - Windows：用 `setx PATH "%PATH%;<Scripts>"` 持久化到 `HKCU\Environment\Path`（新开的 PowerShell 自动看到）
 - macOS / Linux：追加 `export PATH="..."` 到 `~/.bashrc` / `~/.zshrc`
 
-#### 初始化项目
+#### 初始化项目 / Initialize Project
 
 ```bash
 cd /path/to/your-project
@@ -114,7 +114,7 @@ pandax init --root .
 #   - 初始化 .gitignore 排除
 ```
 
-#### 写代码（合规路径）
+#### 写代码（合规路径）/ Write Code (Compliant Path)
 
 ```bash
 # 修改 Python 文件
@@ -135,7 +135,7 @@ pandax write \
     --from-file /tmp/new_logo.png
 ```
 
-#### 查看审计日志
+#### 查看审计日志 / View Audit Log
 
 ```bash
 # 命令行查看
@@ -188,27 +188,27 @@ Project path, configuration summary, L1 lock state, binary snapshots, recent aud
 
 暴露 **11 个工具**：`pandax_init` / `pandax_lock` / `pandax_unlock` / `pandax_write` / `pandax_log` / `pandax_status` / `pandax_install_hook` / `pandax_watch` / `pandax_install_git` / `pandax_fingerprint_update` / `pandax_ci`
 
-### 真实场景测试
+### 真实场景测试 / Real-World Validation
 
 完整实战验证报告：[实战验证报告.md](实战验证报告.md)
 
-包含：
-- 7 层防御每层实战证据
+包含 / Includes：
+- 7 层防御每层实战证据 / 7-layer defense, each layer with real-world evidence
 - L3 hook 严重 bug 的发现 + 修复
 - 隐藏文件锁定 bug 的发现 + 修复
-- 13 种导出格式实测
+- 13 种导出格式实测 / 13 export formats tested
 - MCP 协议完整工作流
 
-### 详细示例集
+### 详细示例集 / Detailed Examples
 
 - [EXAMPLES.md](EXAMPLES.md) — 10 个真实工作流 + 终端输出
 - [examples/](examples/) — 5 个可运行的 Python demo 脚本
 - [docs/](docs/) — 中英双语文档站（mkdocs）
 - [docs/index.html](docs/index.html) — 交互式 HTML 文档首页（带终端动画）
 
-### 命令清单
+### 命令清单 / Command List
 
-| 命令 | 用途 |
+| 命令 / Command | 用途 / Purpose |
 |---|---|
 | `pandax init` | 初始化项目 |
 | `pandax lock` / `unlock` | 锁定 / 解锁所有受保护文件 |
@@ -222,7 +222,7 @@ Project path, configuration summary, L1 lock state, binary snapshots, recent aud
 | `pandax ci` | L7 CI 验证（git diff vs audit log）|
 | `pandax-mcp` | 启动 MCP server（stdio JSON-RPC） |
 
-### 开发与测试
+### 开发与测试 / Development & Testing
 
 ```bash
 git clone https://github.com/hellob1889/PandaX
@@ -233,9 +233,9 @@ pytest tests/ -v
 
 当前测试数：**340 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
 
-### 路线图
+### 路线图 / Roadmap
 
-| 版本 | 状态 | 关键能力 |
+| 版本 / Version | 状态 / Status | 关键能力 / Key Capability |
 |---|---|---|
 | v0.1.0 | ✅ | Phase 1-3 MVP（5 层防御） |
 | v0.2.0 | ✅ | 多格式导出（7 种） |
@@ -251,7 +251,7 @@ pytest tests/ -v
 
 完整历史：[CHANGELOG.md](CHANGELOG.md)
 
-### 许可
+### 许可 / License
 
 MIT License — 详见 [LICENSE](LICENSE)
 

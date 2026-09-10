@@ -15,7 +15,7 @@ $ cd my-project
 $ pandax init --root .
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 ================================================================
 PandaX CLI — README 摘要（每次启动自动加载）
@@ -55,7 +55,7 @@ PandaX CLI — README 摘要（每次启动自动加载）
 $ pandax status --root .
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 ================================================================
 PandaX 状态仪表盘 — D:\my-project
@@ -84,7 +84,7 @@ PandaX 状态仪表盘 — D:\my-project
 ================================================================
 ```
 
-**读法**：
+**读法 / How to Read**：
 - `[WARN]` L1 未锁定 — 还没运行 `pandax lock`
 - `[L2]` watchdog 未运行 — 监控未启用
 - `[L5] OK` — CLI 自身未被篡改
@@ -108,7 +108,7 @@ $ pandax write \
     return "Hello, World! v1.0"'
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 [APPROVED] {"status":"APPROVED","commit":"3d52141","audit_id":"audit_7ace3834","file":"src/app.py"}
 ```
@@ -140,17 +140,17 @@ $ pandax write \
 $ pandax log --root . --format xlsx --output audit.xlsx
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 [OK] 已导出 1 条记录 (xlsx) 到 D:\my-project\audit.xlsx
 ```
 
 生成的 `audit.xlsx` 含：
-- 冻结表头
-- 自动列宽
-- 时间戳排序
-- 中文字段名
-- 可直接在 Excel 中筛选、排序、透视
+- 冻结表头 / Frozen header
+- 自动列宽 / Auto column width
+- 时间戳排序 / Timestamp sorting
+- 中文字段名 / Chinese column names
+- 可直接在 Excel 中筛选、排序、透视 / Direct Excel filter, sort, pivot
 
 ---
 
@@ -165,7 +165,7 @@ $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; d
   done
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 生成 13 个格式:
     text             563 bytes
@@ -183,7 +183,7 @@ $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; d
     tsv              275 bytes
 ```
 
-**特点**：
+**特点 / Features**：
 - PDF 自动探测中文字体（msyh.ttc / simhei.ttf / PingFang）
 - SQLite 含 `audit_records` + `metadata` 两表，可直接 SQL 查询
 - HTML 单文件可直接邮件发送
@@ -204,12 +204,12 @@ $ pandax write \
     --from-file /tmp/new_logo.png
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 [APPROVED] {"status":"APPROVED","commit":"5874b2b","audit_id":"audit_d0af1a26","file":"assets/logo.png"}
 ```
 
-**自动行为**：
+**自动行为 / Automatic Behavior**：
 - 计算 `new_logo.png` 的 SHA256
 - 写入 `binary_snapshots.json`：`{ "assets/logo.png": "f7d1a7c11c5b83f8..." }`
 - L1 锁会临时解锁 → 替换 → 重新锁定
@@ -226,14 +226,14 @@ $ pandax write \
 $ pandax install-hook --root .
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 [OK] pre-commit hook 已安装: D:\my-project\.git\hooks\pre-commit
 [OK] pre-commit-check.py 已复制: D:\my-project\.pandax\pre-commit-check.py
 [INFO] 内容: PandaX L3 防御（强化版：每个 staged 文件必须有 APPROVED 记录）
 ```
 
-**安装内容**：
+**安装内容 / Installation Contents**：
 - `.git/hooks/pre-commit` — shell 启动器（Git 调用）
 - `.pandax/pre-commit-check.py` — Python 校验逻辑（精确查每文件的 APPROVED 记录）
 
@@ -251,7 +251,7 @@ $ git add src/app.py
 $ git commit -m "bypass"
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 ================================================================
 [PandaX] 拒绝提交: 以下文件没有 APPROVED 审计记录
@@ -266,7 +266,7 @@ $ git commit -m "bypass"
 如果确实要绕过审计 (不推荐), 使用: git commit --no-verify
 ```
 
-**攻击失败，提交被拒绝。**
+**攻击失败，提交被拒绝。 / Attack failed, commit rejected.**
 
 ---
 
@@ -314,7 +314,7 @@ $ git commit -m "bypass"
 ← (完整 status 输出)
 ```
 
-**为什么用 stdio JSON-RPC 而非 HTTP**：
+**为什么用 stdio JSON-RPC 而非 HTTP / Why stdio JSON-RPC, not HTTP**：
 - 零网络暴露（无端口、无认证）
 - IDE 管理进程生命周期（启动/重启）
 - 标准协议（任何 MCP client 都能用）
@@ -330,7 +330,7 @@ $ git commit -m "bypass"
 $ pandax status --root .
 ```
 
-**输出**：
+**输出 / Output**：
 ```
 ================================================================
 PandaX 状态仪表盘 — D:\my-project
@@ -366,7 +366,7 @@ PandaX 状态仪表盘 — D:\my-project
 
 ---
 
-## 进阶示例（更复杂的真实场景）
+## 进阶示例（更复杂的真实场景）/ Advanced Examples (More Complex Real-World Scenarios)
 
 ### 示例 11: 完整 PR 工作流（推荐阅读）
 
@@ -434,7 +434,7 @@ $ pandax ci --root . --base origin/main
 {"status":"FAIL","violations":2,"changed":5}
 ```
 
-**修复路径**：
+**修复路径 / Fix Path**：
 ```bash
 # 1. 重新走 write 流程
 $ pandax write --file src/auth.py \
@@ -453,7 +453,7 @@ $ git push origin feature/auth-fix
 
 完整可运行的演示脚本在 [`examples/`](examples/)：
 
-| 脚本 | 演示内容 |
+| 脚本 / Script | 演示内容 / Demo Content |
 |---|---|
 | `01_basic_workflow.sh` | init → write → log 基础流程 |
 | `02_binary_files.sh` | 二进制文件 SHA256 保护 |
@@ -466,7 +466,7 @@ All scripts include **real output** and **expected assertions**; running them on
 
 ---
 
-## 录屏与截图
+## 录屏与截图 / Recordings & Screenshots
 
 虽然这里没有视频/截图附件，但所有示例都是**真实终端输出**（从开发测试捕获，非伪造）。建议用户自己跑：
 Although there are no video/screenshot attachments here, all examples are **real terminal output** (captured during development testing, not fabricated). We recommend users run them themselves:

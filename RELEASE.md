@@ -28,7 +28,7 @@ Configure on PyPI project page (after project is created):
    Go to project → **Publishing** → **Add a new pending publisher**
 3. 选择 **GitHub Actions**
    Select **GitHub Actions**
-4. 填写：
+4. 填写 / Fill in：
    Fill in:
    - Owner: `你的 GitHub 用户名` / `Your GitHub username`
    - Repository: `PandaX`
@@ -128,15 +128,15 @@ ls dist/  # 应看到 .whl + .tar.gz
 PyPI 的项目页面显示的是 README.md 内容（需 `long_description_content_type = "text/markdown"`）：
 PyPI project page shows README.md content (requires `long_description_content_type = "text/markdown"`):
 
-- ✅ 有项目标题 + 一句话描述
+- ✅ 有项目标题 + 一句话描述 / Project title + one-line description
   Has project title + one-line description
 - ✅ 有 shields.io 徽章（版本/license/Python/测试状态）
   Has shields.io badges (version/license/Python/test status)
-- ✅ 有安装命令
+- ✅ 有安装命令 / Install command
   Has install command
-- ✅ 有快速开始示例
+- ✅ 有快速开始示例 / Quick start example
   Has quick start example
-- ✅ 有功能列表
+- ✅ 有功能列表 / Feature list
   Has feature list
 - ✅ 有 license（MIT）
   Has license (MIT)
@@ -170,7 +170,7 @@ pyproject.toml already includes:
 
 ## 安装验证（每个新版本都要做的）/ Install Verification (Required for Each New Version)
 
-发布后**立刻**测试安装：
+发布后**立刻**测试安装 / **Immediately** test installation after publishing：
 Test installation **immediately** after publishing:
 
 ```bash
@@ -218,6 +218,7 @@ echo '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}' | pandax-mcp
 ## 第一性原理 / First Principles
 
 > **发布 = 让任何人都能 1 行命令安装并使用**。
+> **Publishing = letting anyone install and use it with 1 command**.
 > **Publishing = letting anyone install and use it with 1 command**.
 > 一切准备工作（wheel / 签名 / 验证）都为此服务。
 > All preparation work (wheel / signing / validation) serves this.
