@@ -10,8 +10,8 @@ name: Publish to PyPI
 #   Environment: Any（未配置 GitHub Environment）
 #
 # 触发规则 (按 tag 前缀):
-#   v*.*.*-test  → TestPyPI (例: v0.7.1-test)
-#   v*.*.*       → Production PyPI (例: v0.7.1)
+#   v*.*.*-test  → TestPyPI (例: v0.7.2-test)
+#   v*.*.*       → Production PyPI (例: v0.7.2)
 #
 # 也支持 workflow_dispatch 手动触发。
 # ============================================================
@@ -84,7 +84,7 @@ jobs:
       - name: Verify metadata
         run: |
           ls -la dist/
-          timeout 60 python -m twine check dist/pandax_guard-0.7.1-py3-none-any.whl dist/pandax_guard-0.7.1.tar.gz || echo "twine check non-critical"
+          timeout 60 python -m twine check dist/pandax_guard-0.7.2-py3-none-any.whl dist/pandax_guard-0.7.2.tar.gz || echo "twine check non-critical"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -193,7 +193,7 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax-guard
+            pip install --upgrade pandax-guard==0.7.2
             ```
 
             See [CHANGELOG.md](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md) for details.

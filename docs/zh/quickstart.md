@@ -7,7 +7,7 @@
 ```bash
 pip install pandax-guard
 pandax --version
-# pandax-guard v0.7.1
+# pandax-guard v0.7.2
 ```
 
 ## Step 2: 初始化项目（10 秒）

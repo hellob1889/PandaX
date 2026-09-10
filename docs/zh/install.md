@@ -16,7 +16,7 @@ pip install pandax-guard
 
 ```bash
 pandax --version
-# pandax-guard v0.7.1
+# pandax-guard v0.7.2
 ```
 
 ## 开发模式安装

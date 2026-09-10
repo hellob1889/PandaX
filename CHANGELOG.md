@@ -5,6 +5,27 @@ All notable changes to PandaX will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-09-10
+
+### Fixed (CI 工程化)
+- **CI Tests job 在干净 ubuntu-latest 上 25 秒 exit 1** —— 根因：test job 没 pin setuptools 版本，build-isolation 拉到的 setuptools 与 build job 不一致，导致 `pip install -e .[dev]` 阶段 metadata 解析失败
+  - test job pin `setuptools==80.10.2` + `pip install -e .[dev] --no-build-isolation`，与 build 步骤完全对齐
+  - v0.7.1 publish run（run 34429112009）Build ✅ / Tests ❌ / Publish ✅ — 已修复
+  - 新验证 run（run 34430629959）Build ✅ / Tests ✅ / Publish ✅
+
+### Added (CI 诊断加固)
+- **pytest log artifact**：测试失败时 `tee /tmp/pytest.log` + `actions/upload-artifact@v4` 上传完整日志，artifact 名 `pytest-log-{run_id}`
+- **continue-on-error + 显式 fail step**：解耦"上传日志"与"标红"，下次 CI 失败可以直接从 artifact 看到 pytest 输出，无需再重新跑
+
+### Distribution
+- **分发名 `pandax-guard`**（沿用 v0.7.1）：保留 `pandax` 作为内部 Python 包和 CLI 命令
+- **wheel/sdist 文件名归一化**：`pandax_guard-0.7.2-py3-none-any.whl` + `pandax_guard-0.7.2.tar.gz`（setuptools 自动把分发名 hyphen 转为下划线）
+
+### Stats
+- **测试**：340 passed（与 v0.7.1 持平，无回归）
+- **PyPI**：[pandax-guard 0.7.2](https://pypi.org/project/pandax-guard/0.7.2/)
+- **Trusted Publishing**：tag `v0.7.2` push → GitHub Actions `publish.yml` 自动通过 OIDC 上传到 PyPI
+
 ## [0.7.1] - 2026-09-06
 
 ### Fixed (28 bugs)
@@ -228,7 +249,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Tests
 - 59 passed
 
-[Unreleased]: https://github.com/hellob1889/PandaX/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/hellob1889/PandaX/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/hellob1889/PandaX/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/hellob1889/PandaX/compare/v0.6.2...v0.7.1
 [0.6.2]: https://github.com/hellob1889/PandaX/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/hellob1889/PandaX/compare/v0.6.0...v0.6.1

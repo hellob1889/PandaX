@@ -30,7 +30,7 @@
 # 仅第一次需要——创建 PyPI 项目记录
 pip install --upgrade twine build
 python -m build --no-isolation
-twine upload dist/pandax_guard-0.7.1-py3-none-any.whl dist/pandax_guard-0.7.1.tar.gz
+twine upload dist/pandax_guard-0.7.2-py3-none-any.whl dist/pandax_guard-0.7.2.tar.gz
 # 输入 username + password（启用 2FA 后用 token）
 ```
 
@@ -39,8 +39,8 @@ twine upload dist/pandax_guard-0.7.1-py3-none-any.whl dist/pandax_guard-0.7.1.ta
 ### Step 4：后续发布（自动化）
 
 ```bash
-git tag v0.7.1
-git push origin v0.7.1
+git tag v0.7.2
+git push origin v0.7.2
 # GitHub Actions 自动：
 #   1. 跑测试（确保 340 个全过）
 #   2. build wheel + sdist
@@ -139,10 +139,10 @@ source /tmp/pandax-verify/bin/activate  # Windows: Scripts\activate
 # 安装（生产）
 pip install pandax-guard
 # 或指定版本
-pip install pandax-guard==0.7.1
+pip install pandax-guard==0.7.2
 
 # 验证
-pandax --version  # pandax-guard v0.7.1
+pandax --version  # pandax-guard v0.7.2
 pandax init --help
 pandax init /tmp/test-project
 pandax write --root /tmp/test-project --file test.py \
