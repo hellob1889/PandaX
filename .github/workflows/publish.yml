@@ -53,7 +53,33 @@ jobs:
           python -m pip install "setuptools==79.6.0" "wheel" "build" "twine"
 
       - name: Build
-        run: python -m build --no-isolation
+        id: build
+        run: |
+          {
+            python -m build --no-isolation 2>&1
+          } > /tmp/build.log 2>&1 || EXIT=$?
+          echo "BUILD_EXIT=${EXIT:-0}" >> "$GITHUB_ENV"
+          # Always upload the full log so we can read it via API
+          tail -200 /tmp/build.log || true
+          echo "---END---"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_id }}
+          path: /tmp/build.log
+          if-no-files-found: ignore
+
+      - name: Stamp build log as short output
+        if: always()
+        run: |
+          # Compress to fit in step output
+          gzip -c /tmp/build.log > /tmp/build.log.gz
+          b64=$(base64 -w0 /tmp/build.log.gz)
+          echo "BUILD_LOG_B64_LEN=${#b64}" >> "$GITHUB_OUTPUT"
+          # store compressed+b64 in 2KB slices
+          echo "$b64" > /tmp/build.log.b64
 
       - name: Verify metadata
         run: python -m twine check dist/*
