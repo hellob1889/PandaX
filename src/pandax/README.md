@@ -1,14 +1,18 @@
-# PandaX 实施日志（Living Doc）
+# PandaX 实施日志（Living Doc）/ PandaX Implementation Log (Living Doc)
 
 > **核心机制**：CLI 每次运行都会读取本文件，并在启动时显示当前阶段 / 已完成步骤 / 待办。
 > 所以本文件不是"写完就不管"的文档，而是 **CLI 自身依赖的运行时数据**。
+> **Core mechanism**: CLI reads this file on every run and displays the current phase / completed steps / TODO at startup.
+> So this file is not a "write-and-forget" document, but **runtime data that CLI itself depends on**.
 
 ***
 
-## 项目目标
+## 项目目标 / Project Goal
 
 实现 `PandaX` —— 一个 OS 级物理强制的 AI Agent 代码审计门禁系统。
 详见 `PandaX_项目文档.html`（v2.0 设计文档）。
+Implement `PandaX` — an OS-level physically-enforced AI Agent code audit gateway system.
+See `PandaX_项目文档.html` (v2.0 design doc) for details.
 
 ***
 

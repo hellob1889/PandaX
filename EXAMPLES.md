@@ -1,12 +1,14 @@
-# PandaX 使用示例集
+# PandaX 使用示例集 / PandaX Usage Examples
 
 > **从真实终端捕获的完整工作流**——每一行输出都是真实执行的，非伪造。
+> **Complete workflows captured from real terminals** — every line of output is real, not fabricated.
 
 ---
 
-## 示例 1: 首次初始化
+## 示例 1: 首次初始化 / Example 1: First-Time Initialization
 
 **场景**：从空白项目开始，启动 PandaX 保护。
+**Scenario**: Start a blank project and activate PandaX protection.
 
 ```bash
 $ cd my-project
@@ -37,16 +39,17 @@ PandaX CLI — README 摘要（每次启动自动加载）
   binary_snapshots: D:\my-project\.pandax\binary_snapshots.json
 ```
 
-**自动创建**：
-- `.pandax/config.json` — 17 文本 + 24 二进制扩展名配置
-- `.pandax/pandax.jsonl` — 审计日志（JSON Lines 追加写入）
-- `.pandax/binary_snapshots.json` — 二进制文件 SHA256 字典
+**自动创建 / Auto-created**：
+- `.pandax/config.json` — 17 文本 + 24 二进制扩展名配置 / 17 text + 24 binary extension configuration
+- `.pandax/pandax.jsonl` — 审计日志（JSON Lines 追加写入）/ audit log (JSON Lines append-write)
+- `.pandax/binary_snapshots.json` — 二进制文件 SHA256 字典 / binary file SHA256 dictionary
 
 ---
 
-## 示例 2: Status 仪表盘
+## 示例 2: Status 仪表盘 / Example 2: Status Dashboard
 
 **场景**：查看项目当前状态。
+**Scenario**: View the project's current state.
 
 ```bash
 $ pandax status --root .
@@ -88,9 +91,10 @@ PandaX 状态仪表盘 — D:\my-project
 
 ---
 
-## 示例 3: 合规 write（核心命令）
+## 示例 3: 合规 write（核心命令）/ Example 3: Compliant write (Core Command)
 
 **场景**：AI Agent 修改 Python 文件——必须填写审计理由。
+**Scenario**: AI Agent modifies a Python file — must fill in the audit reason.
 
 ```bash
 $ pandax write \
@@ -127,9 +131,10 @@ $ pandax write \
 
 ---
 
-## 示例 4: 导出审计日志为 Excel
+## 示例 4: 导出审计日志为 Excel / Example 4: Export Audit Log to Excel
 
 **场景**：审计员/管理层查看。
+**Scenario**: Auditor / management review.
 
 ```bash
 $ pandax log --root . --format xlsx --output audit.xlsx
@@ -149,9 +154,10 @@ $ pandax log --root . --format xlsx --output audit.xlsx
 
 ---
 
-## 示例 5: 13 种格式批量导出
+## 示例 5: 13 种格式批量导出 / Example 5: Batch Export in 13 Formats
 
 **场景**：多受众分发——开发者看 md、管理层看 pdf、CI 看 json、合规看 sqlite。
+**Scenario**: Multi-audience distribution — developers view md, management views pdf, CI views json, compliance views sqlite.
 
 ```bash
 $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; do
@@ -184,9 +190,10 @@ $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; d
 
 ---
 
-## 示例 6: 替换二进制文件
+## 示例 6: 替换二进制文件 / Example 6: Replace Binary File
 
 **场景**：更新 logo 图片——审计门禁对二进制同样有效。
+**Scenario**: Updating a logo image — audit gateway applies to binaries too.
 
 ```bash
 $ pandax write \
@@ -210,9 +217,10 @@ $ pandax write \
 
 ---
 
-## 示例 7: 安装 pre-commit hook（L3 防御）
+## 示例 7: 安装 pre-commit hook（L3 防御）/ Example 7: Install pre-commit hook (L3 Defense)
 
 **场景**：启用 Git 提交前的强制审计。
+**Scenario**: Enforce audit on every Git commit.
 
 ```bash
 $ pandax install-hook --root .
@@ -231,9 +239,10 @@ $ pandax install-hook --root .
 
 ---
 
-## 示例 8: 攻击 L3——hook 拦截
+## 示例 8: 攻击 L3——hook 拦截 / Example 8: Attack L3 — hook blocks
 
 **场景**：模拟 AI Agent 绕过 write 直接 commit。
+**Scenario**: Simulate an AI Agent bypassing write and committing directly.
 
 ```bash
 # 攻击者尝试：直接修改文件 + git commit（绕过 write）
@@ -261,11 +270,12 @@ $ git commit -m "bypass"
 
 ---
 
-## 示例 9: MCP 协议工作流（AI Agent 直连）
+## 示例 9: MCP 协议工作流（AI Agent 直连）/ Example 9: MCP Protocol Workflow (AI Agent Native)
 
 **场景**：Claude / Cursor / Trae 等 AI IDE 通过 Model Context Protocol 调用。
+**Scenario**: AI IDEs like Claude / Cursor / Trae invoke via Model Context Protocol.
 
-**客户端配置**（`claude_desktop_config.json`）：
+**客户端配置**（`claude_desktop_config.json`）/ **Client configuration** (`claude_desktop_config.json`)：
 ```json
 {
   "mcpServers": {
@@ -311,9 +321,10 @@ $ git commit -m "bypass"
 
 ---
 
-## 示例 10: 最终 status（全功能）
+## 示例 10: 最终 status（全功能）/ Example 10: Final Status (Full Features)
 
 **场景**：运行多个命令后，完整状态。
+**Scenario**: After running multiple commands, full status.
 
 ```bash
 $ pandax status --root .
@@ -405,9 +416,10 @@ $ git push origin feature/add-cache
 # → Reviewer 看到 4 条审计记录 + 完整的 reason/problem/approach
 ```
 
-### 示例 12: CI 失败诊断
+### 示例 12: CI 失败诊断 / Example 12: CI Failure Diagnosis
 
 **场景**：PR 触发 CI 失败。
+**Scenario**: A PR triggers CI failure.
 
 ```bash
 # CI 输出（GitHub Actions 日志）
@@ -450,12 +462,14 @@ $ git push origin feature/auth-fix
 | `05_full_project.py` | 完整 20 文件项目实战 |
 
 所有脚本都自带**真实输出**和**预期断言**，跑一遍能验证功能。
+All scripts include **real output** and **expected assertions**; running them once validates the functionality.
 
 ---
 
 ## 录屏与截图
 
 虽然这里没有视频/截图附件，但所有示例都是**真实终端输出**（从开发测试捕获，非伪造）。建议用户自己跑：
+Although there are no video/screenshot attachments here, all examples are **real terminal output** (captured during development testing, not fabricated). We recommend users run them themselves:
 
 ```bash
 git clone https://github.com/hellob1889/PandaX
