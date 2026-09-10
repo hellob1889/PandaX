@@ -49,11 +49,18 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
-          # Pin setuptools <80: latest 80.x raises Remove on deprecations we don't have time to fix
-          python -m pip install "setuptools<80" "wheel" "build" "twine"
+          python -m pip install "setuptools==79.6.0" "wheel" "build" "twine"
+          pip show setuptools | head -3
 
       - name: Build
-        run: python -m build --no-isolation
+        run: |
+          echo "DEBUG: setuptools version"
+          python -c "import setuptools; print(setuptools.__version__)"
+          echo "DEBUG: pyproject.toml license line"
+          grep '^license' pyproject.toml
+          echo "DEBUG: running build"
+          python -m build --no-isolation
+          echo "---END---"
 
       - name: Verify metadata
         run: python -m twine check dist/*
