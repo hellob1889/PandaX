@@ -106,12 +106,33 @@ jobs:
       - name: Install package + dev deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .[dev]
+          # Pin setuptools to match build step — avoids build-isolation
+          # pulling a newer setuptools that breaks our pyproject metadata
+          python -m pip install "setuptools==80.10.2" "wheel" "build"
+          python -m pip install -e .[dev] --no-build-isolation
           python -m pip install pytest-timeout
 
       - name: Run pytest
+        id: pytest
         run: |
-          pytest tests/ -v --timeout=60 --timeout-method=thread -x --ignore=tests/test_watchdog.py --ignore=tests/test_watchdog_dedupe.py --ignore=tests/test_pandax_serve.py
+          set -o pipefail
+          pytest tests/ -v --timeout=60 --timeout-method=thread -x --ignore=tests/test_watchdog.py --ignore=tests/test_watchdog_dedupe.py --ignore=tests/test_pandax_serve.py 2>&1 | tee /tmp/pytest.log
+          echo "PYTEST_EXIT=${PIPESTATUS[0]}" >> "$GITHUB_ENV"
+        continue-on-error: true
+
+      - name: Upload pytest log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-log-${{ github.run_id }}
+          path: /tmp/pytest.log
+          if-no-files-found: ignore
+
+      - name: Fail if pytest failed
+        if: env.PYTEST_EXIT != '0'
+        run: |
+          echo "::error::pytest exited with code $PYTEST_EXIT. See pytest-log-${{ github.run_id }} artifact for full log."
+          exit "$PYTEST_EXIT"
 
   publish:
     name: Publish
