@@ -37,7 +37,7 @@ which records reason / problem / approach as immutable audit evidence.
 ## One-line Install
 
 ```bash
-pip install pandax
+pip install pandax-guard
 ```
 
 Try it now: [Quick Start](quickstart.md) → [Examples](../../EXAMPLES.md)

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pandax"
+name = "pandax-guard"
 version = "0.7.1"
 description = "AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change"
 readme = {file = "README.md", content-type = "text/markdown"}

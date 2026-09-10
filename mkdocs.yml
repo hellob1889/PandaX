@@ -2,9 +2,9 @@
 
 site_name: PandaX
 site_description: AI Agent code audit gateway (PandaX) — OS-level mandatory review
-site_url: https://pandax.github.io/pandax/
-repo_url: https://github.com/pandax/pandax
-repo_name: pandax/pandax
+site_url: https://hellob1889.github.io/PandaX/
+repo_url: https://github.com/hellob1889/PandaX
+repo_name: hellob1889/PandaX
 
 docs_dir: docs
 
@@ -45,9 +45,9 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/pandax/pandax
+      link: https://github.com/hellob1889/PandaX
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/pandax/
+      link: https://pypi.org/project/pandax-guard/
 
 markdown_extensions:
   - admonition

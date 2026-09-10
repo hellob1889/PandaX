@@ -1,4 +1,4 @@
-# PandaX v0.7.0 安装与使用指南
+# PandaX v0.7.1 安装与使用指南
 
 ## 一、目标电脑前置条件
 
@@ -16,32 +16,32 @@ Git 验证：`git --version`
 
 ```bash
 # 解压安装包
-# 假设 PandaX-0.7.0-install.zip 解压到 D:\pandax-pkg\
+# 假设 PandaX-0.7.1-install.zip 解压到 D:\pandax-pkg\
 cd D:\pandax-pkg
 
 # 安装 wheel（pip 会自动拉依赖）
-pip install dist\pandax-0.7.0-py3-none-any.whl
+pip install dist\pandax_guard-0.7.1-py3-none-any.whl
 
 # 或一行完成
-pip install pandax-0.7.0-py3-none-any.whl
+pip install pandax_guard-0.7.1-py3-none-any.whl
 ```
 
 ### 2.2 备选：从源码 sdist 安装
 
 ```bash
-pip install dist\pandax-0.7.0.tar.gz
+pip install dist\pandax_guard-0.7.1.tar.gz
 ```
 
 ### 2.3 离线安装（目标电脑无网）
 
 在有网的电脑上先下载依赖：
 ```bash
-pip download pandax-0.7.0-py3-none-any.whl -d deps/
+pip download pandax_guard-0.7.1-py3-none-any.whl -d deps/
 # 会下载 watchdog / openpyxl / python-docx / reportlab / pyyaml 等
 
-# 把 PandaX-0.7.0-install.zip + deps/ 一起拷到目标电脑
+# 把 PandaX-0.7.1-install.zip + deps/ 一起拷到目标电脑
 # 目标电脑上：
-pip install --no-index --find-links=deps/ pandax-0.7.0-py3-none-any.whl
+pip install --no-index --find-links=deps/ pandax_guard-0.7.1-py3-none-any.whl
 ```
 
 ## 三、验证安装
@@ -98,7 +98,7 @@ python -m pandax install-hook
 python -m pandax watch --daemon
 ```
 
-## 五、v0.7.0 包含的修复（21 个 bug）
+## 五、v0.7.1 包含的修复
 
 ```
 P0 安全 (5): #8 #12 v1 #12 v2 #22 #23
@@ -122,7 +122,7 @@ UX (1):        #25 (独立 export 子命令)
 ### Q1: pip install 时报 "ModuleNotFoundError: No module named 'venv'"
 A: 你的 Python 缺 venv 模块。改用：
 ```bash
-pip install --no-build-isolation dist\pandax-0.7.0.tar.gz
+pip install --no-build-isolation dist\pandax_guard-0.7.1.tar.gz
 # 或
 python -m build --no-isolation   # 在打包端
 ```
@@ -135,7 +135,7 @@ $env:PATH += ";$(python -m site --user-site)\..\Scripts"
 ```
 
 ### Q3: git commit 时 hook 报 syntax error near 'elif'
-A: 这是已修复的 #22。验证你的 wheel 是 v0.7.0（已包含 fix）：
+A: 这是已修复的 #22。验证你的 wheel 是 v0.7.1（已包含 fix）：
 ```bash
 python -m pandax install-hook --root .
 # 然后 cat .git/hooks/pre-commit | head -5
@@ -156,17 +156,17 @@ A: 暂未发布到 PyPI，可手动用 git 切到对应 tag 重装。
 ## 七、卸载
 
 ```bash
-pip uninstall pandax
+pip uninstall pandax-guard
 ```
 
 ## 八、文件清单
 
 ```
-PandaX-0.7.0-install.zip (210 KB)
+PandaX-0.7.1-install.zip (210 KB)
 ├── dist/
-│   ├── pandax-0.7.0-py3-none-any.whl   (70 KB, 推荐安装方式)
-│   └── pandax-0.7.0.tar.gz             (146 KB, 源码包)
-└── PandaX-0.7.0-INSTALL.md             (本文件)
+│   ├── pandax_guard-0.7.1-py3-none-any.whl   (70 KB, 推荐安装方式)
+│   └── pandax_guard-0.7.1.tar.gz             (146 KB, 源码包)
+└── PandaX-0.7.1-INSTALL.md             (本文件)
 ```
 
 ## 九、反馈

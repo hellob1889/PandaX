@@ -52,10 +52,10 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: 安装 pandax
+      - name: 安装 pandax-guard
         run: |
           pip install --upgrade pip
-          pip install pandax
+          pip install pandax-guard
 
       - name: 探测/安装 git
         run: |

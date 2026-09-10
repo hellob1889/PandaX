@@ -5,9 +5,9 @@
 ## Step 1: 安装（30 秒）
 
 ```bash
-pip install pandax
+pip install pandax-guard
 pandax --version
-# pandax v0.6.2
+# pandax-guard v0.7.1
 ```
 
 ## Step 2: 初始化项目（10 秒）

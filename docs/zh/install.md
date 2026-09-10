@@ -9,14 +9,14 @@
 ## 一行安装
 
 ```bash
-pip install pandax
+pip install pandax-guard
 ```
 
 ## 验证安装
 
 ```bash
 pandax --version
-# pandax v0.6.2
+# pandax-guard v0.7.1
 ```
 
 ## 开发模式安装
@@ -24,11 +24,11 @@ pandax --version
 如果你想参与开发：
 
 ```bash
-git clone https://github.com/pandax/pandax
+git clone https://github.com/hellob1889/PandaX
 cd pandax
 pip install -e .[dev]
 pytest tests/ -v
-# 140 passed
+# 340 passed
 ```
 
 ## 依赖说明
@@ -48,13 +48,13 @@ pytest tests/ -v
 ## 升级
 
 ```bash
-pip install pandax --upgrade
+pip install pandax-guard --upgrade
 ```
 
 ## 卸载
 
 ```bash
-pip uninstall pandax
+pip uninstall pandax-guard
 # 清理 fingerprint
 rm -rf ~/.pandax_fp.txt
 # 清理 PATH（如果之前手动添加过 pandax-mcp）
@@ -64,7 +64,7 @@ rm -rf ~/.pandax_fp.txt
 
 ```dockerfile
 FROM python:3.11-slim
-RUN pip install pandax
+RUN pip install pandax-guard
 ENTRYPOINT ["pandax"]
 ```
 

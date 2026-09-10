@@ -93,11 +93,10 @@ def check_version_sync(target_version: str):
     if pj_ver != target_version:
         die(f"pyproject.toml version={pj_ver} ≠ {target_version}")
 
-    # setup.py
-    su_ver = re.search(r'version\s*=\s*"([^"]+)"',
-                       SETUP.read_text(encoding="utf-8")).group(1)
-    if su_ver != target_version:
-        die(f"setup.py version={su_ver} ≠ {target_version}")
+    # setup.py is a compatibility stub; pyproject.toml is the metadata source of truth.
+    setup_text = SETUP.read_text(encoding="utf-8")
+    if "setup()" not in setup_text:
+        die("setup.py 缺少兼容桩 setup()")
 
     # __init__.py — 动态检查（版本号运行时从 importlib.metadata 或 pyproject.toml 派生）
     sys.path.insert(0, str(ROOT / "src"))
@@ -255,11 +254,17 @@ def upload(target: str, dry_run: bool):
         "testpypi": "https://test.pypi.org/legacy/",
     }[target]
 
+    version = get_version()
+    whl = DIST / f"pandax_guard-{version}-py3-none-any.whl"
+    sdist = DIST / f"pandax_guard-{version}.tar.gz"
+    if not whl.exists() or not sdist.exists():
+        die(f"缺少 pandax-guard 构建产物: {whl} / {sdist}")
+
     r = subprocess.run([
         sys.executable, "-m", "twine", "upload",
         "--repository-url", repo_url,
-        str(DIST / f"pandax-{get_version()}-py3-none-any.whl"),
-        str(DIST / f"pandax-{get_version()}.tar.gz"),
+        str(whl),
+        str(sdist),
     ], cwd=ROOT)
 
     if r.returncode != 0:
@@ -273,9 +278,9 @@ def print_preview(target: str):
     step("PyPI 页面预览")
     ver = get_version()
     if target == "pypi":
-        url = f"https://pypi.org/project/pandax/{ver}/"
+        url = f"https://pypi.org/project/pandax-guard/{ver}/"
     else:
-        url = f"https://test.pypi.org/project/pandax/{ver}/"
+        url = f"https://test.pypi.org/project/pandax-guard/{ver}/"
     print(f"\n{C.H}{url}{C.W}\n")
 
 
@@ -285,14 +290,14 @@ def show_install_instructions(target: str):
 
     if target == "pypi":
         print(f"\n{C.G}任何用户都可以用以下命令安装：{C.W}\n")
-        print(f"  pip install pandax")
-        print(f"  pip install pandax=={get_version()}")
-        print(f"  pip install pandax --upgrade")
+        print(f"  pip install pandax-guard")
+        print(f"  pip install pandax-guard=={get_version()}")
+        print(f"  pip install pandax-guard --upgrade")
     else:
         print(f"\n{C.G}TestPyPI 测试安装：{C.W}\n")
         print(f"  pip install --index-url https://test.pypi.org/simple/ \\")
         print(f"              --extra-index-url https://pypi.org/simple/ \\")
-        print(f"              pandax")
+        print(f"              pandax-guard")
 
 
 # ============================================================

@@ -8,7 +8,7 @@ pandax.py — 根目录 wrapper（向后兼容）
 此 wrapper 用于开发模式（pip install 不需要）。
 
 用户应该:
-  - pip install pandax 后用 `pandax` 命令
+  - pip install pandax-guard 后用 `pandax` 命令
   - 或 `python -m pandax` 在源码目录运行
 
 第一性原理:

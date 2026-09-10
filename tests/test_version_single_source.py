@@ -78,7 +78,7 @@ class TestVersionSingleSource:
             return  # Python < 3.8
 
         try:
-            installed = _v("pandax")
+            installed = _v("pandax-guard")
         except PackageNotFoundError:
             return  # 未安装,跳过
 
@@ -112,7 +112,9 @@ class TestVersionSingleSource:
         import importlib.metadata as im
         from unittest import mock
 
-        with mock.patch.object(im, "version", side_effect=im.PackageNotFoundError("pandax")):
+        with mock.patch.object(
+            im, "version", side_effect=im.PackageNotFoundError("pandax-guard")
+        ) as metadata_version:
             # 强制 reload pandax.__init__
             if "pandax" in sys.modules:
                 del sys.modules["pandax"]
@@ -120,6 +122,7 @@ class TestVersionSingleSource:
                 del sys.modules["pandax.cli"]
             import pandax
 
+            metadata_version.assert_called_once_with("pandax-guard")
             assert pandax.__version__ == _read_pyproject_version(), (
                 f"源码兜底模式读取到 {pandax.__version__!r}, "
                 f"应等于 pyproject.toml: {_read_pyproject_version()!r}"

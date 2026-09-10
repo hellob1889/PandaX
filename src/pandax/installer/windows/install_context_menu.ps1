@@ -1,4 +1,4 @@
-﻿# ============================================================
+﻿﻿﻿# ============================================================
 # PandaX Windows 右键菜单安装脚本
 # ============================================================
 #
@@ -218,9 +218,9 @@ $TXT_TITLE = if ($USER_LANG -eq 'en') { 'PandaX Windows Context Menu Installer' 
 $TXT_FOUND = if ($USER_LANG -eq 'en') { '[OK] pandax found: {0}' } else { '[OK] 找到 pandax: {0}' }
 $TXT_NOT_FOUND = if ($USER_LANG -eq 'en') { '[WARN] pandax executable not found!' } else { '[WARN] 未找到 pandax 可执行文件！' }
 $TXT_INSTALL_HINT_1 = if ($USER_LANG -eq 'en') { 'Please install PandaX first:' } else { '请先安装 PandaX：' }
-$TXT_INSTALL_HINT_2 = if ($USER_LANG -eq 'en') { '  pip install pandax' } else { '  pip install pandax' }
+$TXT_INSTALL_HINT_2 = if ($USER_LANG -eq 'en') { '  pip install pandax-guard' } else { '  pip install pandax-guard' }
 $TXT_INSTALL_HINT_3 = if ($USER_LANG -eq 'en') { 'Or:' } else { '或者：' }
-$TXT_INSTALL_HINT_4 = if ($USER_LANG -eq 'en') { '  pip install git+https://github.com/pandax/pandax.git' } else { '  pip install git+https://github.com/pandax/pandax.git' }
+$TXT_INSTALL_HINT_4 = if ($USER_LANG -eq 'en') { '  pip install git+https://github.com/hellob1889/PandaX.git' } else { '  pip install git+https://github.com/hellob1889/PandaX.git' }
 $TXT_CONFIRM_CONTINUE = if ($USER_LANG -eq 'en') { 'Continue anyway (menu items will use "python -m pandax")? [y/N]' } else { '是否仍要继续安装（菜单项将使用 "python -m pandax" 作为命令）? [y/N]' }
 $TXT_CANCELLED = if ($USER_LANG -eq 'en') { 'Cancelled.' } else { '已取消。' }
 $TXT_ALREADY_INSTALLED = if ($USER_LANG -eq 'en') { '[INFO] PandaX context menu already installed. Use -Force to reinstall.' } else { '[INFO] PandaX 右键菜单已存在。使用 -Force 重新安装。' }

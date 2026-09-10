@@ -7,7 +7,7 @@ name: Publish to PyPI
 #   Owner: hellob1889
 #   Repository: PandaX
 #   Workflow: publish.yml
-#   Environment: pypi
+#   Environment: Any（未配置 GitHub Environment）
 #
 # 触发规则 (按 tag 前缀):
 #   v*.*.*-test  → TestPyPI (例: v0.7.1-test)
@@ -84,7 +84,7 @@ jobs:
       - name: Verify metadata
         run: |
           ls -la dist/
-          timeout 60 python -m twine check dist/pandax-0.7.1-py3-none-any.whl dist/pandax-0.7.1.tar.gz || echo "twine check non-critical"
+          timeout 60 python -m twine check dist/pandax_guard-0.7.1-py3-none-any.whl dist/pandax_guard-0.7.1.tar.gz || echo "twine check non-critical"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -172,7 +172,7 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax
+            pip install --upgrade pandax-guard
             ```
 
             See [CHANGELOG.md](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md) for details.

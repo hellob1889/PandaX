@@ -10,15 +10,15 @@
 
 > **AI Agent 代码审计门禁** — 让每一次代码改动都留下合规、可追溯的证据链。
 
-[![PyPI version](https://img.shields.io/pypi/v/pandax?color=blue)](https://pypi.org/project/pandax/)
-[![Python](https://img.shields.io/pypi/pyversions/pandax)](https://pypi.org/project/pandax/)
-[![License](https://img.shields.io/pypi/l/pandax)](https://github.com/pandax/pandax/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-340%20passed-brightgreen)](https://github.com/pandax/pandax/actions/workflows/audit.yml)
+[![PyPI version](https://img.shields.io/pypi/v/pandax-guard?color=blue)](https://pypi.org/project/pandax-guard/)
+[![Python](https://img.shields.io/pypi/pyversions/pandax-guard)](https://pypi.org/project/pandax-guard/)
+[![License](https://img.shields.io/pypi/l/pandax-guard)](https://github.com/hellob1889/PandaX/blob/main/LICENSE)
+[![Tests](https://img.shields.io/badge/tests-340%20passed-brightgreen)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
 [![Bugs](https://img.shields.io/badge/bugs-11%20fixed%20(v0.7.1)-success)](https://github.com/hellob1889/PandaX/releases/tag/v0.7.1)
 [![i18n](https://img.shields.io/badge/i18n-248%20keys%20zh%2Den%20%E2%89%88%20en-blueviolet)](https://github.com/hellob1889/PandaX/blob/main/src/pandax/i18n.py)
-[![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/pandax/pandax/blob/main/.github/workflows/lint.yml)
-[![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax/)
-[![Phase](https://img.shields.io/badge/status-v0.7.1%20production--ready-success)](https://github.com/pandax/pandax/releases)
+[![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/hellob1889/PandaX/blob/main/.github/workflows/lint.yml)
+[![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax-guard/)
+[![Phase](https://img.shields.io/badge/status-v0.7.1%20production--ready-success)](https://github.com/hellob1889/PandaX/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/audit.yml?branch=main&label=CI&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/lint.yml)
 
@@ -55,7 +55,7 @@ PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）
 **方式 A：从 PyPI 安装（最简单）**
 
 ```bash
-pip install pandax
+pip install pandax-guard
 
 # 一键装上右键菜单（Windows / macOS / Linux 自动检测）
 pandax install-context
@@ -64,7 +64,7 @@ pandax install-context
 **方式 B：从源码一键安装（推荐开发者使用，含最新 i18n + CI lint）**
 
 ```bash
-git clone https://github.com/pandax/pandax.git
+git clone https://github.com/hellob1889/PandaX.git
 cd pandax
 
 # Windows
@@ -223,13 +223,13 @@ pandax status --root .
 ### 开发与测试
 
 ```bash
-git clone https://github.com/pandax/pandax
+git clone https://github.com/hellob1889/PandaX
 cd pandax
 pip install -e .[dev]
 pytest tests/ -v
 ```
 
-当前测试数：**298 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
+当前测试数：**340 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
 
 ### 路线图
 
@@ -273,13 +273,13 @@ which records reason / problem / approach as immutable audit evidence.
 **Option A: from PyPI (easiest)**
 
 ```bash
-pip install pandax
+pip install pandax-guard
 ```
 
 **Option B: from source (recommended for developers, includes latest i18n + CI lint)**
 
 ```bash
-git clone https://github.com/pandax/pandax.git
+git clone https://github.com/hellob1889/PandaX.git
 cd pandax
 
 # Windows
@@ -365,9 +365,9 @@ MIT — see [LICENSE](LICENSE)
 
 ### Links
 
-- [PyPI Package](https://pypi.org/project/pandax/)
-- [GitHub Repository](https://github.com/pandax/pandax)
-- [Issue Tracker](https://github.com/pandax/pandax/issues)
-- [Documentation](https://github.com/pandax/pandax/blob/main/README.md)
-- [Changelog](https://github.com/pandax/pandax/blob/main/CHANGELOG.md)
+- [PyPI Package](https://pypi.org/project/pandax-guard/)
+- [GitHub Repository](https://github.com/hellob1889/PandaX)
+- [Issue Tracker](https://github.com/hellob1889/PandaX/issues)
+- [Documentation](https://github.com/hellob1889/PandaX/blob/main/README.md)
+- [Changelog](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md)
 - [实战验证报告 (Validation Report)](实战验证报告.md)

@@ -33,7 +33,7 @@ python 04_mcp_client.py && python 05_full_project.py
 
 ## 前置要求
 
-- 已安装 pandax：`pip install pandax`
+- 已安装 pandax：`pip install pandax-guard`
 - Windows + Git（脚本通过 `shutil.which("git")` 自动检测）
 - macOS/Linux 用户：把 `GIT_EXE="/d/软件/Git/cmd/git.exe"` 改为 `which git` 的结果
 

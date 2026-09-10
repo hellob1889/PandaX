@@ -16,14 +16,14 @@ PandaX — AI Agent 代码审计门禁系统
 
 # ---------------------------------------------------------------------------
 # 版本号: 单一事实源 = METADATA
-#   - 正常安装(pip install *.whl): importlib.metadata.version("pandax")
+#   - 正常安装(pip install *.whl): importlib.metadata.version("pandax-guard")
 #   - 源码直跑(开发模式 / 源码树): 从同级的 pyproject.toml 读取 [project].version
 #   - 极端 fallback: 字面量常量(打包脚本异常时仍可启动 CLI)
 # ---------------------------------------------------------------------------
 try:
     from importlib.metadata import version as _v, PackageNotFoundError as _PNFE
     try:
-        __version__ = _v("pandax")
+        __version__ = _v("pandax-guard")
     except _PNFE:
         __version__ = None
 except ImportError:  # Python < 3.8 兜底（理论上不支持）

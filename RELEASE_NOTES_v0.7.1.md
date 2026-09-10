@@ -62,7 +62,7 @@ PandaX v0.7.1 是 v0.7.0 之后的**安全与稳定性加固版本**。重点是
 ### pip（推荐）
 
 ```bash
-pip install pandax==0.7.1
+pip install pandax-guard==0.7.1
 ```
 
 ### 下载安装包

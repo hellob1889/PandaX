@@ -38,7 +38,7 @@ USER_LANG="${USER_LANG:-zh-CN}"
 # ---- Load text strings ----
 if [ "$USER_LANG" = "en" ]; then
     TXT_TITLE="PandaX Linux Context Menu Installer"
-    TXT_NOT_FOUND="[WARN] pandax not found! Please run 'pip install pandax' first"
+    TXT_NOT_FOUND="[WARN] pandax not found! Please run 'pip install pandax-guard' first"
     TXT_CONFIRM="Continue anyway? [y/N]"
     TXT_FOUND="[OK] Found pandax:"
     TXT_DETECT_DE="[INFO] Detected desktop environment:"
@@ -66,7 +66,7 @@ if [ "$USER_LANG" = "en" ]; then
     TXT_NOTHING="[INFO] No right-click menu installed."
 else
     TXT_TITLE="PandaX Linux 右键菜单安装程序"
-    TXT_NOT_FOUND="[WARN] 未找到 pandax！请先 pip install pandax"
+    TXT_NOT_FOUND="[WARN] 未找到 pandax！请先 pip install pandax-guard"
     TXT_CONFIRM="是否仍要继续？[y/N]"
     TXT_FOUND="[OK] 找到 pandax:"
     TXT_DETECT_DE="[INFO] 检测到桌面环境:"

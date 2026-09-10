@@ -36,7 +36,7 @@ PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）
 ## 一行安装
 
 ```bash
-pip install pandax
+pip install pandax-guard
 ```
 
 立即试用：[快速开始](quickstart.md) → [示例集](../EXAMPLES.md)

@@ -17,9 +17,9 @@
 ; ============================================================
 
 #define MyAppName "PandaX"
-#define MyAppVersion "0.6.2"
+#define MyAppVersion "0.7.1"
 #define MyAppPublisher "PandaX Project"
-#define MyAppURL "https://github.com/pandax/pandax"
+#define MyAppURL "https://github.com/hellob1889/PandaX"
 #define MyAppExeName "pandax.exe"
 
 [Setup]

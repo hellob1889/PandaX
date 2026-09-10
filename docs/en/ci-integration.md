@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install pandax
+      - run: pip install pandax-guard
       - run: pandax ci --root . --base origin/main
 ```
 
@@ -37,7 +37,7 @@ audit:
   stage: test
   image: python:3.10
   before_script:
-    - pip install pandax
+    - pip install pandax-guard
   script:
     - pandax ci --root . --base origin/main
   rules:
@@ -75,4 +75,4 @@ git push
 
 ---
 
-[← Home](index.md) | [Commands](commands.md)
+[← Home](index.md) | [Commands](commands.md) | [GitHub](https://github.com/hellob1889/PandaX)

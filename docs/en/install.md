@@ -9,24 +9,24 @@
 ## One-line Install
 
 ```bash
-pip install pandax
+pip install pandax-guard
 ```
 
 ## Verify
 
 ```bash
 pandax --version
-# pandax v0.6.2
+# pandax-guard v0.7.1
 ```
 
 ## Dev Install
 
 ```bash
-git clone https://github.com/pandax/pandax
+git clone https://github.com/hellob1889/PandaX
 cd pandax
 pip install -e .[dev]
 pytest tests/ -v
-# 140 passed
+# 340 passed
 ```
 
 ## Dependencies
@@ -46,13 +46,13 @@ Auto-installed (all pure Python, cross-platform):
 ## Upgrade
 
 ```bash
-pip install pandax --upgrade
+pip install pandax-guard --upgrade
 ```
 
 ## Uninstall
 
 ```bash
-pip uninstall pandax
+pip uninstall pandax-guard
 rm -rf ~/.pandax_fp.txt
 ```
 

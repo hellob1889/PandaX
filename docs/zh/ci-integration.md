@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install pandax
+      - run: pip install pandax-guard
       - run: pandax ci --root . --base origin/main
       - if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v6
@@ -43,7 +43,7 @@ jobs:
             });
 ```
 
-完整文件：[`.github/workflows/audit.yml`](https://github.com/pandax/pandax/blob/main/.github/workflows/audit.yml)
+完整文件：[`.github/workflows/audit.yml`](https://github.com/hellob1889/PandaX/blob/main/.github/workflows/audit.yml)
 
 ## GitLab CI
 
@@ -54,7 +54,7 @@ audit:
   stage: test
   image: python:3.10
   before_script:
-    - pip install pandax
+    - pip install pandax-guard
   script:
     - pandax ci --root . --base origin/main
   rules:
@@ -74,7 +74,7 @@ jobs:
       - image: python:3.10
     steps:
       - checkout
-      - run: pip install pandax
+      - run: pip install pandax-guard
       - run: pandax ci --root . --base origin/main
 workflows:
   version: 2

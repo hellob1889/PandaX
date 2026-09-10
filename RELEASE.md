@@ -13,16 +13,16 @@
 
 在 PyPI 项目页面配置（项目创建后）：
 
-1. 创建项目：[https://pypi.org/manage/project/pandax/](https://pypi.org/manage/project/pandax/)
+1. 创建项目：[https://pypi.org/manage/project/pandax-guard/](https://pypi.org/manage/project/pandax-guard/)
    - 第一次发布需要先手动上传一次（见 Step 3）来创建项目
    - 或者用 PyPI 的 **PEP 691 / API** 创建
 2. 进入项目 → **Publishing** → **Add a new pending publisher**
 3. 选择 **GitHub Actions**
 4. 填写：
    - Owner: `你的 GitHub 用户名`
-   - Repository: `pandax`
+   - Repository: `PandaX`
    - Workflow filename: `publish.yml`
-   - Environment name: `pypi`
+   - Environment name: `Any`（如果页面没有 Environment 字段，保持留空）
 
 ### Step 3：第一次手动上传（创建项目）
 
@@ -30,7 +30,7 @@
 # 仅第一次需要——创建 PyPI 项目记录
 pip install --upgrade twine build
 python -m build --no-isolation
-twine upload dist/pandax-0.6.2-py3-none-any.whl dist/pandax-0.6.2.tar.gz
+twine upload dist/pandax_guard-0.7.1-py3-none-any.whl dist/pandax_guard-0.7.1.tar.gz
 # 输入 username + password（启用 2FA 后用 token）
 ```
 
@@ -39,10 +39,10 @@ twine upload dist/pandax-0.6.2-py3-none-any.whl dist/pandax-0.6.2.tar.gz
 ### Step 4：后续发布（自动化）
 
 ```bash
-git tag v0.6.3
-git push origin v0.6.3
+git tag v0.7.1
+git push origin v0.7.1
 # GitHub Actions 自动：
-#   1. 跑测试（确保 140 个全过）
+#   1. 跑测试（确保 340 个全过）
 #   2. build wheel + sdist
 #   3. twine upload（OIDC 无 token）
 #   4. 创建 GitHub Release
@@ -54,7 +54,7 @@ git push origin v0.6.3
 
 ```bash
 twine upload --repository testpypi dist/*
-# 在 https://test.pypi.org/project/pandax/ 预览页面
+# 在 https://test.pypi.org/project/pandax-guard/ 预览页面
 ```
 
 ---
@@ -66,7 +66,7 @@ twine upload --repository testpypi dist/*
 ```bash
 # 1. 跑全部测试
 pytest tests/ -v
-# 期望：140 passed
+# 期望：340 passed
 
 # 2. 验证 CLI 命令完整
 pandax --version
@@ -137,12 +137,12 @@ python -m venv /tmp/pandax-verify
 source /tmp/pandax-verify/bin/activate  # Windows: Scripts\activate
 
 # 安装（生产）
-pip install pandax
+pip install pandax-guard
 # 或指定版本
-pip install pandax==0.6.2
+pip install pandax-guard==0.7.1
 
 # 验证
-pandax --version  # pandax v0.6.2
+pandax --version  # pandax-guard v0.7.1
 pandax init --help
 pandax init /tmp/test-project
 pandax write --root /tmp/test-project --file test.py \

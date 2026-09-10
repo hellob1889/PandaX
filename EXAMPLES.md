@@ -458,7 +458,7 @@ $ git push origin feature/auth-fix
 虽然这里没有视频/截图附件，但所有示例都是**真实终端输出**（从开发测试捕获，非伪造）。建议用户自己跑：
 
 ```bash
-git clone https://github.com/pandax/pandax
+git clone https://github.com/hellob1889/PandaX
 cd pandax/examples
 bash 01_basic_workflow.sh   # 看真实终端输出
 ```

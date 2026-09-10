@@ -6,7 +6,7 @@ setup.py — PandaX 包安装配置
 安装方式:
   pip install .              # 生产安装
   pip install -e .           # 开发模式（任何修改即时生效）
-  pip install git+https://github.com/your/pandax.git  # GitHub 一键安装
+  pip install git+https://github.com/hellob1889/PandaX.git  # GitHub 一键安装
 
 第一性原理:
   - setup.py 是最经典的打包工具，跨 Python 版本可靠
