@@ -1,0 +1,1 @@
+api.py: generate OpenAPI schema from dataclass

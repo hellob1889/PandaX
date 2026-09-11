@@ -5,27 +5,27 @@
 ## Step 1: 安装（30 秒）
 
 ```bash
-pip install pandax-guard
-pandax --version
-# pandax-guard v0.7.2
+pip install pandaone-guard
+pandaone --version
+# pandaone-guard v0.7.2
 ```
 
 ## Step 2: 初始化项目（10 秒）
 
 ```bash
 cd /path/to/your-project
-pandax init --root .
+pandaone init --root .
 ```
 
 自动创建：
-- `.pandax/config.json` — 17 文本 + 24 二进制扩展名
-- `.pandax/pandax.jsonl` — 审计日志
-- `.pandax/binary_snapshots.json` — 二进制文件 SHA256
+- `.pandaone/config.json` — 17 文本 + 24 二进制扩展名
+- `.pandaone/pandaone.jsonl` — 审计日志
+- `.pandaone/binary_snapshots.json` — 二进制文件 SHA256
 
 ## Step 3: 锁定文件（5 秒）
 
 ```bash
-pandax lock --root .
+pandaone lock --root .
 ```
 
 **所有受保护文件变为只读**：
@@ -35,10 +35,10 @@ pandax lock --root .
 
 ## Step 4: 合规修改（30 秒）
 
-不要直接编辑文件——用 `pandax write`：
+不要直接编辑文件——用 `pandaone write`：
 
 ```bash
-pandax write \
+pandaone write \
     --file src/main.py \
     --reason "修复用户 ID 类型注解" \
     --problem "原代码用 int，实际可能是 None" \
@@ -56,19 +56,19 @@ pandax write \
 
 ```bash
 # 命令行查看
-pandax log --last 10
+pandaone log --last 10
 
 # 导出为 Excel
-pandax log --format xlsx --output audit.xlsx
+pandaone log --format xlsx --output audit.xlsx
 
 # 导出为 PDF（含中文支持）
-pandax log --format pdf --output audit.pdf
+pandaone log --format pdf --output audit.pdf
 ```
 
 ## Step 6: 项目状态（5 秒）
 
 ```bash
-pandax status --root .
+pandaone status --root .
 ```
 
 显示 L1 锁定、L2 watchdog、L5 指纹、最近审计等全部状态。
@@ -77,8 +77,8 @@ pandax status --root .
 
 ## 下一步
 
-- **保护 Git 提交**：运行 `pandax install-hook --root .`
-- **后台监控**：运行 `pandax watch --root . --daemon`
+- **保护 Git 提交**：运行 `pandaone install-hook --root .`
+- **后台监控**：运行 `pandaone watch --root . --daemon`
 - **AI Agent 集成**：配置 [MCP Server](mcp-integration.md)
 - **CI 集成**：参考 [CI/CD 集成](ci-integration.md)
 

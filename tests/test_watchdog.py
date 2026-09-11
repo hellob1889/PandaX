@@ -1,7 +1,7 @@
 ﻿"""
 test_watchdog.py
 ================
-RED 测试：pandax_guard.py 的 PandaXHandler
+RED 测试：pandaone_guard.py 的 PandaXHandler
 
 第一性原理：
   L2 防御必须在 L1 被绕过时捕获并回滚。
@@ -27,14 +27,14 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from pandax_guard import PandaXHandler  # noqa: E402
+from pandaone_guard import PandaXHandler  # noqa: E402
 
 
 def setup_git_project(tmp_path: Path) -> Path:
     """建 git 项目 + init + lock + 初始 commit"""
-    # pandax init
+    # pandaone init
     r = subprocess.run(
-        [sys.executable, str(ROOT / "pandax_dev.py"), "init", "--root", str(tmp_path)],
+        [sys.executable, str(ROOT / "pandaone_dev.py"), "init", "--root", str(tmp_path)],
         cwd=str(tmp_path), capture_output=True, text=True,
     )
     assert r.returncode == 0
@@ -49,9 +49,9 @@ def setup_git_project(tmp_path: Path) -> Path:
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, capture_output=True, text=True)
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, text=True)
 
-    # pandax lock
+    # pandaone lock
     r = subprocess.run(
-        [sys.executable, str(ROOT / "pandax_dev.py"), "lock", "--root", str(tmp_path)],
+        [sys.executable, str(ROOT / "pandaone_dev.py"), "lock", "--root", str(tmp_path)],
         cwd=str(tmp_path), capture_output=True, text=True,
     )
     assert r.returncode == 0
@@ -72,7 +72,7 @@ def make_event(src_path: str, dest_path: str | None = None, is_directory: bool =
 
 def test_handler_exists():
     """PandaXHandler 必须可导入"""
-    from pandax_guard import PandaXHandler
+    from pandaone_guard import PandaXHandler
     assert PandaXHandler is not None
 
 
@@ -96,7 +96,7 @@ def test_modified_without_token_reverts(tmp_path):
     assert "ORIGINAL" in content
 
     # 审计日志应有 UNAUTHORIZED 记录
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     records = [
         json.loads(line) for line in
         audit_path.read_text(encoding="utf-8").splitlines() if line.strip()
@@ -112,7 +112,7 @@ def test_modified_with_token_passes(tmp_path):
     main_py = project / "main.py"
 
     # 设令牌
-    token = project / ".pandax" / ".audit_token"
+    token = project / ".pandaone" / ".audit_token"
     token.write_text("test-token", encoding="utf-8")
 
     # 模拟合法写入
@@ -128,7 +128,7 @@ def test_modified_with_token_passes(tmp_path):
     assert "LEGITIMATE" in content, "合法写入应放行"
 
     # 不应有 UNAUTHORIZED 记录
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     records = [
         json.loads(line) for line in
         audit_path.read_text(encoding="utf-8").splitlines() if line.strip()
@@ -173,7 +173,7 @@ def test_excluded_files_ignored(tmp_path):
     handler.on_modified(make_event(str(tmp_py)))
 
     # 不应有 UNAUTHORIZED 记录
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     records = [
         json.loads(line) for line in
         audit_path.read_text(encoding="utf-8").splitlines() if line.strip()
@@ -207,7 +207,7 @@ def test_modified_md_without_token_reverts(tmp_path):
     assert "Original" in content
 
     # 审计日志应有 UNAUTHORIZED 记录
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     records = [
         json.loads(line) for line in
         audit_path.read_text(encoding="utf-8").splitlines() if line.strip()

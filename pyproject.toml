@@ -3,13 +3,13 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pandax-guard"
+name = "pandaone-guard"
 version = "0.7.3"
-description = "AI Agent code audit gateway (PandaX) - OS-level mandatory review of every code change"
+description = "AI Agent code audit gateway (Pandaone AI Agent) - OS-level mandatory review of every code change"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
 authors = [
-    {name = "PandaX Project", email = "pandax@example.com"},
+    {name = "Pandaone AI Agent Project", email = "pandaone@example.com"},
 ]
 requires-python = ">=3.8"
 keywords = ["audit", "ai", "agent", "code-review", "compliance"]
@@ -44,26 +44,26 @@ download = [
 ]
 
 [project.scripts]
-pandax = "pandax:main"
-pandax-guard = "pandax_guard:main"
-pandax-mcp = "pandax_mcp:main"
+pandaone = "pandaone:main"
+pandaone-guard = "pandaone_guard:main"
+pandaone-mcp = "pandaone_mcp:main"
 
 [project.urls]
-Homepage = "https://github.com/hellob1889/PandaX"
-Documentation = "https://github.com/hellob1889/PandaX/blob/main/README.md"
-Repository = "https://github.com/hellob1889/PandaX"
-Issues = "https://github.com/hellob1889/PandaX/issues"
+Homepage = "https://github.com/hellob1889/Pandaone-AI-Agent"
+Documentation = "https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/README.md"
+Repository = "https://github.com/hellob1889/Pandaone-AI-Agent"
+Issues = "https://github.com/hellob1889/Pandaone-AI-Agent/issues"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["pandax*", "pandax_guard*", "pandax_mcp*"]
+include = ["pandaone*", "pandaone_guard*", "pandaone_mcp*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-pandax = [
+pandaone = [
     "templates/*.sh",
     "templates/pre-commit-hook",
     "README.md",
@@ -72,7 +72,7 @@ pandax = [
     "pandax_unlocked.ico",
     "index.html",
     # Bug fix (右键菜单验证发现): installer/ 目录没被打包,
-    # 导致 site-packages/pandax/ 下缺 installer/,`pandax install-context` 报脚本不存在
+    # 导致 site-packages/pandaone/ 下缺 installer/,`pandaone install-context` 报脚本不存在
     "installer/windows/*.ps1",
     "installer/macos/*.sh",
     "installer/linux/*.sh",

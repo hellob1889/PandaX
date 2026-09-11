@@ -1,4 +1,4 @@
-# PandaX v0.7.1 — Release Notes
+# Pandaone AI Agent v0.7.1 — Release Notes
 
 **Release date / 发布日期**: 2026-09-10
 **Status / 状态**: Stable
@@ -9,8 +9,8 @@
 
 ## 🎯 What's New / 新版本亮点
 
-PandaX v0.7.1 是 v0.7.0 之后的**安全与稳定性加固版本**。重点是消除 v0.7.0 引入的几处安全漏洞、改进错误处理鲁棒性、并完成剩余模块的国际化（i18n）覆盖。
-PandaX v0.7.1 is a **security and stability hardening release** following v0.7.0. Focus is on eliminating several security vulnerabilities introduced in v0.7.0, improving error handling robustness, and completing i18n coverage for remaining modules.
+Pandaone v0.7.1 是 v0.7.0 之后的**安全与稳定性加固版本**。重点是消除 v0.7.0 引入的几处安全漏洞、改进错误处理鲁棒性、并完成剩余模块的国际化（i18n）覆盖。
+Pandaone v0.7.1 is a **security and stability hardening release** following v0.7.0. Focus is on eliminating several security vulnerabilities introduced in v0.7.0, improving error handling robustness, and completing i18n coverage for remaining modules.
 
 ## 🐛 Bug 修复（11 个）/ Bug Fixes (11 Bugs)
 
@@ -43,7 +43,7 @@ PandaX v0.7.1 is a **security and stability hardening release** following v0.7.0
 - `test_i18n.py` 加 **8 个回归测试** / **8 regression tests**:
   - t() with backslash / double quote / CJK / None / extra kwargs
   - zh-CN ↔ en keys parity 严格相等 / strict parity
-  - 扫描 src/pandax 全部 t() 调用，断言 0 个 undefined key / scan all t() calls, assert 0 undefined keys
+  - 扫描 src/pandaone 全部 t() 调用，断言 0 个 undefined key / scan all t() calls, assert 0 undefined keys
 
 ## 🌍 i18n 同步 / i18n Sync
 
@@ -64,12 +64,12 @@ PandaX v0.7.1 is a **security and stability hardening release** following v0.7.0
 ### pip（推荐）/ pip (Recommended)
 
 ```bash
-pip install pandax-guard==0.7.1
+pip install pandaone-guard==0.7.1
 ```
 
 ### 下载安装包 / Download Installer
 
-下载附件 `PandaX-0.7.1-install.zip`，解压后运行 / Download `PandaX-0.7.1-install.zip`, extract and run:
+下载附件 `Pandaone-0.7.1-install.zip`，解压后运行 / Download `Pandaone-0.7.1-install.zip`, extract and run:
 **Windows**:
 ```powershell
 .\install.bat
@@ -82,8 +82,8 @@ bash install.sh
 ### 源码开发模式 / Source Dev Mode
 
 ```bash
-git clone https://github.com/hellob1889/PandaX.git
-cd PandaX
+git clone https://github.com/hellob1889/Pandaone-AI-Agent.git
+cd Pandaone
 pip install -e .
 ```
 
@@ -98,12 +98,12 @@ v0.7.1 是第一个**经过对抗式复查**的版本 / v0.7.1 is the first vers
 ## 🐞 已知问题 / Known Issues
 
 - **P3**: `_DEFAULT_FP_PASSWORD = "0000"` 是演示默认值，**生产环境必须用环境变量覆盖**（已有测试守门）/ is demo default; **production must override via env var** (test gatekeeper in place)
-- **P3**: `D:\软件\Git\cmd\git.exe` 仍是 Windows 上 Git 路径的候选 fallback（已在 `examples/` 中改为 `shutil.which("git")`，但 `src/pandax/` 中保留作为 fallback）/ remains candidate fallback on Windows; `examples/` uses `shutil.which("git")`, `src/pandax/` keeps as fallback
+- **P3**: `D:\软件\Git\cmd\git.exe` 仍是 Windows 上 Git 路径的候选 fallback（已在 `examples/` 中改为 `shutil.which("git")`，但 `src/pandaone/` 中保留作为 fallback）/ remains candidate fallback on Windows; `examples/` uses `shutil.which("git")`, `src/pandaone/` keeps as fallback
 
 ## 🤝 贡献 / Contributing
 
 欢迎提交 Issue 和 PR / Issues and PRs welcome:
-- 仓库 / Repo: https://github.com/hellob1889/PandaX
+- 仓库 / Repo: https://github.com/hellob1889/Pandaone-AI-Agent
 - 文档 / Docs: [README.md](README.md)
 - 审计防御层 / Audit defense layers: 7 层（L1 file chmod → L7 CI） / 7 layers (L1 file chmod → L7 CI)
 

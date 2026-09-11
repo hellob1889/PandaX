@@ -1,7 +1,7 @@
 ﻿"""
 test_lock.py
 ============
-RED 测试：pandax lock / unlock 子命令
+RED 测试：pandaone lock / unlock 子命令
 
 第一性原理：
   L1 防御 = OS 级文件锁。lock 后所有 Python 写文件操作（open 'w' / 'a'）必须失败。
@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run_cmd(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
@@ -99,7 +99,7 @@ def test_lock_without_init_fails_gracefully(tmp_path):
     Bug #28 (方案 A): 默认 lock 会自动 init（首次使用友好）
     要测试"未 init 失败"行为，必须显式加 --no-auto-init 禁用自动 init
     """
-    # tmp_path 没有 .pandax/，应报错但不崩溃（用 --no-auto-init 禁用自动 init）
+    # tmp_path 没有 .pandaone/，应报错但不崩溃（用 --no-auto-init 禁用自动 init）
     result = run_cmd(["lock", "--root", str(tmp_path), "--no-auto-init"], cwd=tmp_path)
     # 期望：rc != 0
     assert result.returncode != 0, "未 init 的目录 lock 应失败"

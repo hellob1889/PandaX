@@ -1,7 +1,7 @@
 ﻿"""
 test_write.py
 =============
-RED 测试：pandax write 子命令（核心）
+RED 测试：pandaone write 子命令（核心）
 
 第一性原理：
   write 是审计的"内联检测点"：
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -44,7 +44,7 @@ def setup_git_project(tmp_path: Path, lock: bool = True) -> Path:
         tmp_path: pytest tmp_path fixture
         lock: True = 锁定（默认），False = 不锁定（适合 write 测试加 --force-write 验证）
     """
-    # pandax init
+    # pandaone init
     r = run(["init", "--root", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0
 
@@ -61,7 +61,7 @@ def setup_git_project(tmp_path: Path, lock: bool = True) -> Path:
     subprocess.run(["git", "add", "."], cwd=tmp_path, capture_output=True, text=True)
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, text=True)
 
-    # pandax lock（可选）
+    # pandaone lock（可选）
     if lock:
         r = run(["lock", "--root", str(tmp_path)], cwd=tmp_path)
         assert r.returncode == 0
@@ -70,8 +70,8 @@ def setup_git_project(tmp_path: Path, lock: bool = True) -> Path:
 
 
 def read_audit_log(project: Path) -> list[dict]:
-    """读取 .pandax/pandax.jsonl 中所有记录"""
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    """读取 .pandaone/pandaone.jsonl 中所有记录"""
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     if not audit_path.exists():
         return []
     records = []

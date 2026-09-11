@@ -1,10 +1,10 @@
-# mkdocs.yml — PandaX 双语文档配置
+# mkdocs.yml — Pandaone AI Agent 双语文档配置
 
-site_name: PandaX
-site_description: AI Agent code audit gateway (PandaX) — OS-level mandatory review
-site_url: https://hellob1889.github.io/PandaX/
-repo_url: https://github.com/hellob1889/PandaX
-repo_name: hellob1889/PandaX
+site_name: Pandaone
+site_description: AI Agent code audit gateway (Pandaone) — OS-level mandatory review
+site_url: https://hellob1889.github.io/Pandaone/
+repo_url: https://github.com/hellob1889/Pandaone-AI-Agent
+repo_name: hellob1889/Pandaone-AI-Agent
 
 docs_dir: docs
 
@@ -45,9 +45,9 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/hellob1889/PandaX
+      link: https://github.com/hellob1889/Pandaone-AI-Agent
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/pandax-guard/
+      link: https://pypi.org/project/pandaone-guard/
 
 markdown_extensions:
   - admonition

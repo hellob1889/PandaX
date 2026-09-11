@@ -5,7 +5,7 @@ name: Publish to PyPI
 # ============================================================
 # PyPI 端已配 pending publisher:
 #   Owner: hellob1889
-#   Repository: PandaX
+#   Repository: Pandaone AI Agent
 #   Workflow: publish.yml
 #   Environment: Any（未配置 GitHub Environment）
 #
@@ -65,7 +65,7 @@ jobs:
 
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-log-${{ github.run_id }}
           path: /tmp/build.log
@@ -86,10 +86,10 @@ jobs:
           ls -la dist/
           # Derive expected wheel/sdist names from the tag (strip leading 'v')
           _ver="${GITHUB_REF_NAME#v}"
-          timeout 60 python -m twine check "dist/pandax_guard-${_ver}-py3-none-any.whl" "dist/pandax_guard-${_ver}.tar.gz" || echo "twine check non-critical"
+          timeout 60 python -m twine check "dist/pandaone_guard-${_ver}-py3-none-any.whl" "dist/pandaone_guard-${_ver}.tar.gz" || echo "twine check non-critical"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -118,13 +118,13 @@ jobs:
         id: pytest
         run: |
           set -o pipefail
-          pytest tests/ -v --timeout=60 --timeout-method=thread -x --ignore=tests/test_watchdog.py --ignore=tests/test_watchdog_dedupe.py --ignore=tests/test_pandax_serve.py 2>&1 | tee /tmp/pytest.log
+          pytest tests/ -v --timeout=60 --timeout-method=thread -x --ignore=tests/test_watchdog.py --ignore=tests/test_watchdog_dedupe.py --ignore=tests/test_pandaone_serve.py 2>&1 | tee /tmp/pytest.log
           echo "PYTEST_EXIT=${PIPESTATUS[0]}" >> "$GITHUB_ENV"
         continue-on-error: true
 
       - name: Upload pytest log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-log-${{ github.run_id }}
           path: /tmp/pytest.log
@@ -183,7 +183,7 @@ jobs:
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/') && !endsWith(github.ref_name, '-test')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/*
           generate_release_notes: true
@@ -195,7 +195,7 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax-guard
+            pip install --upgrade pandaone-guard
             ```
 
-            See [CHANGELOG.md](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md) for details.
+            See [CHANGELOG.md](https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/CHANGELOG.md) for details.

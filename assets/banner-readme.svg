@@ -67,9 +67,9 @@
 
   <!-- 右侧：文字 -->
   <g transform="translate(620, 200)">
-    <!-- PandaX 主标 -->
+    <!-- Pandaone AI Agent 主标 -->
     <text x="0" y="100" font-family="-apple-system, BlinkMacSystemFont, sans-serif"
-          font-size="120" font-weight="900" fill="#f8fafc">PandaX</text>
+          font-size="120" font-weight="900" fill="#f8fafc">Pandaone</text>
 
     <!-- 副标 -->
     <text x="0" y="170" font-family="-apple-system, BlinkMacSystemFont, sans-serif"

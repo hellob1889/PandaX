@@ -1,12 +1,12 @@
-# PandaX 文档（中文）
+# Pandaone AI Agent 文档（中文）
 
 > **AI Agent 代码审计门禁** — 让每一次代码改动都留下合规、可追溯的证据链。
 
-## 🧑‍💼 PandaX 是你代码库的专属经理 / PandaX is your codebase's personal manager
+## 🧑‍💼 Pandaone 是你代码库的专属经理 / Pandaone is your codebase's personal manager
 
 每个 AI agent 都是你公司的员工 —— 你的代码库就是那家公司。没有专属经理，员工想干什么就干什么 —— 改文件、推提交、搞崩生产 —— 你完全不知道是谁干的、什么时候干的、为什么。
 
-**PandaX 是你雇来保护代码的专属经理。** 每一个 AI agent —— Claude、Cursor、Trae，或者你明天会采用的任何工具 —— 都必须先向 PandaX 报备。任何代码改动、任何 git commit、任何部署动作，都要 PandaX 签字盖章才会放行，并留下可审计的凭证：
+**Pandaone 是你雇来保护代码的专属经理。** 每一个 AI agent —— Claude、Cursor、Trae，或者你明天会采用的任何工具 —— 都必须先向 Pandaone 报备。任何代码改动、任何 git commit、任何部署动作，都要 Pandaone 签字盖章才会放行，并留下可审计的凭证：
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -23,7 +23,7 @@
 没有专属经理，你的 AI 在转钱 —— 呃，是转代码 —— 但没有凭证：
 
 ```
-没有 PandaX          有了 PandaX
+没有 Pandaone          有了 Pandaone
 ──────────────          ──────────────
 $50,000 ???            $50,000  src/payment.py
                         Reason:  "修复四舍五入"
@@ -36,7 +36,7 @@ $50,000 ???            $50,000  src/payment.py
 **右边这一列，是你的代码库用一行命令就能变成的样子：**
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 你的专属经理 24/7 值班 —— **每一次代码改动的前、中、后都在场**。每一个 AI agent —— Claude、Cursor、Trae —— 都在同一条可审计的协议下工作。**无例外。不许绕行。**
@@ -55,8 +55,8 @@ pip install pandax-guard
 
 ## 是什么？
 
-PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）写代码前必须经过审计。
-任何受保护文件的修改都必须通过 `pandax write` 命令，留下 reason / problem / approach 三段式审计记录。
+Pandaone 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）写代码前必须经过审计。
+任何受保护文件的修改都必须通过 `pandaone write` 命令，留下 reason / problem / approach 三段式审计记录。
 
 ## 适用场景
 
@@ -75,7 +75,7 @@ PandaX 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者）
 ## 一行安装
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 立即试用：[快速开始](quickstart.md) → [示例集](../EXAMPLES.md)

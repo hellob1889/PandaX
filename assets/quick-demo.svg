@@ -32,10 +32,10 @@
   <!-- Top header banner -->
   <rect x="0" y="0" width="1600" height="80" fill="#0f172a" opacity="0.6"/>
   <text x="40" y="50" font-size="24" fill="#94a3b8" font-weight="600">$</text>
-  <text x="70" y="50" font-size="22" fill="#e2e8f0" font-weight="600">PandaX — Your Codebase Personal Manager</text>
+  <text x="70" y="50" font-size="22" fill="#e2e8f0" font-weight="600">Pandaone AI Agent — Your Codebase Personal Manager</text>
   <text x="1480" y="50" font-size="20" fill="#64748b">v0.7.2</text>
 
-  <!-- ===== STEP 1: pandax write ===== -->
+  <!-- ===== STEP 1: pandaone write ===== -->
   <g transform="translate(40, 120)">
     <!-- Card background -->
     <rect width="500" height="620" rx="12" fill="url(#card-bg)" stroke="#334155" stroke-width="1"/>
@@ -45,12 +45,12 @@
     <text x="30" y="36" font-size="16" fill="white" text-anchor="middle" font-weight="700">1</text>
 
     <!-- Step title -->
-    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandax write</text>
-    <text x="60" y="58" font-size="13" fill="#64748b">AI Agent reports to PandaX first</text>
+    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandaone write</text>
+    <text x="60" y="58" font-size="13" fill="#64748b">AI Agent reports to Pandaone first</text>
 
     <!-- Terminal prompt -->
     <text x="30" y="100" font-size="13" fill="#10b981" font-weight="600">$</text>
-    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandax write --file src/payment.py \</text>
+    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandaone write --file src/payment.py \</text>
 
     <!-- Terminal command lines -->
     <text x="50" y="125" font-size="13" fill="#94a3b8">  --reason "Fix rounding" \</text>
@@ -84,19 +84,19 @@
     <path d="M 0 0 L 30 0 L 30 -8 L 50 4 L 30 16 L 30 8 L 0 8 Z" fill="#475569"/>
   </g>
 
-  <!-- ===== STEP 2: pandax log ===== -->
+  <!-- ===== STEP 2: pandaone log ===== -->
   <g transform="translate(600, 120)">
     <rect width="500" height="620" rx="12" fill="url(#card-bg)" stroke="#334155" stroke-width="1"/>
 
     <circle cx="30" cy="30" r="14" fill="#8b5cf6"/>
     <text x="30" y="36" font-size="16" fill="white" text-anchor="middle" font-weight="700">2</text>
 
-    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandax log</text>
+    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandaone log</text>
     <text x="60" y="58" font-size="13" fill="#64748b">Query the audit ledger anytime</text>
 
     <!-- Terminal prompt -->
     <text x="30" y="100" font-size="13" fill="#10b981" font-weight="600">$</text>
-    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandax log --recent 5</text>
+    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandaone log --recent 5</text>
 
     <!-- Output table header -->
     <rect x="30" y="125" width="440" height="30" fill="#1e293b"/>
@@ -160,18 +160,18 @@
     <path d="M 0 0 L 30 0 L 30 -8 L 50 4 L 30 16 L 30 8 L 0 8 Z" fill="#475569"/>
   </g>
 
-  <!-- ===== STEP 3: pandax ci ===== -->
+  <!-- ===== STEP 3: pandaone ci ===== -->
   <g transform="translate(1160, 120)">
     <rect width="400" height="620" rx="12" fill="url(#card-bg)" stroke="#334155" stroke-width="1"/>
 
     <circle cx="30" cy="30" r="14" fill="#ec4899"/>
     <text x="30" y="36" font-size="16" fill="white" text-anchor="middle" font-weight="700">3</text>
 
-    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandax ci</text>
+    <text x="60" y="36" font-size="20" fill="#e2e8f0" font-weight="700">pandaone ci</text>
     <text x="60" y="58" font-size="13" fill="#64748b">GitHub Actions safety net</text>
 
     <text x="30" y="100" font-size="13" fill="#10b981" font-weight="600">$</text>
-    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandax ci --base main</text>
+    <text x="50" y="100" font-size="13" fill="#cbd5e1">pandaone ci --base main</text>
 
     <!-- CI results card -->
     <rect x="30" y="125" width="340" height="220" rx="8" fill="#1e293b" stroke="#334155"/>
@@ -206,7 +206,7 @@
     <rect x="30" y="500" width="340" height="90" rx="8" fill="#831843" opacity="0.5"/>
     <text x="50" y="530" font-size="13" fill="#f9a8d4" font-weight="600">🛡️ Last line of defense</text>
     <text x="50" y="555" font-size="12" fill="#fbcfe8">Even --no-verify</text>
-    <text x="50" y="572" font-size="12" fill="#fbcfe8">cannot bypass PandaX.</text>
+    <text x="50" y="572" font-size="12" fill="#fbcfe8">cannot bypass Pandaone.</text>
   </g>
 
   <!-- Bottom tagline -->

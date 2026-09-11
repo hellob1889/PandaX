@@ -4,7 +4,7 @@ test_e2e.py
 端到端集成测试：覆盖完整用户工作流
 
 场景：
-  1. 全新项目 init → 自动创建 .pandax/
+  1. 全新项目 init → 自动创建 .pandaone/
   2. lock → 所有 .py 不可写
   3. 不带 reason 的 write → REJECTED + 审计留痕
   4. 带完整字段的 write → APPROVED + 写入成功 + git commit + 审计留痕
@@ -14,7 +14,7 @@ test_e2e.py
   8. install-git → 探测 + 报告（不实际下载）
 
 第一性原理：
-  这是 PandaX 的核心承诺：必须能完整跑通"开发 → 审计 → 查询"全链路。
+  这是 Pandaone AI Agent 的核心承诺：必须能完整跑通"开发 → 审计 → 查询"全链路。
 """
 import json
 import subprocess
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
@@ -42,12 +42,12 @@ def test_full_workflow_e2e(tmp_path):
     # ============ Step 1: init ============
     r = run(["init", "--root", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0, f"init 失败: {r.stderr}"
-    assert (tmp_path / ".pandax" / "config.json").exists()
-    assert (tmp_path / ".pandax" / "pandax.jsonl").exists()
+    assert (tmp_path / ".pandaone" / "config.json").exists()
+    assert (tmp_path / ".pandaone" / "pandaone.jsonl").exists()
 
     # ============ Step 2: git init ============
     subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, text=True, timeout=10)
-    subprocess.run(["git", "config", "user.email", "agent@pandax"], cwd=tmp_path, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "agent@pandaone"], cwd=tmp_path, capture_output=True, text=True)
     subprocess.run(["git", "config", "user.name", "Agent"], cwd=tmp_path, capture_output=True, text=True)
 
     # ============ Step 3: 创建初始文件 + 首次 commit ============
@@ -81,7 +81,7 @@ def test_full_workflow_e2e(tmp_path):
     assert r.returncode != 0, "reason 太短应被拒绝"
 
     # 审计日志应有 REJECTED 记录
-    audit_lines = (tmp_path / ".pandax" / "pandax.jsonl").read_text(encoding="utf-8").splitlines()
+    audit_lines = (tmp_path / ".pandaone" / "pandaone.jsonl").read_text(encoding="utf-8").splitlines()
     records = [json.loads(l) for l in audit_lines if l.strip()]
     rejected = [r for r in records if r["status"] == "REJECTED"]
     assert len(rejected) >= 1, "应有 REJECTED 审计记录"
@@ -138,7 +138,7 @@ def test_full_workflow_e2e(tmp_path):
     assert "REJECTED" in html_content
 
     # ============ Step 10: 完整审计日志验证 ============
-    audit_lines = (tmp_path / ".pandax" / "pandax.jsonl").read_text(encoding="utf-8").splitlines()
+    audit_lines = (tmp_path / ".pandaone" / "pandaone.jsonl").read_text(encoding="utf-8").splitlines()
     records = [json.loads(l) for l in audit_lines if l.strip()]
     approved = [r for r in records if r["status"] == "APPROVED"]
     assert len(approved) >= 1

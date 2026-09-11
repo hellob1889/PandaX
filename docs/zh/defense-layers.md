@@ -1,6 +1,6 @@
 # 7 层防御体系
 
-PandaX 的核心是**冗余防御**——任何受保护文件的修改必须同时绕过 L1-L7 中至少 5 层才能成功。
+Pandaone AI Agent 的核心是**冗余防御**——任何受保护文件的修改必须同时绕过 L1-L7 中至少 5 层才能成功。
 每层防御**独立工作**，**互相兜底**。
 
 ## 全景图
@@ -42,7 +42,7 @@ PandaX 的核心是**冗余防御**——任何受保护文件的修改必须同
 **实现**：watchdog 库 + 审计令牌机制。
 
 **检测机制**：
-- 任何文件修改 → 检查是否在 pandax write 期间（即有 audit_token）
+- 任何文件修改 → 检查是否在 pandaone write 期间（即有 audit_token）
 - 如果没有 audit_token → git checkout HEAD 还原 + 记录 UNAUTHORIZED
 
 **绕过难度**：中（需先 kill watchdog 进程）
@@ -70,7 +70,7 @@ for staged_file in git_diff_cached:
 
 **作用**：CLI 启动时加载项目元数据（当前阶段、已完成步骤）。
 
-**实现**：CLI 每次运行自动读取项目根的 `.pandax/README`。
+**实现**：CLI 每次运行自动读取项目根的 `.pandaone/README`。
 
 **价值**：让审计门禁成为项目**日常工作流**的一部分（透明可见）。
 
@@ -78,9 +78,9 @@ for staged_file in git_diff_cached:
 
 **作用**：防止 CLI 自身被篡改。
 
-**实现**：CLI 自身代码的 SHA256 指纹，存放在 `~/.pandax_fp.txt`。
+**实现**：CLI 自身代码的 SHA256 指纹，存放在 `~/.pandaone_fp.txt`。
 
-**校验时机**：每次 pandax CLI 启动。
+**校验时机**：每次 pandaone CLI 启动。
 
 **绕过难度**：极高（需修改指纹存储位置 + 重新计算所有 hash）。
 
@@ -98,7 +98,7 @@ for staged_file in git_diff_cached:
 
 **作用**：PR 合入主分支前的最终验证。
 
-**实现**：`pandax ci --root . --base origin/main`
+**实现**：`pandaone ci --root . --base origin/main`
 
 **校验逻辑**：
 ```bash
@@ -120,7 +120,7 @@ for each file:
 | 攻击者 chmod +w 直接改文件 | L1 → L2 兜底 | L2 |
 | 攻击者 kill watchdog 进程 | L2 → L3 兜底 | L3 |
 | 攻击者用 `--no-verify` 绕过 hook | L3 → L7 兜底 | L7 |
-| 攻击者改 pandax CLI 自身 | L5 检测指纹不匹配 → L4 启动失败 | L5 |
+| 攻击者改 pandaone CLI 自身 | L5 检测指纹不匹配 → L4 启动失败 | L5 |
 | 攻击者改 .gitignore 隐藏攻击 | L1 lock + L2 监控 | L1+L2 |
 | 攻击者覆盖 .png 二进制 | L1 lock + L6 SHA256 mismatch | L1+L6 |
 | 攻击者直接 push 到 main 分支 | GitHub 权限保护 + 分支规则 | (GitHub settings) |

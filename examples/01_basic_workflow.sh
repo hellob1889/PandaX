@@ -1,7 +1,7 @@
 #!/bin/bash
 # 01_basic_workflow.sh
 # ============================================================
-# PandaX 基础工作流 demo
+# Pandaone AI Agent 基础工作流 demo
 # ============================================================
 # 演示：init → lock → write → log → status 完整流程
 # 预期：每个步骤输出对应状态，所有 write 记录 APPROVED
@@ -15,14 +15,14 @@ PROJECT="$(pwd)/demo_01_basic"
 GIT_EXE="$(command -v git)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PY_EXE="$("$SCRIPT_DIR/_detect_python.sh")" || {
-    echo "请先运行: pip install pandax-guard"
+    echo "请先运行: pip install pandaone-guard"
     exit 1
 }
 
 if [ -z "$GIT_EXE" ]; then echo "找不到 git"; exit 1; fi
 
 echo -e "${B}============================================================${W}"
-echo -e "${B}  PandaX 基础工作流 demo${W}"
+echo -e "${B}  Pandaone 基础工作流 demo${W}"
 echo -e "${B}  PROJECT = $PROJECT${W}"
 echo -e "${B}============================================================${W}"
 
@@ -49,14 +49,14 @@ echo -e "\n${Y}[1/7] git init${W}"
 "$GIT_EXE" config user.name "Demo"
 echo "  ✓ git initialized"
 
-# 2. pandax init
-echo -e "\n${Y}[2/7] pandax init${W}"
-"$PY_EXE" -m pandax init --root "$PROJECT" 2>&1 | tail -5
-echo "  ✓ PandaX initialized"
+# 2. pandaone init
+echo -e "\n${Y}[2/7] pandaone init${W}"
+"$PY_EXE" -m pandaone init --root "$PROJECT" 2>&1 | tail -5
+echo "  ✓ Pandaone initialized"
 
-# 3. pandax lock
-echo -e "\n${Y}[3/7] pandax lock${W}"
-"$PY_EXE" -m pandax lock --root "$PROJECT" 2>&1 | grep -E "\[OK\]|\[" | tail -5
+# 3. pandaone lock
+echo -e "\n${Y}[3/7] pandaone lock${W}"
+"$PY_EXE" -m pandaone lock --root "$PROJECT" 2>&1 | grep -E "\[OK\]|\[" | tail -5
 echo "  ✓ Files locked"
 
 # 4. 验证锁定（用 Python 尝试写）
@@ -69,8 +69,8 @@ else
 fi
 
 # 5. 通过 write 修改
-echo -e "\n${Y}[5/7] pandax write 合规修改${W}"
-"$PY_EXE" -m pandax write \
+echo -e "\n${Y}[5/7] pandaone write 合规修改${W}"
+"$PY_EXE" -m pandaone write \
   --root "$PROJECT" \
   --file src/hello.py \
   --reason "添加默认 name 参数" \
@@ -81,11 +81,11 @@ echo -e "\n${Y}[5/7] pandax write 合规修改${W}"
 
 # 6. 验证审计记录
 echo -e "\n${Y}[6/7] 查看审计日志${W}"
-"$PY_EXE" -m pandax log --root "$PROJECT" --last 5 2>&1 | tail -10
+"$PY_EXE" -m pandaone log --root "$PROJECT" --last 5 2>&1 | tail -10
 
 # 7. status
 echo -e "\n${Y}[7/7] status 仪表盘${W}"
-"$PY_EXE" -m pandax status --root "$PROJECT" 2>&1 | tail -20
+"$PY_EXE" -m pandaone status --root "$PROJECT" 2>&1 | tail -20
 
 echo -e "\n${G}============================================================${W}"
 echo -e "${G}  ✓ Demo 1 完成 — 基础工作流演示${W}"

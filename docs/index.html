@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PandaX — AI Agent 代码审计门禁</title>
+<title>Pandaone AI Agent — AI Agent 代码审计门禁</title>
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <style>
 :root {
@@ -332,20 +332,20 @@ footer a { color: var(--accent-light); text-decoration: none; }
 <!-- ========== HERO ========== -->
 <section class="hero">
   <div class="container">
-    <h1>PandaX</h1>
+    <h1>Pandaone</h1>
     <p class="tagline">AI Agent 代码审计门禁</p>
     <p class="subtitle">7 层防御体系，让每一次代码改动都留下合规、可追溯的证据链。<br>适用于 AI Agent 开发、企业合规、团队协作。</p>
 
     <div class="badges">
-      <img src="https://img.shields.io/pypi/v/pandax?color=blue" alt="PyPI version">
-      <img src="https://img.shields.io/pypi/pyversions/pandax" alt="Python versions">
+      <img src="https://img.shields.io/pypi/v/pandaone?color=blue" alt="PyPI version">
+      <img src="https://img.shields.io/pypi/pyversions/pandaone" alt="Python versions">
       <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
       <img src="https://img.shields.io/badge/tests-140%20passed-brightgreen" alt="Tests">
       <img src="https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="OS">
     </div>
 
     <div class="install-box">
-      <span class="prompt">$</span><span class="cmd">pip install pandax-guard</span>
+      <span class="prompt">$</span><span class="cmd">pip install pandaone-guard</span>
     </div>
 
     <div class="nav-links">
@@ -353,8 +353,8 @@ footer a { color: var(--accent-light); text-decoration: none; }
       <a href="#demo">实时演示</a>
       <a href="#layers">7 层防御</a>
       <a href="#commands">命令参考</a>
-      <a href="https://github.com/hellob1889/PandaX">GitHub</a>
-      <a href="https://pypi.org/project/pandax-guard/">PyPI</a>
+      <a href="https://github.com/hellob1889/Pandaone-AI-Agent">GitHub</a>
+      <a href="https://pypi.org/project/pandaone-guard/">PyPI</a>
     </div>
   </div>
 </section>
@@ -463,11 +463,11 @@ footer a { color: var(--accent-light); text-decoration: none; }
     </div>
     <div class="layer-detail" id="layer-l4">
       <h3>L4: 启动读 README</h3>
-      <p>CLI 每次启动自动加载项目根的 .pandax/README（项目阶段、已完成步骤）。让审计门禁成为项目日常工作流的一部分。</p>
+      <p>CLI 每次启动自动加载项目根的 .pandaone/README（项目阶段、已完成步骤）。让审计门禁成为项目日常工作流的一部分。</p>
     </div>
     <div class="layer-detail" id="layer-l5">
       <h3>L5: 自指纹校验</h3>
-      <p>CLI 自身代码的 SHA256 指纹（~/.pandax_fp.txt），启动时校验。防止 CLI 本身被篡改。<strong>绕过难度</strong>：极高。</p>
+      <p>CLI 自身代码的 SHA256 指纹（~/.pandaone_fp.txt），启动时校验。防止 CLI 本身被篡改。<strong>绕过难度</strong>：极高。</p>
     </div>
     <div class="layer-detail" id="layer-l6">
       <h3>L6: 二进制 SHA256 snapshot</h3>
@@ -475,7 +475,7 @@ footer a { color: var(--accent-light); text-decoration: none; }
     </div>
     <div class="layer-detail" id="layer-l7">
       <h3>L7: GitHub Actions CI</h3>
-      <p>PR 合入前的最终验证。pandax ci --root . --base origin/main 校验所有变更都有审计。<strong>绕过难度</strong>：极高。</p>
+      <p>PR 合入前的最终验证。pandaone ci --root . --base origin/main 校验所有变更都有审计。<strong>绕过难度</strong>：极高。</p>
     </div>
   </div>
 </section>
@@ -523,16 +523,16 @@ footer a { color: var(--accent-light); text-decoration: none; }
           <tr><th>命令</th><th>用途</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>pandax init</code></td><td>初始化项目（创建 .pandax/）</td></tr>
-          <tr><td><code>pandax lock</code></td><td>锁定所有受保护文件</td></tr>
-          <tr><td><code>pandax write</code></td><td>审计写入（核心 — 需 reason/problem/approach）</td></tr>
-          <tr><td><code>pandax log --format &lt;fmt&gt;</code></td><td>导出审计历史（13 种格式）</td></tr>
-          <tr><td><code>pandax status</code></td><td>项目状态仪表盘</td></tr>
-          <tr><td><code>pandax install-hook</code></td><td>安装 L3 pre-commit hook</td></tr>
-          <tr><td><code>pandax watch --daemon</code></td><td>启动 L2 watchdog 后台进程</td></tr>
-          <tr><td><code>pandax install-git</code></td><td>自动下载 git</td></tr>
-          <tr><td><code>pandax ci --base main</code></td><td>L7 CI 验证</td></tr>
-          <tr><td><code>pandax-mcp</code></td><td>启动 MCP server（AI Agent 直连）</td></tr>
+          <tr><td><code>pandaone init</code></td><td>初始化项目（创建 .pandaone/）</td></tr>
+          <tr><td><code>pandaone lock</code></td><td>锁定所有受保护文件</td></tr>
+          <tr><td><code>pandaone write</code></td><td>审计写入（核心 — 需 reason/problem/approach）</td></tr>
+          <tr><td><code>pandaone log --format &lt;fmt&gt;</code></td><td>导出审计历史（13 种格式）</td></tr>
+          <tr><td><code>pandaone status</code></td><td>项目状态仪表盘</td></tr>
+          <tr><td><code>pandaone install-hook</code></td><td>安装 L3 pre-commit hook</td></tr>
+          <tr><td><code>pandaone watch --daemon</code></td><td>启动 L2 watchdog 后台进程</td></tr>
+          <tr><td><code>pandaone install-git</code></td><td>自动下载 git</td></tr>
+          <tr><td><code>pandaone ci --base main</code></td><td>L7 CI 验证</td></tr>
+          <tr><td><code>pandaone-mcp</code></td><td>启动 MCP server（AI Agent 直连）</td></tr>
         </tbody>
       </table>
     </div>
@@ -543,9 +543,9 @@ footer a { color: var(--accent-light); text-decoration: none; }
 <footer>
   <div class="container">
     <p>
-      <strong>PandaX</strong> v0.7.2 · MIT License ·
-      <a href="https://github.com/hellob1889/PandaX">GitHub</a> ·
-      <a href="https://pypi.org/project/pandax-guard/">PyPI</a> ·
+      <strong>Pandaone</strong> v0.7.2 · MIT License ·
+      <a href="https://github.com/hellob1889/Pandaone-AI-Agent">GitHub</a> ·
+      <a href="https://pypi.org/project/pandaone-guard/">PyPI</a> ·
       <a href="../README.md">README</a> ·
       <a href="../EXAMPLES.md">Examples</a> ·
       <a href="../实战验证报告.md">Validation Report</a>
@@ -560,22 +560,22 @@ footer a { color: var(--accent-light); text-decoration: none; }
 const terminal = document.getElementById('terminal');
 
 const lines = [
-  { html: '<span class="prompt">$</span> <span class="cmd">cd my-project && pandax init --root .</span>', delay: 400 },
-  { html: '<span class="ok">[OK]</span> <span class="dim">已初始化: D:\\my-project\\.pandax</span>', delay: 800 },
-  { html: '<span class="dim">  config: D:\\my-project\\.pandax\\config.json</span>', delay: 200 },
-  { html: '<span class="dim">  audit:  D:\\my-project\\.pandax\\pandax.jsonl</span>', delay: 200 },
+  { html: '<span class="prompt">$</span> <span class="cmd">cd my-project && pandaone init --root .</span>', delay: 400 },
+  { html: '<span class="ok">[OK]</span> <span class="dim">已初始化: D:\\my-project\\.pandaone</span>', delay: 800 },
+  { html: '<span class="dim">  config: D:\\my-project\\.pandaone\\config.json</span>', delay: 200 },
+  { html: '<span class="dim">  audit:  D:\\my-project\\.pandaone\\pandaone.jsonl</span>', delay: 200 },
   { html: '<span class="dim">  binary_snapshots: ...</span>', delay: 200 },
   { html: '', delay: 400 },
-  { html: '<span class="prompt">$</span> <span class="cmd">pandax lock --root .</span>', delay: 600 },
+  { html: '<span class="prompt">$</span> <span class="cmd">pandaone lock --root .</span>', delay: 600 },
   { html: '<span class="ok">[OK]</span> <span class="dim">锁定 12 个文件</span>', delay: 400 },
   { html: '', delay: 300 },
-  { html: '<span class="prompt">$</span> <span class="cmd">pandax write --file src/auth.py \\</span>', delay: 400 },
+  { html: '<span class="prompt">$</span> <span class="cmd">pandaone write --file src/auth.py \\</span>', delay: 400 },
   { html: '<span class="cmd">    --reason "实现用户登录" \\</span>', delay: 100 },
   { html: '<span class="cmd">    --problem "用户系统缺少登录入口" \\</span>', delay: 100 },
   { html: '<span class="cmd">    --approach "JWT 认证 + bcrypt 哈希"</span>', delay: 100 },
   { html: '<span class="ok">[APPROVED]</span> <span class="dim">{"status":"APPROVED","commit":"3d52141","audit_id":"audit_xxx","file":"src/auth.py"}</span>', delay: 700 },
   { html: '', delay: 400 },
-  { html: '<span class="prompt">$</span> <span class="cmd">pandax log --format xlsx --output audit.xlsx</span>', delay: 600 },
+  { html: '<span class="prompt">$</span> <span class="cmd">pandaone log --format xlsx --output audit.xlsx</span>', delay: 600 },
   { html: '<span class="ok">[OK]</span> <span class="dim">已导出 1 条记录 (xlsx) 到 audit.xlsx</span>', delay: 400 },
   { html: '', delay: 400 },
   { html: '<span class="prompt">$</span> <span class="cmd"># 攻击测试：尝试直接修改锁定文件</span>', delay: 400 },
@@ -584,10 +584,10 @@ const lines = [
   { html: '', delay: 300 },
   { html: '<span class="prompt">$</span> <span class="cmd"># L3: git hook 拒绝绕过</span>', delay: 300 },
   { html: '<span class="prompt">$</span> <span class="cmd">git commit -m "bypass"</span>', delay: 400 },
-  { html: '<span class="err">[PandaX] 拒绝提交: 以下文件没有 APPROVED 审计记录</span>', delay: 500 },
+  { html: '<span class="err">[Pandaone] 拒绝提交: 以下文件没有 APPROVED 审计记录</span>', delay: 500 },
   { html: '<span class="dim">  src/auth.py</span>', delay: 200 },
   { html: '', delay: 400 },
-  { html: '<span class="ok">✓</span> <span class="dim">所有变更必须通过 pandax write 审计</span>', delay: 300 },
+  { html: '<span class="ok">✓</span> <span class="dim">所有变更必须通过 pandaone write 审计</span>', delay: 300 },
 ];
 
 let totalDelay = 0;

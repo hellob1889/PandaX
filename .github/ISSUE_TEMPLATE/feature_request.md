@@ -1,6 +1,6 @@
 ---
 name: Feature Request / 功能请求
-about: Suggest a new feature for PandaX
+about: Suggest a new feature for Pandaone AI Agent
 title: "[FEATURE] "
 labels: ["enhancement"]
 assignees: []
@@ -25,7 +25,7 @@ assignees: []
 ### 示例输入
 
 ```bash
-pandax <new-command> --flag value
+pandaone <new-command> --flag value
 ```
 
 ### 示例输出

@@ -1,7 +1,7 @@
 """
 03_bypass_attempt.py
 =====================
-PandaX 7 层防御实战 demo
+Pandaone AI Agent 7 层防御实战 demo
 
 演示：尝试用各种方法绕过审计门禁，验证拦截
 预期：所有攻击都被对应层拦截
@@ -44,7 +44,7 @@ def warn(msg):
 def find_src():
     here = Path(__file__).resolve().parent
     for p in [here.parent, here.parent.parent]:
-        if (p / "src" / "pandax" / "__init__.py").exists():
+        if (p / "src" / "pandaone" / "__init__.py").exists():
             return p / "src"
     return None
 
@@ -61,7 +61,7 @@ def cli(args, cwd):
     src = find_src()
     if src:
         env["PYTHONPATH"] = str(src) + os.pathsep + env.get("PYTHONPATH", "")
-    r = subprocess.run([sys.executable, "-m", "pandax", *args],
+    r = subprocess.run([sys.executable, "-m", "pandaone", *args],
                        cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
     return r.returncode, r.stdout, r.stderr
 
@@ -79,7 +79,7 @@ def git(args, cwd):
 
 def main():
     project = Path("demo_03_bypass").resolve()
-    print(f"\n[Demo] PandaX 7 层防御实战")
+    print(f"\n[Demo] Pandaone 7 层防御实战")
     print(f"  Project: {project}\n")
 
     if project.exists():
@@ -149,7 +149,7 @@ def main():
     if rc != 0:
         ok(f"L3 拦截：hook 拒绝 commit (rc={rc})")
         for line in (out + err).splitlines():
-            if "PandaX" in line or "未审计" in line:
+            if "Pandaone" in line or "未审计" in line:
                 print(f"    {line.strip()}")
                 break
     else:
@@ -168,7 +168,7 @@ def main():
     # ================================================================
     # 攻击 5: CI 验证（最终兜底）
     # ================================================================
-    step("攻击 5/5] pandax ci（L7 最终验证）")
+    step("攻击 5/5] pandaone ci（L7 最终验证）")
     # 先看有几个 commit，确保 HEAD~1 存在
     _, out, _ = git(["log", "--oneline"], project)
     commit_count = len([l for l in out.splitlines() if l.strip()])

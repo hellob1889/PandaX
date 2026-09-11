@@ -1,6 +1,6 @@
 # 7 Defense Layers
 
-PandaX's core is **redundant defense** — any modification must bypass at least 5 of L1-L7 to succeed.
+Pandaone AI Agent's core is **redundant defense** — any modification must bypass at least 5 of L1-L7 to succeed.
 Each layer **operates independently** and **backs up the others**.
 
 ## Overview
@@ -42,7 +42,7 @@ Metadata above all layers:
 **Implementation**: watchdog library + audit token mechanism.
 
 **Detection**:
-- Any file modification → check if it's during pandax write (has audit_token)
+- Any file modification → check if it's during pandaone write (has audit_token)
 - If no audit_token → git checkout HEAD to revert + log UNAUTHORIZED
 
 **Bypass difficulty**: Medium (must kill watchdog process first)
@@ -70,7 +70,7 @@ for staged_file in git_diff_cached:
 
 **Purpose**: CLI loads project metadata (current phase, completed steps) on startup.
 
-**Implementation**: Auto-load project root `.pandax/README` on every run.
+**Implementation**: Auto-load project root `.pandaone/README` on every run.
 
 **Value**: Makes audit gate visible in project's **daily workflow** (transparent).
 
@@ -78,7 +78,7 @@ for staged_file in git_diff_cached:
 
 **Purpose**: Prevent CLI itself from being tampered.
 
-**Implementation**: SHA256 of CLI code, stored in `~/.pandax_fp.txt`.
+**Implementation**: SHA256 of CLI code, stored in `~/.pandaone_fp.txt`.
 
 **Validation**: Every CLI startup.
 
@@ -98,7 +98,7 @@ for staged_file in git_diff_cached:
 
 **Purpose**: Final validation before PR merge.
 
-**Implementation**: `pandax ci --root . --base origin/main`
+**Implementation**: `pandaone ci --root . --base origin/main`
 
 **Validation**:
 ```bash
@@ -120,7 +120,7 @@ for each file:
 | Attacker chmod +w modifies file | L1 → L2 backup | L2 |
 | Attacker kills watchdog | L2 → L3 backup | L3 |
 | Attacker uses `--no-verify` | L3 → L7 backup | L7 |
-| Attacker modifies pandax CLI | L5 detects mismatch → L4 startup fails | L5 |
+| Attacker modifies pandaone CLI | L5 detects mismatch → L4 startup fails | L5 |
 | Attacker modifies .gitignore | L1 lock + L2 monitor | L1+L2 |
 | Attacker overwrites .png | L1 lock + L6 SHA256 mismatch | L1+L6 |
 | Attacker pushes directly to main | GitHub branch protection | (GitHub settings) |

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# install.sh — PandaX 一键安装脚本（macOS / Linux）
+# install.sh — Pandaone AI Agent 一键安装脚本（macOS / Linux）
 # =====================================================
 # 按"对抗式审查"：克隆项目后第一次运行，确保环境就位。
 #
 # 功能：
 #   1. 检测 Python 版本（≥ 3.10）
 #   2. 探测 git
-#   3. 卸载 site-packages 里可能存在的老 pandax 版本
+#   3. 卸载 site-packages 里可能存在的老 pandaone 版本
 #   4. python -m pip install -e .（本地源码，--user）
-#   5. 验证 pandax 可用
+#   5. 验证 pandaone 可用
 #   6. 调用 doctor.py 给出最终诊断
 #
 # 用法：
@@ -83,7 +83,7 @@ fi
 # ============================================================
 banner() {
     echo -e "${C_INFO}================================================================${C_RESET}"
-    echo -e "${C_INFO} PandaX 一键安装 — install.sh${C_RESET}"
+    echo -e "${C_INFO} Pandaone 一键安装 — install.sh${C_RESET}"
     echo -e "${C_INFO} 仓库: $REPO_ROOT${C_RESET}"
     echo -e "${C_INFO}================================================================${C_RESET}"
     echo ""
@@ -149,25 +149,25 @@ find_git() {
     return 1
 }
 
-uninstall_stale_pandax() {
-    step "3/6 卸载 site-packages 里的老 pandax"
-    if pip show pandax >/dev/null 2>&1; then
-        warn "检测到 site-packages 里装了 pandax（旧 wheel）"
+uninstall_stale_pandaone() {
+    step "3/6 卸载 site-packages 里的老 pandaone"
+    if pip show pandaone >/dev/null 2>&1; then
+        warn "检测到 site-packages 里装了 pandaone（旧 wheel）"
         local ver
-        ver=$(pip show pandax 2>/dev/null | grep "^Version:" | awk '{print $2}')
+        ver=$(pip show pandaone 2>/dev/null | grep "^Version:" | awk '{print $2}')
         info "version: $ver"
         if confirm "        卸载? (y/N, 默认 y) " "y"; then
-            pip uninstall pandax -y >/dev/null 2>&1 && ok "卸载完成" || warn "卸载失败（可能不影响，继续）"
+            pip uninstall pandaone -y >/dev/null 2>&1 && ok "卸载完成" || warn "卸载失败（可能不影响，继续）"
         else
             info "保留老版本（你将承担版本冲突风险）"
         fi
     else
-        ok "未装老 pandax"
+        ok "未装老 pandaone"
     fi
 }
 
-install_pandax_editable() {
-    step "4/6 安装本地源码 pandax（editable）"
+install_pandaone_editable() {
+    step "4/6 安装本地源码 pandaone（editable）"
     info "cd $REPO_ROOT"
     cd "$REPO_ROOT"
 
@@ -181,16 +181,16 @@ install_pandax_editable() {
     fi
 }
 
-verify_pandax_install() {
-    step "5/6 验证 pandax 可用"
+verify_pandaone_install() {
+    step "5/6 验证 pandaone 可用"
     local check
-    check=$(python -c "import pandax; print('OK from:', pandax.__file__); print('version:', pandax.__version__)" 2>&1) || true
+    check=$(python -c "import pandaone; print('OK from:', pandaone.__file__); print('version:', pandaone.__version__)" 2>&1) || true
     if [[ "$check" == *"OK from:"* ]]; then
         echo -e "${C_OK}$check${C_RESET}"
-        ok "pandax 可导入"
+        ok "pandaone 可导入"
         return 0
     else
-        fail "pandax 不可导入："
+        fail "pandaone 不可导入："
         echo "$check" >&2
         return 1
     fi
@@ -223,7 +223,7 @@ python_cmd=$(find_python) || {
 # Step 2: Git
 if ! find_git; then
     echo ""
-    warn "git 未找到，PandaX 部分功能（rollback / pre-commit hook）会受限"
+    warn "git 未找到，Pandaone 部分功能（rollback / pre-commit hook）会受限"
     info "可以继续，但建议先装 git"
     if ! confirm "        是否继续? (y/N) " "N"; then
         exit 1
@@ -232,17 +232,17 @@ fi
 
 if [[ "$SKIP_INSTALL" -eq 0 ]]; then
     # Step 3: 卸载老版本
-    uninstall_stale_pandax
+    uninstall_stale_pandaone
 
     # Step 4: 安装
-    install_pandax_editable || {
+    install_pandaone_editable || {
         echo ""
         fail "安装失败"
         exit 1
     }
 
     # Step 5: 验证
-    verify_pandax_install || {
+    verify_pandaone_install || {
         echo ""
         fail "验证失败"
         exit 1
@@ -263,7 +263,7 @@ echo -e "${C_INFO} 安装完成 — 耗时: ${duration}s${C_RESET}"
 echo -e "${C_INFO}================================================================${C_RESET}"
 echo ""
 echo -e "${C_WARN}下一步：${C_RESET}"
-echo "  python -m pandax --version         # 验证 CLI"
+echo "  python -m pandaone --version         # 验证 CLI"
 echo "  python scripts/doctor.py           # 详细诊断"
 echo "  python -m pytest tests/ -q        # 跑全部测试"
 echo ""

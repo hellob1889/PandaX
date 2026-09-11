@@ -1,7 +1,7 @@
 """
 test_log_export.py
 ==================
-RED 测试：pandax log --format <FORMAT> 多格式导出
+RED 测试：pandaone log --format <FORMAT> 多格式导出
 
 支持的格式:
   - text   (默认表格)
@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -44,7 +44,7 @@ def setup_records(tmp_path: Path) -> Path:
     r = run(["init", "--root", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0
 
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     records = [
         {"id": "audit_001", "timestamp": "2026-09-03 10:00:00",
          "status": "APPROVED", "file": "main.py",

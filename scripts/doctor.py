@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-doctor.py — PandaX 环境自检工具
+doctor.py — Pandaone AI Agent 环境自检工具
 ==================================
 
-按"对抗式审查"：在用户安装/运行 PandaX 前主动检测环境问题，
+按"对抗式审查"：在用户安装/运行 Pandaone 前主动检测环境问题，
 不要等问题在 CI / 用户机器上爆炸。
 
 检测项：
   1. Python 版本（≥ 3.10）
   2. pip 可用
   3. git 可执行（且在 PATH）
-  4. pandax 包已安装（且指向本地源码）
+  4. pandaone 包已安装（且指向本地源码）
   5. site-packages 没有装老版本
-  6. pandax.exe 在 PATH（Windows / Unix）
-  7. ~/.pandax_fp.txt 是否存在（污染检测）
+  6. pandaone.exe 在 PATH（Windows / Unix）
+  7. ~/.pandaone_fp.txt 是否存在（污染检测）
   8. setuptools / wheel 可用
   9. 所有运行时依赖（watchdog / openpyxl / python-docx / reportlab / pyyaml）
 
@@ -40,10 +40,10 @@ doctor.py — PandaX 环境自检工具
 可自动修复的问题（13 种）：
   - pip 缺失（ensurepip）
   - git 不在 PATH（临时加 PATH）
-  - pandax 未装（pip install -e .）
-  - pandax 装在 site-packages 老版本（uninstall + 装本地）
-  - pandax.exe 不在 PATH（临时加 PATH）
-  - ~/.pandax_fp.txt 污染/空（删除）
+  - pandaone 未装（pip install -e .）
+  - pandaone 装在 site-packages 老版本（uninstall + 装本地）
+  - pandaone.exe 不在 PATH（临时加 PATH）
+  - ~/.pandaone_fp.txt 污染/空（删除）
   - setuptools 缺失（pip install）
   - 5 个运行时依赖缺失（pip install <dep>）
 """
@@ -264,12 +264,12 @@ def check_git() -> CheckResult:
     )
 
 
-def check_pandax_installed() -> CheckResult:
-    """pandax 包可导入且指向本地源码"""
+def check_pandaone_installed() -> CheckResult:
+    """pandaone 包可导入且指向本地源码"""
     try:
-        import pandax  # noqa: F401
+        import pandaone  # noqa: F401
     except ImportError as e:
-        def fix_install_pandax():
+        def fix_install_pandaone():
             try:
                 subprocess.run(
                     [sys.executable, "-m", "pip", "install", "-e", ".",
@@ -281,27 +281,27 @@ def check_pandax_installed() -> CheckResult:
             except subprocess.CalledProcessError as fe:
                 return False, f"pip install failed (exit {fe.returncode}): {fe.stderr.decode(errors='replace')[:200] if fe.stderr else 'unknown'}"
         return CheckResult(
-            "pandax 安装", "FAIL", f"未安装: {e}",
+            "pandaone 安装", "FAIL", f"未安装: {e}",
             fix_hint=f"cd {REPO_ROOT} && python -m pip install -e . --no-build-isolation",
-            fix_action=fix_install_pandax,
+            fix_action=fix_install_pandaone,
             fixable=True,
         )
 
-    import pandax
-    pkg_file = Path(pandax.__file__).resolve()
+    import pandaone
+    pkg_file = Path(pandaone.__file__).resolve()
     is_local = str(pkg_file).startswith(str(REPO_ROOT))
     if is_local:
         return CheckResult(
-            "pandax 安装",
+            "pandaone 安装",
             "OK",
-            f"{pandax.__version__}（本地源码：{pkg_file.parent.parent.parent}）",
+            f"{pandaone.__version__}（本地源码：{pkg_file.parent.parent.parent}）",
         )
 
     # site-packages 装的是老版本 → 自动卸载
     def fix_uninstall_stale():
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "uninstall", "pandax", "-y"],
+                [sys.executable, "-m", "pip", "uninstall", "pandaone", "-y"],
                 capture_output=True, timeout=60,
             )
             if result.returncode == 0:
@@ -312,15 +312,15 @@ def check_pandax_installed() -> CheckResult:
                     cwd=str(REPO_ROOT),
                     capture_output=True, timeout=180, check=True,
                 )
-                return True, "stale pandax uninstalled, local source installed"
+                return True, "stale pandaone uninstalled, local source installed"
             return False, f"uninstall failed: {result.stderr.decode(errors='replace')[:200]}"
         except Exception as fe:
             return False, f"exception: {fe}"
 
     return CheckResult(
-        "pandax 安装",
+        "pandaone 安装",
         "WARN",
-        f"{pandax.__version__}（site-packages：{pkg_file}）",
+        f"{pandaone.__version__}（site-packages：{pkg_file}）",
         fix_hint=(
             "装的是 PyPI 上的旧版。建议本地源码安装：\n"
             f"    python -m pip install -e {REPO_ROOT} --no-build-isolation"
@@ -330,20 +330,20 @@ def check_pandax_installed() -> CheckResult:
     )
 
 
-def check_pandax_exe_in_path() -> CheckResult:
-    """pandax 命令在 PATH"""
-    exe = shutil.which("pandax")
+def check_pandaone_exe_in_path() -> CheckResult:
+    """pandaone 命令在 PATH"""
+    exe = shutil.which("pandaone")
     if exe:
-        return CheckResult("pandax.exe PATH", "OK", exe)
+        return CheckResult("pandaone.exe PATH", "OK", exe)
 
     # 检查 Scripts 目录
     if sys.platform == "win32":
         scripts_dir = Path(sys.executable).parent / "Scripts"
-        if (scripts_dir / "pandax.exe").exists():
+        if (scripts_dir / "pandaone.exe").exists():
             def fix_windows_path():
                 """Windows: 临时加入 PATH（不修改注册表，避免破坏系统）"""
                 os.environ["PATH"] = str(scripts_dir) + os.pathsep + os.environ.get("PATH", "")
-                if shutil.which("pandax"):
+                if shutil.which("pandaone"):
                     return True, f"added to PATH (current session): {scripts_dir}"
                 return False, "failed to add to PATH"
 
@@ -374,7 +374,7 @@ def check_pandax_exe_in_path() -> CheckResult:
                     return False, f"setx exception: {e}"
 
             return CheckResult(
-                "pandax.exe PATH", "WARN",
+                "pandaone.exe PATH", "WARN",
                 f"已安装到 {scripts_dir} 但不在 PATH",
                 fix_hint=(
                     f"添加 {scripts_dir} 到 PATH（用户级 PATH）\n"
@@ -386,11 +386,11 @@ def check_pandax_exe_in_path() -> CheckResult:
             )
     else:
         # Unix 上检查 ~/.local/bin
-        local_bin = Path.home() / ".local" / "bin" / "pandax"
+        local_bin = Path.home() / ".local" / "bin" / "pandaone"
         if local_bin.exists():
             def fix_unix_path():
                 os.environ["PATH"] = str(local_bin.parent) + os.pathsep + os.environ.get("PATH", "")
-                if shutil.which("pandax"):
+                if shutil.which("pandaone"):
                     return True, f"added to PATH (current session): {local_bin.parent}"
                 return False, "failed to add to PATH"
 
@@ -406,7 +406,7 @@ def check_pandax_exe_in_path() -> CheckResult:
                 if not shell_rc_candidates:
                     shell_rc_candidates.append(Path.home() / ".profile")
                 path_line = f'export PATH="{local_bin.parent}:$PATH"\n'
-                panda_marker = "# Added by PandaX doctor.py\n"
+                panda_marker = "# Added by Pandaone doctor.py\n"
                 try:
                     for rc in shell_rc_candidates:
                         existing = rc.read_text(encoding="utf-8") if rc.exists() else ""
@@ -423,7 +423,7 @@ def check_pandax_exe_in_path() -> CheckResult:
                     return False, f"shell rc write failed: {e}"
 
             return CheckResult(
-                "pandax.exe PATH", "WARN",
+                "pandaone.exe PATH", "WARN",
                 f"已安装到 {local_bin} 但不在 PATH",
                 fix_hint=(
                     f"添加 {local_bin.parent} 到 PATH\n"
@@ -434,14 +434,14 @@ def check_pandax_exe_in_path() -> CheckResult:
                 fixable=True,
             )
     return CheckResult(
-        "pandax.exe PATH", "INFO",
-        "未在 PATH 找到（可用 `python -m pandax` 替代）",
+        "pandaone.exe PATH", "INFO",
+        "未在 PATH 找到（可用 `python -m pandaone` 替代）",
     )
 
 
 def check_fingerprint() -> CheckResult:
-    """~/.pandax_fp.txt 检测（污染 vs 缺失 vs 空文件）"""
-    fp_path = Path.home() / ".pandax_fp.txt"
+    """~/.pandaone_fp.txt 检测（污染 vs 缺失 vs 空文件）"""
+    fp_path = Path.home() / ".pandaone_fp.txt"
     if not fp_path.exists():
         return CheckResult(
             "指纹文件", "OK",
@@ -461,7 +461,7 @@ def check_fingerprint() -> CheckResult:
             return CheckResult(
                 "指纹文件", "WARN",
                 f"{fp_path} 存在但为空",
-                fix_hint=f"删除 {fp_path} 让 PandaX 自动重新生成",
+                fix_hint=f"删除 {fp_path} 让 Pandaone 自动重新生成",
                 fix_action=fix_remove_fp,
                 fixable=True,
             )
@@ -647,8 +647,8 @@ def run_all_checks() -> list[CheckResult]:
         check_python,
         check_pip,
         check_git,
-        check_pandax_installed,
-        check_pandax_exe_in_path,
+        check_pandaone_installed,
+        check_pandaone_exe_in_path,
         check_fingerprint,
         check_setuptools,
         check_python_version_in_pyproject,
@@ -666,7 +666,7 @@ def run_all_checks() -> list[CheckResult]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="PandaX 环境自检工具（默认 dry-run；加 --fix 真正修复）",
+        description="Pandaone 环境自检工具（默认 dry-run；加 --fix 真正修复）",
     )
     parser.add_argument("--json", action="store_true",
                         help="以 JSON 格式输出（CI 用）")
@@ -736,7 +736,7 @@ def main() -> int:
 
     # ---- 人类可读输出 ----
     print("=" * 70)
-    print(f" PandaX 环境自检 — doctor.py")
+    print(f" Pandaone 环境自检 — doctor.py")
     print(f" 平台: {platform.platform()}")
     print(f" Python: {sys.version.split()[0]}")
     print(f" 仓库: {REPO_ROOT}")

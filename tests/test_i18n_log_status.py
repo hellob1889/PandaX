@@ -33,7 +33,7 @@ def _run(args, cwd, env_extra=None):
     if env_extra:
         env.update(env_extra)
     r = subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
     return r
@@ -44,7 +44,7 @@ def _setup_with_audit(tmp_path: Path) -> Path:
     r = _run(["init", "--root", str(tmp_path), "--force"], tmp_path)
     assert r.returncode == 0, f"init failed: {r.stderr}"
     # 直接写 audit jsonl（绕过 git + write 流程，测试聚焦 i18n 输出）
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     rec = {
         "id": "audit_test_001",
         "timestamp": "2026-01-01 12:00:00",

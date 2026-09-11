@@ -1,15 +1,15 @@
 ﻿"""
 test_install_git.py
 ===================
-RED 测试：pandax install-git 子命令
+RED 测试：pandaone install-git 子命令
 
 第一性原理：
-  - git 是 PandaX 自动 commit 的依赖
+  - git 是 Pandaone AI Agent 自动 commit 的依赖
   - 用户可能没装 git，CLI 应能自动安装
   - 设计：默认便携版 git（解压即用，免安装）
 
 测试策略：
-  - 子进程调用 pandax install-git
+  - 子进程调用 pandaone install-git
   - 至少做到：探测 + 报告，不强制下载
   - 详细测试用 --probe-only 跳过下载阶段
 """
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:

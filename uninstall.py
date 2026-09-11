@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-uninstall.py — PandaX 卸载清理工具
+uninstall.py — Pandaone AI Agent 卸载清理工具
 
 职责:
   1. 停止所有运行中的 watchdog 进程
-  2. 清理用户级指纹文件 (~/.pandax_fp.txt)
-  3. 清理 PATH 中的 pandax 条目（可选）
-  4. 调用 pip uninstall pandax
+  2. 清理用户级指纹文件 (~/.pandaone_fp.txt)
+  3. 清理 PATH 中的 pandaone 条目（可选）
+  4. 调用 pip uninstall pandaone
 
 用法:
   python uninstall.py
-  python uninstall.py --keep-projects   # 不清理项目内 .pandax/ 目录
+  python uninstall.py --keep-projects   # 不清理项目内 .pandaone/ 目录
   python uninstall.py --no-pip          # 只清理，不调 pip
 
 第一性原理:
@@ -32,7 +32,7 @@ def kill_watchdogs():
     killed = 0
     if sys.platform == "win32":
         # Windows 用 taskkill
-        for name in ["pandax-watchdog.exe", "pandax_guard.exe"]:
+        for name in ["pandaone-watchdog.exe", "pandaone_guard.exe"]:
             r = subprocess.run(
                 ["taskkill", "/F", "/IM", name],
                 capture_output=True, text=True, timeout=10,
@@ -41,7 +41,7 @@ def kill_watchdogs():
                 killed += 1
     else:
         # Unix 用 pkill
-        for sig in ["pandax-watchdog", "pandax_guard"]:
+        for sig in ["pandaone-watchdog", "pandaone_guard"]:
             r = subprocess.run(
                 ["pkill", "-9", "-f", sig],
                 capture_output=True, text=True, timeout=10,
@@ -54,7 +54,7 @@ def kill_watchdogs():
 def clean_fingerprint():
     """清理用户级指纹文件"""
     print("[2/4] 清理指纹文件...")
-    fp_path = Path.home() / ".pandax_fp.txt"
+    fp_path = Path.home() / ".pandaone_fp.txt"
     if fp_path.exists():
         fp_path.unlink()
         print(f"  删除: {fp_path}")
@@ -63,7 +63,7 @@ def clean_fingerprint():
 
 
 def clean_path_windows():
-    """从 Windows PATH 移除 pandax"""
+    """从 Windows PATH 移除 pandaone"""
     print("[3/4] 清理 PATH...")
     if sys.platform != "win32":
         print("  跳过 (Unix 系统手动改 ~/.bashrc 等)")
@@ -83,14 +83,14 @@ def clean_path_windows():
             0, winreg.KEY_READ | winreg.KEY_WRITE,
         ) as key:
             current, _ = winreg.QueryValueEx(key, "Path")
-            # 移除含 pandax 的路径
-            parts = [p for p in current.split(";") if "pandax" not in p.lower()]
+            # 移除含 pandaone 的路径
+            parts = [p for p in current.split(";") if "pandaone" not in p.lower()]
             new = ";".join(parts)
             if new != current:
                 winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, new)
                 print(f"  PATH 已更新")
             else:
-                print(f"  PATH 中无 pandax 条目")
+                print(f"  PATH 中无 pandaone 条目")
     except Exception as e:
         print(f"  [WARN] 清理 PATH 失败: {e}")
 
@@ -98,7 +98,7 @@ def clean_path_windows():
 def pip_uninstall():
     """调用 pip uninstall"""
     print("[4/4] 调用 pip uninstall...")
-    cmd = [sys.executable, "-m", "pip", "uninstall", "pandax", "-y"]
+    cmd = [sys.executable, "-m", "pip", "uninstall", "pandaone", "-y"]
     r = subprocess.run(cmd, capture_output=False)
     if r.returncode == 0:
         print("[OK] 卸载完成")
@@ -107,13 +107,13 @@ def pip_uninstall():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PandaX 卸载清理")
+    parser = argparse.ArgumentParser(description="Pandaone 卸载清理")
     parser.add_argument("--no-pip", action="store_true", help="只清理，不调 pip")
-    parser.add_argument("--keep-projects", action="store_true", help="不清理项目内 .pandax/")
+    parser.add_argument("--keep-projects", action="store_true", help="不清理项目内 .pandaone/")
     args = parser.parse_args()
 
     print("=" * 60)
-    print("PandaX 卸载工具")
+    print("Pandaone 卸载工具")
     print("=" * 60)
     print()
 
@@ -130,7 +130,7 @@ def main():
     print("完成")
     print("=" * 60)
     if args.keep_projects:
-        print("提示: 项目内的 .pandax/ 目录已保留，可手动删除")
+        print("提示: 项目内的 .pandaone/ 目录已保留，可手动删除")
     return 0
 
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-audit_i18n.py — PandaX i18n 对抗式审查脚本
+audit_i18n.py — Pandaone AI Agent i18n 对抗式审查脚本
 ============================================
 
-扫描所有 pandax 包源码（cli.py / guard / mcp / exporters / templates），找出：
+扫描所有 pandaone 包源码（cli.py / guard / mcp / exporters / templates），找出：
   1. print() / sys.stderr.write() 中的硬编码中文字符串（未被 t() 包裹）
   2. raise Exception("...") 中的中文
   3. f-string 中的中文（重点）
@@ -64,7 +64,7 @@ BRAND_WHITELIST = [
     "menu_", "banner_tagline", "banner_", "macos_",
     "🐼", "█████", "PANDAX",
     # Python 标准库和第三方库的常见中文化命名
-    "PandaX", "pandax", "PANDAS",
+    "Pandaone", "pandaone", "PANDAS",
     # 路径
     "/Users/", "/home/", "C:\\",
     # SHA256 哈希占位符
@@ -162,7 +162,7 @@ def check_i18n_coverage() -> dict:
     """
     try:
         sys.path.insert(0, str(DEFAULT_ROOT))
-        from pandax import i18n
+        from pandaone import i18n
         return i18n.coverage_report()
     except Exception as e:
         print(f"[WARN] 无法运行 i18n 覆盖率检查: {e}", file=sys.stderr)
@@ -175,7 +175,7 @@ def check_i18n_coverage() -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="PandaX i18n 对抗式审查 + 覆盖率检查"
+        description="Pandaone i18n 对抗式审查 + 覆盖率检查"
     )
     parser.add_argument("--root", default=str(DEFAULT_ROOT), help="源码根目录")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出")
@@ -215,7 +215,7 @@ def main() -> int:
         return 0 if output["passed"] else 1
     else:
         print("=" * 70)
-        print(" PandaX i18n 对抗式审查")
+        print(" Pandaone i18n 对抗式审查")
         print("=" * 70)
         print()
 

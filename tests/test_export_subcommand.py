@@ -1,12 +1,12 @@
 """
 test_export_subcommand.py
 ==========================
-Bug #25 RED 测试：pandax export 应该是独立子命令，不再借用 log。
+Bug #25 RED 测试：pandaone export 应该是独立子命令，不再借用 log。
 
 第一性原理：
-  之前用户只能 `pandax log --format html --output report.html` 导出，
+  之前用户只能 `pandaone log --format html --output report.html` 导出，
   但 "log" 语义是"查看历史"，借用来做"导出"语义混乱。
-  修复：新增独立子命令 `pandax export --format <fmt> --output <path>`。
+  修复：新增独立子命令 `pandaone export --format <fmt> --output <path>`。
   旧 log --format/--output 仍可用但打印 deprecation warning。
 """
 import json
@@ -29,7 +29,7 @@ def _run(args, cwd, env_extra=None, lang="zh-CN"):
     if env_extra:
         env.update(env_extra)
     return subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
 
@@ -38,7 +38,7 @@ def _setup_with_audit(tmp_path):
     """初始化项目 + 注入 1 条 audit 记录"""
     r = _run(["init", "--root", str(tmp_path), "--force"], tmp_path)
     assert r.returncode == 0, f"init failed: {r.stderr}"
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     rec = {
         "id": "audit_001",
         "timestamp": "2026-01-01 12:00:00",
@@ -58,26 +58,26 @@ def _setup_with_audit(tmp_path):
 # ============================================================
 
 class TestExportSubcommand:
-    """Bug #25 — `pandax export` 应作为独立子命令存在"""
+    """Bug #25 — `pandaone export` 应作为独立子命令存在"""
 
     def test_export_subcommand_exists_in_argparse(self):
         """静态验证：cli.py argparse 中有 export_p = sub.add_parser('export', ...)"""
-        cli_src = (SRC_DIR / "pandax" / "cli.py").read_text(encoding="utf-8")
+        cli_src = (SRC_DIR / "pandaone" / "cli.py").read_text(encoding="utf-8")
         assert re.search(
             r'sub\.add_parser\(\s*"export"', cli_src,
         ), "Bug #25 回归：cli.py argparse 中没有 export 子命令"
 
     def test_export_registered_in_commands_dict(self):
         """静态验证：COMMANDS 字典中 export 映射到 cmd_export"""
-        cli_src = (SRC_DIR / "pandax" / "cli.py").read_text(encoding="utf-8")
+        cli_src = (SRC_DIR / "pandaone" / "cli.py").read_text(encoding="utf-8")
         # COMMANDS = { ... "export": cmd_export ... }
         m = re.search(r'COMMANDS\s*=\s*\{[^}]*"export"\s*:\s*(\w+)', cli_src, re.DOTALL)
         assert m, "Bug #25 回归：COMMANDS 中找不到 'export' 键"
         # 该函数应实际存在
         assert f"def {m.group(1)}(" in cli_src, f"导出函数 {m.group(1)} 未定义"
 
-    def test_pandax_help_lists_export(self, tmp_path):
-        """E2E：pandax --help 输出应包含 export"""
+    def test_pandaone_help_lists_export(self, tmp_path):
+        """E2E：pandaone --help 输出应包含 export"""
         r = _run(["--help"], tmp_path)
         assert r.returncode == 0
         assert "export" in r.stdout.lower(), (
@@ -85,7 +85,7 @@ class TestExportSubcommand:
         )
 
     def test_export_help_includes_format_output_args(self, tmp_path):
-        """E2E：pandax export --help 应列出 --format 和 --output"""
+        """E2E：pandaone export --help 应列出 --format 和 --output"""
         r = _run(["export", "--help"], tmp_path)
         assert r.returncode == 0
         assert "--format" in r.stdout or "-f" in r.stdout
@@ -94,7 +94,7 @@ class TestExportSubcommand:
     # ----- 实际功能 -----
 
     def test_export_html_en(self, tmp_path):
-        """pandax export --format html --output FILE --lang en 应生成英文 HTML"""
+        """pandaone export --format html --output FILE --lang en 应生成英文 HTML"""
         project = _setup_with_audit(tmp_path)
         out = project / "report.html"
         r = _run(
@@ -104,12 +104,12 @@ class TestExportSubcommand:
         assert r.returncode == 0, f"export failed: {r.stderr}"
         assert out.exists()
         content = out.read_text(encoding="utf-8")
-        assert "PandaX Audit Report" in content
+        assert "Pandaone AI Agent Audit Report" in content
         # Bug #26 同时验证（i18n 已修复）
         assert "审计报告" not in content
 
     def test_export_json(self, tmp_path):
-        """pandax export --format json --output FILE 应生成 JSON 结构"""
+        """pandaone export --format json --output FILE 应生成 JSON 结构"""
         project = _setup_with_audit(tmp_path)
         out = project / "data.json"
         r = _run(["export", "--format", "json", "--output", str(out)], project)
@@ -121,10 +121,10 @@ class TestExportSubcommand:
         assert data["records"][0]["id"] == "audit_001"
 
     def test_export_csv_filter_by_file(self, tmp_path):
-        """pandax export --format csv --file main.py 应只导出 main.py 记录"""
+        """pandaone export --format csv --file main.py 应只导出 main.py 记录"""
         project = _setup_with_audit(tmp_path)
         # 再添加一条其他文件的记录
-        audit_path = project / ".pandax" / "pandax.jsonl"
+        audit_path = project / ".pandaone" / "pandaone.jsonl"
         rec2 = {
             "id": "audit_002",
             "timestamp": "2026-01-02 12:00:00",
@@ -171,7 +171,7 @@ class TestLegacyLogExportDeprecation:
     """旧 log --format/--output 仍可用，但应打印 WARN 推荐新子命令"""
 
     def test_log_format_output_still_works_with_warning(self, tmp_path):
-        """pandax log --format html --output FILE 应仍能导出 + 打印 deprecation"""
+        """pandaone log --format html --output FILE 应仍能导出 + 打印 deprecation"""
         project = _setup_with_audit(tmp_path)
         out = project / "legacy.html"
         r = _run(["log", "--format", "html", "--output", str(out)], project, lang="en")

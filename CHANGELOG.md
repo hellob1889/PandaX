@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to PandaX will be documented in this file.
+All notable changes to Pandaone AI Agent will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,22 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (审计可追溯性增强 / Audit Traceability)
 
-- **`pandax write --agent` 参数**：所有 audit 记录现在带 agent 身份字段
-  **`pandax write --agent` flag**: every audit record now carries agent identity
+- **`pandaone write --agent` 参数**：所有 audit 记录现在带 agent 身份字段
+  **`pandaone write --agent` flag**: every audit record now carries agent identity
   - 默认 `user:anonymous`，调用方可显式传 `claude-code` / `cursor` / `trae` / `user:name` / `ci-bot` / 任意字符串
     Default `user:anonymous`; callers explicitly pass `claude-code` / `cursor` / `trae` / `user:name` / `ci-bot` / any string
-  - 配合 `pandax log --agent=<name>` 按 agent 过滤审计历史
-    Pairs with `pandax log --agent=<name>` to filter audit history by agent
-  - `pandax status` 新增 agent 分组统计（按写入次数 top 5）
-    `pandax status` adds per-agent grouped stats (top 5 by write count)
+  - 配合 `pandaone log --agent=<name>` 按 agent 过滤审计历史
+    Pairs with `pandaone log --agent=<name>` to filter audit history by agent
+  - `pandaone status` 新增 agent 分组统计（按写入次数 top 5）
+    `pandaone status` adds per-agent grouped stats (top 5 by write count)
 
-- **`pandax write` 捕获 diff 上下文**（文本文件）：在 audit log 里存 `old_content` / `new_content`（截断 500 字符）
-  **`pandax write` captures diff context** (text files): stores `old_content` / `new_content` in audit log (truncated at 500 chars)
-  - 配合 `pandax log --verbose` 在彩色面板里显示完整 diff
-    Pairs with `pandax log --verbose` to render full diff in colored panel
+- **`pandaone write` 捕获 diff 上下文**（文本文件）：在 audit log 里存 `old_content` / `new_content`（截断 500 字符）
+  **`pandaone write` captures diff context** (text files): stores `old_content` / `new_content` in audit log (truncated at 500 chars)
+  - 配合 `pandaone log --verbose` 在彩色面板里显示完整 diff
+    Pairs with `pandaone log --verbose` to render full diff in colored panel
 
-- **`pandax log` 重写为彩色面板格式**（ANSI box drawing chars）：
-  **`pandax log` rewritten as colored panel format** (ANSI box drawing chars):
+- **`pandaone log` 重写为彩色面板格式**（ANSI box drawing chars）：
+  **`pandaone log` rewritten as colored panel format** (ANSI box drawing chars):
   - 面板字段：状态 / audit_id / 时间 / agent byline / 文件 / commit / 行数（+N/-M）/ 原因 / 问题 / 方法 / 差异
     Panel fields: status / audit_id / time / agent byline / file / commit / lines (+N/-M) / reason / problem / approach / diff
   - 颜色：APPROVED=绿，REJECTED=红，agent=青，diff 行加号=绿 / 减号=红
@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Stats
 - **测试**：342 passed, 1 skipped（+2 个 v0.7.3 专项测试：test_v073_audit_diff 9 个 + 既有 i18n/log/export 套件更新）
   **Tests**: 342 passed, 1 skipped (+2 v0.7.3 tests: 9 in test_v073_audit_diff + i18n/log/export suite updates)
-- **PyPI**：[pandax-guard 0.7.3](https://pypi.org/project/pandax-guard/0.7.3/)
+- **PyPI**：[pandaone-guard 0.7.3](https://pypi.org/project/pandaone-guard/0.7.3/)
 - **Trusted Publishing**：tag `v0.7.3` push → GitHub Actions `publish.yml` 通过 OIDC 自动上传 PyPI
   **Trusted Publishing**: tag `v0.7.3` push → GitHub Actions `publish.yml` auto-uploads to PyPI via OIDC
 
@@ -385,14 +385,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Tests
 - 59 passed
 
-[Unreleased]: https://github.com/hellob1889/PandaX/compare/v0.7.2...HEAD
-[0.7.2]: https://github.com/hellob1889/PandaX/compare/v0.7.1...v0.7.2
-[0.7.1]: https://github.com/hellob1889/PandaX/compare/v0.6.2...v0.7.1
-[0.6.2]: https://github.com/hellob1889/PandaX/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/hellob1889/PandaX/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/hellob1889/PandaX/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/hellob1889/PandaX/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/hellob1889/PandaX/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/hellob1889/PandaX/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/hellob1889/PandaX/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/hellob1889/PandaX/releases/tag/v0.1.0
+[Unreleased]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.2...v0.7.1
+[0.6.2]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/hellob1889/Pandaone-AI-Agent/releases/tag/v0.1.0

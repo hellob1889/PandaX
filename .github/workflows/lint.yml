@@ -1,5 +1,5 @@
 # ============================================================
-# .github/workflows/lint.yml — PandaX Lint & i18n CI
+# .github/workflows/lint.yml — Pandaone AI Agent Lint & i18n CI
 # ============================================================
 #
 # 第一性原理：
@@ -9,7 +9,7 @@
 #   - 必须 fail-fast：发现违规立即报错，PR 不能合并
 #
 # 对抗式审查：
-#   - audit_i18n.py 扫描所有 pandax 包源码
+#   - audit_i18n.py 扫描所有 pandaone 包源码
 #   - 检查 print() / raise / sys.stderr.write 中的硬编码中文
 #   - 检查 i18n 模块的语言包覆盖率
 #   - 失败时 exit 1，阻止 PR 合并
@@ -54,7 +54,7 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install PandaX (editable)
+      - name: Install Pandaone (editable)
         run: |
           pip install -e .
         shell: bash
@@ -62,7 +62,7 @@ jobs:
       - name: Run i18n audit (human-readable)
         run: |
           echo "================================================================"
-          echo " PandaX i18n 对抗式审查（CI 自动）"
+          echo " Pandaone i18n 对抗式审查（CI 自动）"
           echo "================================================================"
           python scripts/audit_i18n.py
         shell: bash
@@ -76,7 +76,7 @@ jobs:
 
       - name: Upload audit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: i18n-audit-results
           path: artifacts/i18n_audit.json
@@ -101,7 +101,7 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install PandaX (editable)
+      - name: Install Pandaone (editable)
         run: |
           pip install -e .
         shell: bash
@@ -109,7 +109,7 @@ jobs:
       - name: Check i18n coverage
         run: |
           python -c "
-          from pandax import i18n
+          from pandaone import i18n
           import sys
           report = i18n.coverage_report()
           failed = False

@@ -1,5 +1,5 @@
 # ============================================================
-# PandaX .gitignore
+# Pandaone AI Agent .gitignore
 # ============================================================
 
 # Python 构建产物
@@ -37,10 +37,10 @@ env/
 .mypy_cache/
 .ruff_cache/
 
-# PandaX 自身产物
+# Pandaone 自身产物
 test_project/
 
-# PandaX 运行时状态目录（init 后生成）
+# Pandaone 运行时状态目录（init 后生成）
 .codeaudit/
 
 # OS
@@ -56,8 +56,8 @@ installer/staging/
 installer/Output/
 
 # Release artifacts(用户级输出,不入仓库 — 重新打包请跑 scripts/release.py)
-PandaX-*-install.zip
-PandaX-*.exe
+Pandaone-*-install.zip
+Pandaone-*.exe
 
 # ============================================================
 # Workspace 临时产物（本次工作 session 产生，不入仓库）
@@ -73,3 +73,8 @@ CodeAudit_项目文档.html
 # ============================================================
 examples/demo_03_bypass/
 examples/demo_05_full/
+
+
+# Pandaone 运行时产物(自动管理,不要手动提交)
+.pandaone/
+desktop.ini

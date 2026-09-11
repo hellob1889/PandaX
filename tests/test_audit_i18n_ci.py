@@ -28,8 +28,8 @@ import pytest
 # ============================================================
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AUDIT = REPO_ROOT / "scripts" / "audit_i18n.py"
-CLI = REPO_ROOT / "src" / "pandax" / "cli.py"
-GUARD_MAIN = REPO_ROOT / "src" / "pandax_guard" / "__main__.py"
+CLI = REPO_ROOT / "src" / "pandaone" / "cli.py"
+GUARD_MAIN = REPO_ROOT / "src" / "pandaone_guard" / "__main__.py"
 
 
 # ============================================================
@@ -82,7 +82,7 @@ def fresh_cli():
     # 从 git HEAD 读取原始干净版本（避免被前一个测试污染）
     try:
         original = subprocess.run(
-            ["git", "show", "HEAD:src/pandax/cli.py"],
+            ["git", "show", "HEAD:src/pandaone/cli.py"],
             cwd=str(REPO_ROOT),
             capture_output=True, text=True, timeout=10,
         )
@@ -154,7 +154,7 @@ class TestFailureDetection:
         """应报告违规文件路径"""
         _inject_hardcoded(CLI)
         result = _run_audit()
-        assert "src\\pandax\\cli.py" in result.stdout or "src/pandax/cli.py" in result.stdout
+        assert "src\\pandaone\\cli.py" in result.stdout or "src/pandaone/cli.py" in result.stdout
 
     def test_injection_covers_multiple_syntaxes(self, fresh_cli):
         """应检测多种语法（print / raise / f-string）的硬编码"""

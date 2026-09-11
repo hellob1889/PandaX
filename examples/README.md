@@ -1,4 +1,4 @@
-# PandaX Examples
+# Pandaone AI Agent Examples
 
 > **可运行的演示脚本** — 每个脚本都是真实工作流，自带预期验证。
 > **Runnable demo scripts** — each script is a real workflow with built-in expected validation.
@@ -36,8 +36,8 @@ python 04_mcp_client.py && python 05_full_project.py
 
 ## 前置要求 / Prerequisites
 
-- 已安装 pandax：`pip install pandax-guard`
-  pandax installed: `pip install pandax-guard`
+- 已安装 pandaone：`pip install pandaone-guard`
+  pandaone installed: `pip install pandaone-guard`
 - Windows + Git（脚本通过 `shutil.which("git")` 自动检测）
   Windows + Git (script auto-detects via `shutil.which("git")`)
 - macOS/Linux 用户：把 `GIT_EXE="/d/软件/Git/cmd/git.exe"` 改为 `which git` 的结果
@@ -76,7 +76,7 @@ Want to test your own scenario? Edit the `files = {...}` dict in the correspondi
 ### 01_basic_workflow.sh 输出关键行 / Output key lines
 ```
 ✓ git initialized
-✓ PandaX initialized
+✓ Pandaone initialized
 ✓ Files locked
 ✓ PermissionError（文件被锁 / file is locked）
 ✓ Demo 1 完成 — 基础工作流演示 / Demo 1 done — basic workflow demo
@@ -99,7 +99,7 @@ status 检测到篡改 / status detected tampering
 
 ### 04_mcp_client.py 输出关键行 / Output key lines
 ```
-Server: pandax v0.6.x
+Server: pandaone v0.6.x
 发现 11 个工具 / found 11 tools
 Result: ...
 ```

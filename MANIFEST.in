@@ -3,17 +3,17 @@ include LICENSE
 include CHANGELOG.md
 include RELEASE.md
 
-include src/pandax/banner.txt
-recursive-include src/pandax/templates *.sh pre-commit-hook pre-commit-check.py README.md
+include src/pandaone/banner.txt
+recursive-include src/pandaone/templates *.sh pre-commit-hook pre-commit-check.py README.md
 
-# Phase 9: OS 右键菜单集成（所有平台，v0.7.1+ installer 移入 src/pandax/）
-recursive-include src/pandax/installer/windows *.ps1
-recursive-include src/pandax/installer/macos *.sh
-recursive-include src/pandax/installer/macos/PandaX Lock.workflow *.plist *.wflow
-recursive-include src/pandax/installer/linux *.sh
-include src/pandax/installer/linux/nautilus/PandaX
-include src/pandax/installer/linux/dolphin/*.desktop
-include src/pandax/installer/*.iss
+# Phase 9: OS 右键菜单集成（所有平台，v0.7.1+ installer 移入 src/pandaone/）
+recursive-include src/pandaone/installer/windows *.ps1
+recursive-include src/pandaone/installer/macos *.sh
+recursive-include src/pandaone/installer/macos/Pandaone Lock.workflow *.plist *.wflow
+recursive-include src/pandaone/installer/linux *.sh
+include src/pandaone/installer/linux/nautilus/Pandaone
+include src/pandaone/installer/linux/dolphin/*.desktop
+include src/pandaone/installer/*.iss
 
 # 文档资源
 include assets/*.svg

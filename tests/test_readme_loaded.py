@@ -8,7 +8,7 @@ RED 测试：CLI 每次启动必须读取 README.md 并显示当前阶段 / 步�
   开发者 / agent 就无法同步设计意图与当前进度。
 
 测试策略：
-  - 通过 subprocess 调用 `python pandax.py` 无子命令
+  - 通过 subprocess 调用 `python pandaone.py` 无子命令
   - 期望 stdout 包含 README 中的关键标识（"Phase 1"、"CLI MVP"）
   - 这是机制的核心保证，必须从第一个版本就锁定
 """
@@ -19,13 +19,13 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 README = ROOT / "README.md"
 
 
-def test_pandax_file_exists():
-    """pandax.py 必须存在（前置条件）"""
-    assert PANDAX.exists(), f"pandax.py 不存在: {PANDAX}"
+def test_pandaone_file_exists():
+    """pandaone.py 必须存在（前置条件）"""
+    assert PANDAX.exists(), f"pandaone.py 不存在: {PANDAX}"
 
 
 def test_readme_file_exists():
@@ -46,7 +46,7 @@ def test_cli_loads_readme_on_startup():
         timeout=10,
     )
 
-    # 失败当前：pandax.py 还不存在，subprocess 会报 FileNotFoundError 或非零退出
+    # 失败当前：pandaone.py 还不存在，subprocess 会报 FileNotFoundError 或非零退出
     assert result.returncode == 0, (
         f"CLI 启动失败: rc={result.returncode}\n"
         f"stdout: {result.stdout}\n"
@@ -96,13 +96,13 @@ def test_summary_shows_latest_phase_not_old_step13():
     # 直接 import load_readme_summary 测试（避免 subprocess 启动开销）
     import importlib.util
     spec = importlib.util.spec_from_file_location(
-        "pandax_cli", ROOT / "src" / "pandax" / "cli.py"
+        "pandaone_cli", ROOT / "src" / "pandaone" / "cli.py"
     )
-    pandax_cli = importlib.util.module_from_spec(spec)
-    # 加载前需要 pandax 包可导入
+    pandaone_cli = importlib.util.module_from_spec(spec)
+    # 加载前需要 pandaone 包可导入
     sys.path.insert(0, str(ROOT / "src"))
-    spec.loader.exec_module(pandax_cli)
-    summary = pandax_cli.load_readme_summary()
+    spec.loader.exec_module(pandaone_cli)
+    summary = pandaone_cli.load_readme_summary()
     text = "\n".join(summary)
 
     # Phase 6 是最新活跃阶段（README 维护者按时间顺序写在最后）
@@ -119,7 +119,7 @@ def test_summary_includes_actual_completed_bugfixes():
     第一性原则：README 段落必须反映真实修复历史，否则 CLI 启动信息误导用户。
     """
     sys.path.insert(0, str(ROOT / "src"))
-    from pandax.cli import load_readme_summary
+    from pandaone.cli import load_readme_summary
     summary = load_readme_summary()
     text = "\n".join(summary)
 

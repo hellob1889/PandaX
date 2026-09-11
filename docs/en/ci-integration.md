@@ -7,7 +7,7 @@
 `.github/workflows/audit.yml`:
 
 ```yaml
-name: PandaX CI
+name: Pandaone AI Agent CI
 on:
   pull_request:
     branches: [main, master, develop]
@@ -24,8 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install pandax-guard
-      - run: pandax ci --root . --base origin/main
+      - run: pip install pandaone-guard
+      - run: pandaone ci --root . --base origin/main
 ```
 
 ## GitLab CI
@@ -37,9 +37,9 @@ audit:
   stage: test
   image: python:3.10
   before_script:
-    - pip install pandax-guard
+    - pip install pandaone-guard
   script:
-    - pandax ci --root . --base origin/main
+    - pandaone ci --root . --base origin/main
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
@@ -60,11 +60,11 @@ audit:
 ## Fix Workflow
 
 ```bash
-pandax write --file src/auth.py \
+pandaone write --file src/auth.py \
     --reason "..." --problem "..." --approach "..." \
     --old "..." --new "..."
 
-pandax write --file assets/icon.ico \
+pandaone write --file assets/icon.ico \
     --reason "..." --problem "..." --approach "..." \
     --from-file /tmp/new_icon.ico
 
@@ -75,4 +75,4 @@ git push
 
 ---
 
-[← Home](index.md) | [Commands](commands.md) | [GitHub](https://github.com/hellob1889/PandaX)
+[← Home](index.md) | [Commands](commands.md) | [GitHub](https://github.com/hellob1889/Pandaone-AI-Agent)

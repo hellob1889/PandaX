@@ -5,19 +5,19 @@ Complete CLI command reference. All commands support `--root <path>` (default: c
 ## init — Initialize project
 
 ```bash
-pandax init [--root PATH]
+pandaone init [--root PATH]
 ```
 
-Creates `.pandax/` with:
+Creates `.pandaone/` with:
 - `config.json` — 17 text + 24 binary extensions
-- `pandax.jsonl` — audit log (JSON Lines)
+- `pandaone.jsonl` — audit log (JSON Lines)
 - `binary_snapshots.json` — binary SHA256 dictionary
 
 ## lock / unlock
 
 ```bash
-pandax lock [--root PATH]
-pandax unlock [--root PATH]
+pandaone lock [--root PATH]
+pandaone unlock [--root PATH]
 ```
 
 Windows: `attrib +R` / `-R`
@@ -26,7 +26,7 @@ macOS/Linux: `chmod 444` / `chmod 644`
 ## write — Audit write (core)
 
 ```bash
-pandax write \
+pandaone write \
     --file <RELATIVE_PATH> \
     --reason "change reason" \
     --problem "problem solved" \
@@ -45,8 +45,8 @@ pandax write \
 ## log — Audit history
 
 ```bash
-pandax log [--root PATH] [--last N] [--status STATUS]
-pandax log --format <fmt> --output <file>
+pandaone log [--root PATH] [--last N] [--status STATUS]
+pandaone log --format <fmt> --output <file>
 ```
 
 13 export formats: text/txt, csv/tsv, json, yaml/yml, md/markdown, html, xlsx/excel, docx/word, pdf, sqlite/db, rst, asciidoc/adoc
@@ -54,7 +54,7 @@ pandax log --format <fmt> --output <file>
 ## status — Project status dashboard
 
 ```bash
-pandax status [--root PATH]
+pandaone status [--root PATH]
 ```
 
 Shows: L1 lock, L2 watchdog, L5 fingerprint, audit stats, recent audits, Phase 5 binary snapshots.
@@ -62,33 +62,33 @@ Shows: L1 lock, L2 watchdog, L5 fingerprint, audit stats, recent audits, Phase 5
 ## install-hook — Install L3 pre-commit hook
 
 ```bash
-pandax install-hook [--root PATH]
+pandaone install-hook [--root PATH]
 ```
 
 Requires: `.git/` directory.
 
 Installs:
 - `.git/hooks/pre-commit` — shell launcher
-- `.pandax/pre-commit-check.py` — Python validation
+- `.pandaone/pre-commit-check.py` — Python validation
 
 ## watch — Start L2 watchdog
 
 ```bash
-pandax watch [--root PATH] [--daemon]
+pandaone watch [--root PATH] [--daemon]
 ```
 
-`--daemon`: background mode, writes PID to `.pandax/.watchdog_pid`.
+`--daemon`: background mode, writes PID to `.pandaone/.watchdog_pid`.
 
 ## install-git — Auto-install git
 
 ```bash
-pandax install-git
+pandaone install-git
 ```
 
 ## ci — L7 CI verification
 
 ```bash
-pandax ci [--root PATH] [--base REF]
+pandaone ci [--root PATH] [--base REF]
 ```
 
 **base**: baseline ref (default `HEAD~1`)
@@ -98,7 +98,7 @@ Exit codes: 0 = all audited, 1 = unaudited changes found.
 ## update-fingerprint — Update CLI self-fingerprint
 
 ```bash
-pandax --update-fingerprint <CODE>
+pandaone --update-fingerprint <CODE>
 ```
 
 Default password is `0000` (single-user / local). For production / CI / multi-user
@@ -107,7 +107,7 @@ source no longer hard-codes a privileged password.
 
 ## MCP
 
-`pandax-mcp` — Start MCP server (stdio JSON-RPC).
+`pandaone-mcp` — Start MCP server (stdio JSON-RPC).
 
 Exposes 11 tools for AI Agents (Claude / Cursor / Trae).
 
