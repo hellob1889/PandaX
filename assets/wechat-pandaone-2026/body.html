@@ -1,0 +1,109 @@
+<p style="text-align:center;font-size:13px;color:#9a8c6a;letter-spacing:5px;margin:0 0 14px;">— 科技数码 · 实测 —</p>
+<p style="text-align:center;font-size:22px;font-weight:bold;color:#2b2b2b;margin:0 0 28px;line-height:1.4;">我让 AI 改代码,装了一道闸</p>
+<p style="text-align:center;color:#78716c;font-size:14px;margin:0 0 36px;line-height:1.7;">一个被严重低估的工程问题 · Pandaone v0.7.3 实测</p>
+
+<p style="text-align:center;margin:0 0 36px;"><img src="assets/dashboard.png" style="max-width:100%;border-radius:8px;display:block;" /></p>
+<p style="text-align:center;font-size:13px;color:#9a8c6a;margin:0 0 36px;">▲ 实测截图:Pandaone 实时仪表盘,12 条 APPROVED + 4 条 REJECTED</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">说真的,这件事我做完了才敢说。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">上月某天凌晨,我用 Cursor 让 AI 改一段用户认证逻辑。AI 干得很快,改完了我也没细看,直接 commit。第二天 review 一遍,发现一个微妙的 <strong style="color:#dc2626;">常量时间比较被改成了普通字符串比较</strong>。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">时序攻击。本来是防住的,这一改,就开了。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">我事后翻了 5 遍 git log 才反应过来,就是这个 AI 改的。</p>
+
+<p style="background:#fafaf9;border-left:3px solid #dc2626;padding:14px 18px;margin:0 0 32px;font-size:15px;color:#4b4640;line-height:1.85;">这就是问题。<strong style="color:#dc2626;">AI 改代码的工程风险,不在模型会不会写错,而在它写错了你不知道。</strong></p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">一个被忽视的事实</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">我们这一代人,正在做一件前无古人的事——<strong style="color:#1a1a1a;">把代码的修改权交给一个非人类</strong>。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">它可以 30 秒写完一段过去要 30 分钟的代码。它也可以 30 秒写出过去你不会写的 bug。它<strong style="color:#1a1a1a;">不知道</strong>你的项目历史。<strong style="color:#1a1a1a;">不知道</strong>你之前踩过的坑。<strong style="color:#1a1a1a;">不知道</strong>你团队的代码规范。它甚至不知道自己改了什么——它一次只看到上下文的一小段。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">但它改起来,比人类还自信。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">这件事,我想了很久。</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">把 audit 当成 git commit 一样严肃</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">后来朋友推荐了一个东西,叫 <strong style="color:#4f46e5;">Pandaone</strong>(原 PandaX)。开源,免费,装了一下午,我现在每次让 AI 改代码,都得走它。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">它的核心思路,一句话讲完:</p>
+
+<p style="background:#f0f9ff;border-radius:8px;padding:20px 24px;margin:0 0 24px;font-size:17px;color:#1c1917;line-height:1.8;font-weight:500;text-align:center;"><strong style="color:#4f46e5;">AI 想改 .py,先告诉我 4 个东西:<br/>为什么改 · 解决什么问题 · 用什么方法 · 改了什么</strong><br/><span style="font-size:14px;color:#78716c;font-weight:400;margin-top:8px;display:block;">差一项,不让写。</span></p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">写完了,审计日志会写到 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:14px;color:#4f46e5;">.pandaone/pandaone.jsonl</code>,浏览器自动跳出来面板,我自己盯一眼。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">改完了还有指纹自检——它会给自己算 SHA256,<strong style="color:#1a1a1a;">如果我自己手动去改 pandaone.exe 给自己开后门,装在 hooks 里的指纹会告警</strong>。这是一道对 AI 隐藏的关。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">听着是不是挺折腾?其实不。一行 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:14px;color:#4f46e5;">pandaone write</code> 命令,Claude Code / Cursor / Trae 都能自动塞进 skill 里调用。</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">5 层防御 · 第一性原理</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">它做了 5 层,各挡一条路:</p>
+
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 12px;"><strong style="color:#4f46e5;">L1 · 文件锁</strong> —— 把 .py 改成只读。AI 想写,先解锁。解锁=明确允许。</p>
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 12px;"><strong style="color:#4f46e5;">L2 · watchdog</strong> —— 后台盯文件系统。AI 绕开 L1 直接写?它会立刻锁回去。</p>
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 12px;"><strong style="color:#4f46e5;">L3 · pre-commit hook</strong> —— git commit 前检查 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:13px;">.pandaone/pandaone.jsonl</code> 是否被一起 stage。没 stage?直接拒绝 commit。</p>
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 12px;"><strong style="color:#4f46e5;">L4 · README startup</strong> —— 启动时打印 banner,提示当前是受审计状态。</p>
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;"><strong style="color:#4f46e5;">L5 · 自指纹</strong> —— pandaone.exe 自己的 SHA256,被改了就告警。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">注意一个细节:L3 是真正不可绕过的关。<strong style="color:#1a1a1a;">除非 git commit --no-verify,否则任何 .py 改动没有审计就走不到 main 分支</strong>。CI 那边再加一个 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:14px;color:#4f46e5;">pandaone ci</code> 校验,审计记录数对不上,PR 直接 fail。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">5 层不是冗余。第一性原理就是:假设每一层都会被绕开,所以每层都得独立成立。</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">实测:装一遍,改一次</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;text-align:justify;">实测命令 4 条:</p>
+
+<p style="background:#1c1917;color:#d6d3d1;border-radius:8px;padding:20px 24px;margin:0 0 24px;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.7;">pip install pandaone-guard<br/>pandaone init --root .<br/>pandaone lock<br/>pandaone install-hook</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">装完我做了个实验,故意让 AI 改一个 .py 文件但不调 write 命令,直接 git commit。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">pre-commit hook 立刻挡住:</p>
+
+<p style="background:#fef2f2;border-left:3px solid #dc2626;padding:14px 18px;margin:0 0 24px;font-size:14px;color:#7f1d1d;line-height:1.7;font-family:Consolas,Monaco,monospace;">[Pandaone] 拒绝提交: 检测到 .py 修改但审计日志未更新<br/><br/>被修改的文件:<br/>&nbsp;&nbsp;src/auth.py<br/><br/>请使用 pandaone write 命令代替直接 git commit</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">接着我让 AI 调 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:14px;color:#4f46e5;">pandaone write --file src/auth.py --reason "..." --problem "..." --approach "..."</code>,审计记录写进去,commit 放行。</p>
+
+<p style="text-align:center;margin:0 0 12px;"><img src="assets/social-preview.png" style="max-width:100%;border-radius:8px;display:block;" /></p>
+<p style="text-align:center;font-size:13px;color:#9a8c6a;margin:0 0 36px;">▲ Pandaone 官方 social preview,1280×640,GitHub repo 顶部展示</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">不吹不黑</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">用了三周,说几个观察:</p>
+
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;"><strong style="color:#16a34a;">✓ 真有用</strong>:CI 上接上 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:13px;">pandaone ci</code>,PR 改了几行就要几条审计。AI 偷改代码的成本从「看 log」变成「每次都要写 reason」,门槛拉高一个数量级。</p>
+
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;"><strong style="color:#16a34a;">✓ 审计可追溯</strong>:哪天出问题,翻 jsonl 就能看到「是 cursor 在 3 月 17 日改的,reason 是修 bug,实际是引入 CVE」。这是过去做不到的事。</p>
+
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;"><strong style="color:#d97706;">⚠ 不是银弹</strong>:L3 hook 还是可以 <code style="background:#f5f5f4;padding:2px 6px;border-radius:3px;font-size:13px;">--no-verify</code> 绕过。所以它防的是「忘了审计」,不是「故意不审计」。后者靠 PR review + CI 拦截。</p>
+
+<p style="font-size:15px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;"><strong style="color:#d97706;">⚠ Python only</strong>:目前只挡 .py。.ts / .go / .rs 还在 TODO。生产项目用 TS 的话,要等。</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">适合谁</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;">- 团队刚把 Cursor / Claude Code / Trae 接进 CI/CD,担心 agent 改坏代码没人发现</p>
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;">- 一个人写项目,想给 AI 加个「自动 code review」</p>
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 14px;">- 公司要求所有 .py 改动有审计 trail(SOX / 等保合规)</p>
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;">- 单纯好奇,想看看「代码审计到底能不能被工程化」</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">怎么装</p>
+
+<p style="background:#f0fdf4;border-radius:8px;padding:20px 24px;margin:0 0 18px;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.8;color:#1c1917;">pip install pandaone-guard<br/>cd your-project<br/>pandaone init --root .<br/>pandaone lock<br/>pandaone install-hook</p>
+
+<p style="font-size:14px;color:#78716c;line-height:1.85;margin:0 0 32px;text-align:justify;">GitHub: github.com/hellob1889/Pandaone-AI-Agent · MIT License · v0.7.3 · 342 测 / 28 bug · 中文 README</p>
+
+<p style="font-size:20px;font-weight:bold;color:#1a1a1a;margin:46px 0 14px;line-height:1.4;">写在最后</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">AI 改代码这事,挡是挡不住的。趋势就是让 AI 写更多,我们审更少。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">但「审」这事,不能靠人脑死扛,得靠工程化。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 18px;text-align:justify;">Pandaone 这类工具做的是:把「我信任这段代码」这件事,从模糊的体感,变成可追溯的 JSONL 行。</p>
+
+<p style="font-size:16px;color:#2b2b2b;line-height:1.85;margin:0 0 32px;text-align:justify;">这是一种新的工程范式。我愿意押注它。</p>
+
+<p style="text-align:center;font-size:13px;color:#9a8c6a;margin:46px 0 0;letter-spacing:3px;">— END —</p>
+<p style="text-align:center;font-size:13px;color:#9a8c6a;margin:14px 0 0;">如果有用,点个在看</p>
