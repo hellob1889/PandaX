@@ -65,7 +65,7 @@ jobs:
 
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-log-${{ github.run_id }}
           path: /tmp/build.log
@@ -89,7 +89,7 @@ jobs:
           timeout 60 python -m twine check "dist/pandaone_guard-${_ver}-py3-none-any.whl" "dist/pandaone_guard-${_ver}.tar.gz" || echo "twine check non-critical"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload pytest log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-log-${{ github.run_id }}
           path: /tmp/pytest.log
