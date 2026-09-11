@@ -195,7 +195,7 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax-guard==${GITHUB_REF_NAME#v}
+            pip install --upgrade pandax-guard
             ```
 
             See [CHANGELOG.md](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md) for details.
