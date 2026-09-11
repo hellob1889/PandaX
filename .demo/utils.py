@@ -1,1 +1,1 @@
-utils.py: slugify preserves unicode word chars
+utils.py: md_to_html converter with syntax highlighting
