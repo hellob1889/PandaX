@@ -32,7 +32,7 @@ on:
 
 # 取消同分支的旧运行（节省 CI 资源）
 concurrency:
-  group: ${{. Git.workflow }}-${{. Git.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
