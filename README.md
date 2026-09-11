@@ -8,6 +8,45 @@
   <img src="assets/icon-github.svg" alt="PandaX Logo" width="96" height="96"/>
 </p>
 
+## 🧑‍💼 PandaX is your codebase's personal manager. / PandaX 是你代码库的专属经理。
+
+Every AI agent is an employee working in your company — your codebase. Without a personal manager, employees do what they want — edit files, push commits, break production — and you have no idea what they did, when, or why.
+
+**PandaX is the personal manager you hired to protect your code.** Every AI agent — Claude, Cursor, Trae, or any tool you adopt tomorrow — must report to PandaX first. Nothing gets written, nothing gets committed, nothing gets deployed until PandaX approves it with a signed, auditable receipt:
+
+```
+┌─────────────────────────────────────────────┐
+│ [APPROVED]                  2026-09-11 03:47 │
+│ File:      src/payment.py                    │
+│ Agent:     Claude Code (employee #3)         │
+│ Reason:    "Fix rounding"                    │
+│ Problem:   "Charge $50,001 on $50,000 bill"  │
+│ Approach:  "Round before transfer, not after"│
+│ Commit:    a3f7b2c                           │
+└─────────────────────────────────────────────┘
+```
+
+Without a personal manager, your agents move money — er, code — without receipts:
+
+```
+Without PandaX          With PandaX
+──────────────          ──────────────
+$50,000 ???            $50,000  src/payment.py
+                        Reason:  "Fix rounding"
+                        By:      Claude Code
+                        When:    2026-09-11 03:47
+                        Commit:  a3f7b2c
+```
+
+**The left column is how most AI-agent-driven codebases look today.**
+**The right column is how yours will look with one command:**
+
+```bash
+pip install pandax-guard
+```
+
+Your personal manager is on duty 24/7 — **before, during, and after every code change**. Every AI agent — Claude, Cursor, Trae — operates under one auditable protocol. **No exceptions. No bypass.**
+
 > **AI Agent 代码审计门禁** — 让每一次代码改动都留下合规、可追溯的证据链。
 
 [![PyPI version](https://img.shields.io/pypi/v/pandax-guard?color=blue)](https://pypi.org/project/pandax-guard/)
