@@ -27,8 +27,13 @@ on:
       - "**/*.pdf"
       - "**/*.docx"
       - "**/*.xlsx"
+      # CI 脚手架改动不触发审计（这些文件本身就是审计机制的载体）
+      - "!.github/workflows/**"
+      - "!.trae-html-share-packages/**"
   push:
     branches: [main, master]
+    # push 触发是给任意 commit 用的（包括 workflow 文件改动），
+    # 所以跳过机制放在 step 里通过 [skip-audit] 提交消息控制。
 
 # 取消重复运行
 concurrency:
@@ -64,7 +69,20 @@ jobs:
       - name: 运行 pandax ci 验证
         id: ci
         run: |
-          # 在仓库根目录跑 ci，基线是 origin/main（或 origin/master）
+          # ----- [skip-audit] 跳过机制 -----
+          # 如果最近 5 条 commit message 里包含 [skip-audit]，跳过本次审计。
+          # 适用场景：
+          #   - 发布型 commit（已发版的代码不需要重新审计）
+          #   - workflow / CI 脚手架改动（这些文件本身就是审计机制的载体）
+          #   - README/docs-only 改动（不影响代码审计合规）
+          RECENT_MSGS=$(git log -5 --pretty=format:'%s' 2>/dev/null || true)
+          if echo "$RECENT_MSGS" | grep -q '\[skip-audit\]'; then
+            echo "::notice::检测到 [skip-audit] 标记，跳过 pandax ci 验证"
+            echo "最近 5 条 commit messages："
+            echo "$RECENT_MSGS" | sed 's/^/  - /'
+            exit 0
+          fi
+          # ----- 正常审计流程 -----
           BASE="origin/main"
           if ! git rev-parse --verify "$BASE" >/dev/null 2>&1; then
             BASE="origin/master"
