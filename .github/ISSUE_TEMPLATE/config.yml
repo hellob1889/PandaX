@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions (社区讨论)
+    url: https://github.com/hellob1889/PandaX/discussions
+    about: 提问 / 想法 / 闲聊请去 Discussions，issue 只用于 bug 和具体 feature
+  - name: PandaX 文档站
+    url: https://github.com/hellob1889/PandaX/tree/main/docs
+    about: 完整文档（包含 i18n / 防御层 / 命令参考 / MCP 集成）
+  - name: CHANGELOG（版本历史）
+    url: https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md
+    about: 看是否有新版本已修复你的问题

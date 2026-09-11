@@ -58,12 +58,12 @@ Your personal manager is on duty 24/7 — **before, during, and after every code
 [![Downloads/month](https://pepy.tech/badge/pandax-guard/month)](https://pepy.tech/project/pandax-guard)
 [![Python](https://img.shields.io/pypi/pyversions/pandax-guard)](https://pypi.org/project/pandax-guard/)
 [![License](https://img.shields.io/pypi/l/pandax-guard)](https://github.com/hellob1889/PandaX/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-340%20passed-brightgreen)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
-[![Bugs](https://img.shields.io/badge/bugs-11%20fixed%20(v0.7.2)-success)](https://github.com/hellob1889/PandaX/releases/tag/v0.7.2)
+[![Tests](https://img.shields.io/badge/tests-342%20passed-brightgreen)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
+[![Bugs](https://img.shields.io/badge/bugs-28%20fixed%20(v0.7.1)-success)](https://github.com/hellob1889/PandaX/releases/tag/v0.7.1)
 [![i18n](https://img.shields.io/badge/i18n-248%20keys%20zh%2Den%20%E2%89%88%20en-blueviolet)](https://github.com/hellob1889/PandaX/blob/main/src/pandax/i18n.py)
 [![Lint & i18n CI](https://img.shields.io/badge/Lint%20%26%20i18n-passing-success)](https://github.com/hellob1889/PandaX/blob/main/.github/workflows/lint.yml)
 [![OS](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://pypi.org/project/pandax-guard/)
-[![Phase](https://img.shields.io/badge/status-v0.7.2%20production--ready-success)](https://github.com/hellob1889/PandaX/releases)
+[![Phase](https://img.shields.io/badge/status-v0.7.3%20production--ready-success)](https://github.com/hellob1889/PandaX/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/audit.yml?branch=main&label=CI&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/hellob1889/PandaX/lint.yml?branch=main&label=Lint&logo=github)](https://github.com/hellob1889/PandaX/actions/workflows/lint.yml)
 
@@ -276,7 +276,7 @@ pip install -e .[dev]
 pytest tests/ -v
 ```
 
-当前测试数：**340 passed**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
+当前测试数：**342 passed, 1 skipped**（覆盖 i18n / write / status / lock / ci / watchdog / export / init / e2e / serve / desktop-icon / gitignore）
 
 ### 路线图 / Roadmap
 
@@ -291,8 +291,9 @@ pytest tests/ -v
 | v0.6.1 | ✅ | L3 hook 强化（实战验证） |
 | **v0.6.2** | ✅ | 隐藏文件锁定 bug 修复 |
 | **v0.7.0** | ✅ | Phase 9 OS 右键菜单 + Phase 10 i18n（zh-CN/en）+ doctor.py 环境自检 + auto-fix 13 类 + PATH 持久化 |
-| **v0.7.2** | ✅ | **CI 工程化修复**：publish.yml Tests job 在干净 ubuntu-latest 容器 25s exit 1（setuptools pin 缺失）→ pin `setuptools==80.10.2` + `--no-build-isolation`，新增 pytest log artifact 上传。340 测试通过 |
 | **v0.7.1** | ✅ | **28 个 bug 全修 + 4 大新功能**：P0 安全（#8/#12×2/#22/#23）+ P1（#2/#5/#15/#29）+ P2（#21/#6/#20/#9-#10）+ P3（#13/#4/#26/#39）+ UX（#14/#17/#48/#25/#28）+ 工程化（#版本漂移 / #README 分组标签 / #CRLF 根因）+ **🆕 文件夹熊猫锁图标**（desktop.ini + ICO）+ **🆕 Web 实时仪表盘**（watchdog + SSE <100ms）+ **🆕 Git 兼容**（init 自动写 .gitignore）+ **🆕 右键菜单真实可用验证**，298 测试通过 |
+| **v0.7.2** | ✅ | **CI 工程化修复**：publish.yml Tests job 在干净 ubuntu-latest 容器 25s exit 1（setuptools pin 缺失）→ pin `setuptools==80.10.2` + `--no-build-isolation`，新增 pytest log artifact 上传。340 测试通过 |
+| **v0.7.3** | ✅ | **agent 身份 + diff 捕获 + 面板 UI**：`--agent` 参数追踪调用方（Claude / Cursor / Trae / user:name）+ `--verbose` 完整 diff + 彩色面板格式（状态 / 文件 / commit / 行数 / 原因 / 问题 / 方法 / 差异）+ status 加 agent 分组统计 + HTML 导出加卡片布局 + i18n 新增 16 个键。342 测试通过 |
 
 完整历史：[CHANGELOG.md](CHANGELOG.md)
 

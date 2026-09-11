@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # pip 依赖（运行时 + dev）
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+    # 允许的版本更新策略：
+    # - major: 不自动开 PR
+    # - minor / patch: 自动开 PR
+    # 重大升级需要人工评估
+    ignore:
+      - dependency-name: "setuptools"
+        # setuptools pin 在 publish.yml 的 setuptools==80.10.2 上有特殊原因
+        # Dependabot 提 PR 时会破坏 CI
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+
+# 注意：
+# 1. Dependabot 默认 PR 标题格式：deps(pip): bump X from A.B.C to D.E.F
+# 2. PR 会触发 audit.yml CI（[skip-audit] 不需要，因为 Dependabot PR 都是依赖更新）
+#    但有个问题：Dependabot PR 不通过 pandax write，所以会被审计拦下
+#    → PR 标题加 [skip-audit] 即可豁免
+# 3. setuptools 在 publish.yml 里有专门 pin（setuptools==80.10.2），Dependabot 不能升

@@ -1,0 +1,46 @@
+# CODEOWNERS — 每个改动默认需要 owner 审批
+# 语法：pattern @owner1 @owner2
+# 多个 pattern 中最后一个匹配生效
+
+# 默认 owner（整个仓库）
+*                                       @hellob1889
+
+# 核心 CLI（改一行影响所有用户）
+/src/pandax/cli.py                     @hellob1889
+/src/pandax/__main__.py                @hellob1889
+/src/pandax/__init__.py                @hellob1889
+
+# 审计核心（改这里影响所有审计流程）
+/src/pandax/i18n.py                    @hellob1889
+/src/pandax/exporters.py               @hellob1889
+/tests/test_*.py                       @hellob1889
+
+# CI / 工作流（影响发版流程）
+/.github/workflows/                    @hellob1889
+/pyproject.toml                        @hellob1889
+/setup.py                               @hellob1889
+
+# 文档（需要双语校对）
+/docs/                                  @hellob1889
+/README.md                              @hellob1889
+/CHANGELOG.md                           @hellob1889
+/SECURITY.md                            @hellob1889
+
+# 安全敏感
+/src/pandax/cli.py                      @hellob1889  # 包含指纹校验逻辑
+/src/pandax/lock.py                     @hellob1889
+/src/pandax/watch.py                    @hellob1889
+/src/pandax/hook.py                     @hellob1889
+
+# Assets（图标 / banner）
+/assets/                                @hellob1889
+
+# 模板和示例（社区贡献友好）
+/examples/                              @hellob1889
+/templates/                             @hellob1889
+
+# 注意：
+# 1. 当前仓库只有单一 owner（@hellob1889）。这是单人项目，没有协作者。
+# 2. 当项目增长、需要多人维护时，把上面每一行的 @hellob1889 改为多人组，如 @hellob1889 @alice @bob。
+# 3. GitHub 会在 PR 中自动请求 owner review；owner 不需要 review 时可用 /review none 或管理员 override。
+# 4. CI 文件改动会触发 [skip-audit] 流程（audit.yml 的 [skip-audit] 机制）。
