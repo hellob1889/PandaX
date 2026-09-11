@@ -19,7 +19,7 @@ import urllib.request
 
 import pytest
 
-from pandax.pandax_serve import AuditEventBus, _find_free_port
+from pandaone.pandaone_serve import AuditEventBus, _find_free_port
 
 
 # ============================================================
@@ -91,15 +91,15 @@ class TestSSEDisconnectCleanup:
 
     @pytest.fixture
     def running_server(self, tmp_path):
-        """启动 pandax serve,返回 (proc, port, audit_path)。"""
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        (tmp_path / ".pandax" / "pandax.jsonl").touch()
+        """启动 pandaone serve,返回 (proc, port, audit_path)。"""
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        (tmp_path / ".pandaone" / "pandaone.jsonl").touch()
         port = _find_free_port(20300)
         server, monitor = start_server(tmp_path, port=port, open_browser=False)
         try:
-            yield port, tmp_path / ".pandax" / "pandax.jsonl"
+            yield port, tmp_path / ".pandaone" / "pandaone.jsonl"
         finally:
             monitor.stop()
             server.shutdown()

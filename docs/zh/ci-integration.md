@@ -7,7 +7,7 @@
 `.github/workflows/audit.yml`：
 
 ```yaml
-name: PandaX CI
+name: Pandaone AI Agent CI
 on:
   pull_request:
     branches: [main, master, develop]
@@ -24,8 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install pandax-guard
-      - run: pandax ci --root . --base origin/main
+      - run: pip install pandaone-guard
+      - run: pandaone ci --root . --base origin/main
       - if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v6
         with:
@@ -39,11 +39,11 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: '## PandaX CI Failed\n\n所有变更必须通过 `pandax write` 审计。\n\n修复步骤：\n```bash\npandax write --file <FILE> --reason "..." --problem "..." --approach "..."\n```',
+              body: '## Pandaone CI Failed\n\n所有变更必须通过 `pandaone write` 审计。\n\n修复步骤：\n```bash\npandaone write --file <FILE> --reason "..." --problem "..." --approach "..."\n```',
             });
 ```
 
-完整文件：[`.github/workflows/audit.yml`](https://github.com/hellob1889/PandaX/blob/main/.github/workflows/audit.yml)
+完整文件：[`.github/workflows/audit.yml`](https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/.github/workflows/audit.yml)
 
 ## GitLab CI
 
@@ -54,9 +54,9 @@ audit:
   stage: test
   image: python:3.10
   before_script:
-    - pip install pandax-guard
+    - pip install pandaone-guard
   script:
-    - pandax ci --root . --base origin/main
+    - pandaone ci --root . --base origin/main
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
@@ -74,8 +74,8 @@ jobs:
       - image: python:3.10
     steps:
       - checkout
-      - run: pip install pandax-guard
-      - run: pandax ci --root . --base origin/main
+      - run: pip install pandaone-guard
+      - run: pandaone ci --root . --base origin/main
 workflows:
   version: 2
   audit:
@@ -104,12 +104,12 @@ CI 失败时：
 
 ```bash
 # 1. 重新审计修改
-pandax write --file src/auth.py \
+pandaone write --file src/auth.py \
     --reason "..." --problem "..." --approach "..." \
     --old "..." --new "..."
 
 # 2. 替换二进制
-pandax write --file assets/icon.ico \
+pandaone write --file assets/icon.ico \
     --reason "..." --problem "..." --approach "..." \
     --from-file /tmp/new_icon.ico
 

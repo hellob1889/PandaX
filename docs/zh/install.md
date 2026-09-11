@@ -9,14 +9,14 @@
 ## 一行安装
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 ## 验证安装
 
 ```bash
-pandax --version
-# pandax-guard v0.7.2
+pandaone --version
+# pandaone-guard v0.7.2
 ```
 
 ## 开发模式安装
@@ -24,8 +24,8 @@ pandax --version
 如果你想参与开发：
 
 ```bash
-git clone https://github.com/hellob1889/PandaX
-cd pandax
+git clone https://github.com/hellob1889/Pandaone-AI-Agent
+cd pandaone
 pip install -e .[dev]
 pytest tests/ -v
 # 340 passed
@@ -48,24 +48,24 @@ pytest tests/ -v
 ## 升级
 
 ```bash
-pip install pandax-guard --upgrade
+pip install pandaone-guard --upgrade
 ```
 
 ## 卸载
 
 ```bash
-pip uninstall pandax-guard
+pip uninstall pandaone-guard
 # 清理 fingerprint
-rm -rf ~/.pandax_fp.txt
-# 清理 PATH（如果之前手动添加过 pandax-mcp）
+rm -rf ~/.pandaone_fp.txt
+# 清理 PATH（如果之前手动添加过 pandaone-mcp）
 ```
 
 ## Docker（可选）
 
 ```dockerfile
 FROM python:3.11-slim
-RUN pip install pandax-guard
-ENTRYPOINT ["pandax"]
+RUN pip install pandaone-guard
+ENTRYPOINT ["pandaone"]
 ```
 
 ## 故障排查
@@ -84,8 +84,8 @@ sudo apt install git
 # Windows
 # 从 https://git-scm.com 下载安装
 
-# PandaX 也提供自动安装（但需要用户授权）
-pandax install-git
+# Pandaone AI Agent 也提供自动安装（但需要用户授权）
+pandaone install-git
 ```
 
 ### 问题：PDF 中文显示为方块
@@ -99,7 +99,7 @@ sudo apt install fonts-wqy-microhei fonts-noto-cjk
 
 ### 问题：PermissionError when locking
 
-PandaX 用 chmod 锁定文件。在 Linux/macOS 上是 POSIX 标准行为。
+Pandaone 用 chmod 锁定文件。在 Linux/macOS 上是 POSIX 标准行为。
 在 Windows 上用 `attrib +r`，对普通用户透明。
 **如果你看到 PermissionError** — 说明锁定生效（这是预期行为）。
 

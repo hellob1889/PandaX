@@ -1,7 +1,7 @@
 """
 test_mcp_server.py
 ==================
-Phase 6 — PandaX MCP (Model Context Protocol) server。
+Phase 6 — Pandaone AI Agent MCP (Model Context Protocol) server。
 
 第一性原理：
   AI Agent 直接通过 shell 调用 CLI 已可用，但 MCP 是标准化协议：
@@ -10,9 +10,9 @@ Phase 6 — PandaX MCP (Model Context Protocol) server。
     - 工具列表、参数 schema 都从服务端动态暴露
 
 设计：
-  - pandax-mcp: 独立 console script（stdio JSON-RPC 2.0）
+  - pandaone-mcp: 独立 console script（stdio JSON-RPC 2.0）
   - 每个工具 = 一个 CLI 子命令的封装
-  - 复用现有 pandax.py 实现（subprocess 调用），不重写
+  - 复用现有 pandaone.py 实现（subprocess 调用），不重写
 
 对抗式审查：
   - 攻击：恶意 stdin 注入
@@ -42,9 +42,9 @@ def _start_mcp_server(extra_env=None):
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     if extra_env:
         env.update(extra_env)
-    # 启动 pandax_mcp/__main__.py 作为子进程
+    # 启动 pandaone_mcp/__main__.py 作为子进程
     p = subprocess.Popen(
-        [sys.executable, "-m", "pandax_mcp"],
+        [sys.executable, "-m", "pandaone_mcp"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -105,7 +105,7 @@ class TestMCPInitialize:
             assert "result" in resp
             assert "protocolVersion" in resp["result"]
             assert "serverInfo" in resp["result"]
-            assert resp["result"]["serverInfo"]["name"] == "pandax"
+            assert resp["result"]["serverInfo"]["name"] == "pandaone"
         finally:
             _stop(p)
 
@@ -130,8 +130,8 @@ class TestMCPToolsList:
             tools = resp["result"]["tools"]
             tool_names = {t["name"] for t in tools}
             # 必须包含的核心工具
-            for required in ["pandax_init", "pandax_write", "pandax_log",
-                             "pandax_status", "pandax_lock", "pandax_unlock"]:
+            for required in ["pandaone_init", "pandaone_write", "pandaone_log",
+                             "pandaone_status", "pandaone_lock", "pandaone_unlock"]:
                 assert required in tool_names, f"缺少工具: {required}"
         finally:
             _stop(p)
@@ -159,8 +159,8 @@ class TestMCPToolsList:
 class TestMCPToolsCall:
     """MCP tools/call 方法"""
 
-    def test_call_init_creates_pandax_dir(self, tmp_path):
-        """调用 pandax_init 应在目标目录创建 .pandax/"""
+    def test_call_init_creates_pandaone_dir(self, tmp_path):
+        """调用 pandaone_init 应在目标目录创建 .pandaone/"""
         p = _start_mcp_server()
         try:
             _send(p, {
@@ -171,22 +171,22 @@ class TestMCPToolsCall:
             resp = _send(p, {
                 "jsonrpc": "2.0", "id": 4, "method": "tools/call",
                 "params": {
-                    "name": "pandax_init",
+                    "name": "pandaone_init",
                     "arguments": {"root": str(tmp_path)},
                 },
             })
             assert "result" in resp, f"失败: {resp}"
-            assert (tmp_path / ".pandax").exists()
+            assert (tmp_path / ".pandaone").exists()
         finally:
             _stop(p)
 
     def test_call_write_returns_approval(self, tmp_path):
-        """调用 pandax_write 应返回 APPROVED 结果"""
+        """调用 pandaone_write 应返回 APPROVED 结果"""
         # 先 init + git init + 初始 commit
         (tmp_path / "main.py").write_text("INITIAL = 1\n", encoding="utf-8")
         env = os.environ.copy()
         env["PYTHONPATH"] = str(SRC_DIR)
-        subprocess.run([sys.executable, "-m", "pandax", "init", "--root", str(tmp_path)],
+        subprocess.run([sys.executable, "-m", "pandaone", "init", "--root", str(tmp_path)],
                        cwd=str(tmp_path), env=env, capture_output=True)
         # git init
         git = r"D:\软件\Git\cmd\git.exe"
@@ -206,7 +206,7 @@ class TestMCPToolsCall:
             resp = _send(p, {
                 "jsonrpc": "2.0", "id": 5, "method": "tools/call",
                 "params": {
-                    "name": "pandax_write",
+                    "name": "pandaone_write",
                     "arguments": {
                         "root": str(tmp_path),
                         "file": "main.py",
@@ -227,11 +227,11 @@ class TestMCPToolsCall:
             _stop(p)
 
     def test_call_status_returns_dashboard(self, tmp_path):
-        """调用 pandax_status 应返回状态仪表盘信息"""
+        """调用 pandaone_status 应返回状态仪表盘信息"""
         # init
         env = os.environ.copy()
         env["PYTHONPATH"] = str(SRC_DIR)
-        subprocess.run([sys.executable, "-m", "pandax", "init", "--root", str(tmp_path)],
+        subprocess.run([sys.executable, "-m", "pandaone", "init", "--root", str(tmp_path)],
                        cwd=str(tmp_path), env=env, capture_output=True)
 
         p = _start_mcp_server()
@@ -244,7 +244,7 @@ class TestMCPToolsCall:
             resp = _send(p, {
                 "jsonrpc": "2.0", "id": 6, "method": "tools/call",
                 "params": {
-                    "name": "pandax_status",
+                    "name": "pandaone_status",
                     "arguments": {"root": str(tmp_path)},
                 },
             })
@@ -288,20 +288,20 @@ class TestMCPErrors:
 
 
 class TestMCPCLIIntegration:
-    """pandax-mcp 命令行入口"""
+    """pandaone-mcp 命令行入口"""
 
     def test_mcp_console_script_exists(self):
-        """pyproject.toml 应注册 pandax-mcp console script"""
+        """pyproject.toml 应注册 pandaone-mcp console script"""
         import re
         pyproject = (ROOT_DIR / "pyproject.toml").read_text(encoding="utf-8")
-        assert "pandax-mcp" in pyproject, "pyproject.toml 应包含 pandax-mcp console script"
+        assert "pandaone-mcp" in pyproject, "pyproject.toml 应包含 pandaone-mcp console script"
 
     def test_mcp_module_importable(self):
-        """pandax_mcp 包应可导入"""
+        """pandaone_mcp 包应可导入"""
         sys.path.insert(0, str(SRC_DIR))
         try:
-            import pandax_mcp
-            assert pandax_mcp is not None
+            import pandaone_mcp
+            assert pandaone_mcp is not None
         finally:
             # cleanup sys.path
             if str(SRC_DIR) in sys.path:

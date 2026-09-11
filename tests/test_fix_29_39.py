@@ -3,7 +3,7 @@ test_fix_29_39.py
 =================
 Bug #29 + #39 专属回归测试
 
-Bug #29 (P1 数据丢失): pandax init 不再覆盖用户自定义 config.json
+Bug #29 (P1 数据丢失): pandaone init 不再覆盖用户自定义 config.json
 Bug #39 (P3 i18n 漏): cmd_write 4 处硬编码中文改为 i18n
 """
 import json
@@ -22,7 +22,7 @@ def _run(args, cwd, lang="zh-CN"):
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     env["PANDAX_LANG"] = lang
     return subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
 
@@ -40,7 +40,7 @@ class TestBug29InitPreserveUserConfig:
         project.mkdir()
         # 首次 init
         _run(["init", "--root", str(project)], project)
-        cfg_path = project / ".pandax" / "config.json"
+        cfg_path = project / ".pandaone" / "config.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["team_policy"] = "require_pair_review"
         cfg["min_reason_length"] = 99
@@ -63,7 +63,7 @@ class TestBug29InitPreserveUserConfig:
         project = tmp_path / "p"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
-        cfg_path = project / ".pandax" / "config.json"
+        cfg_path = project / ".pandaone" / "config.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["protected_extensions"] = [".py", ".proto", ".thrift"]
         cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -83,7 +83,7 @@ class TestBug29InitPreserveUserConfig:
         project = tmp_path / "p"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
-        cfg_path = project / ".pandax" / "config.json"
+        cfg_path = project / ".pandaone" / "config.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["custom_team_field"] = "should_be_lost"
         cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -100,7 +100,7 @@ class TestBug29InitPreserveUserConfig:
         project = tmp_path / "p"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
-        cfg_path = project / ".pandax" / "config.json"
+        cfg_path = project / ".pandaone" / "config.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["protected_extensions"] = [".py", ".proto"]
         cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")

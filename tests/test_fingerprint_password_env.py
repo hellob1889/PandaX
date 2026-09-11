@@ -24,16 +24,16 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "src" / "pandax" / "cli.py"
-# FP_PATH 与 cli.py 一致:Path.home() / ".pandax_fp.txt"
-FP_PATH = Path.home() / ".pandax_fp.txt"
-FP_BACKUP = ROOT / ".pandax_fp.txt.test_backup"
+PANDAX = ROOT / "src" / "pandaone" / "cli.py"
+# FP_PATH 与 cli.py 一致:Path.home() / ".pandaone_fp.txt"
+FP_PATH = Path.home() / ".pandaone_fp.txt"
+FP_BACKUP = ROOT / ".pandaone_fp.txt.test_backup"
 
 ENV_KEY = "PANDAX_FP_PASSWORD"
 
 
 def run(args, env_extra=None):
-    """运行 pandax CLI,允许注入环境变量"""
+    """运行 pandaone CLI,允许注入环境变量"""
     env = os.environ.copy()
     env.pop(ENV_KEY, None)
     if env_extra:
@@ -95,7 +95,7 @@ def test_no_module_level_FINGERPRINT_PASSWORD_constant():
 def test_get_fingerprint_password_function_exists():
     """get_fingerprint_password() 函数必须存在并行为正确。"""
     import importlib.util
-    spec = importlib.util.spec_from_file_location("pandax_cli_test", PANDAX)
+    spec = importlib.util.spec_from_file_location("pandaone_cli_test", PANDAX)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
 

@@ -1,4 +1,4 @@
-# PandaX Documentation (English)
+# Pandaone AI Agent Documentation (English)
 
 > **AI Agent Code Audit Gateway** — Every code change leaves a compliant, traceable evidence chain.
 
@@ -16,8 +16,8 @@
 
 ## What is it?
 
-PandaX is a **7-layer defense system** that forces every code change through an audit gate.
-Any modification to a protected file (17 text + 24 binary formats) must go through `pandax write`,
+Pandaone is a **7-layer defense system** that forces every code change through an audit gate.
+Any modification to a protected file (17 text + 24 binary formats) must go through `pandaone write`,
 which records reason / problem / approach as immutable audit evidence.
 
 ## Use Cases
@@ -37,7 +37,7 @@ which records reason / problem / approach as immutable audit evidence.
 ## One-line Install
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 Try it now: [Quick Start](quickstart.md) → [Examples](../../EXAMPLES.md)

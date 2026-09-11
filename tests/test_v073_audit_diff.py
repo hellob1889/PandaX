@@ -29,14 +29,14 @@ def _git_init(cwd: Path):
     subprocess.run(["git", "config", "user.name", "test"], cwd=cwd, env=env, check=True)
     subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=cwd, env=env, check=True)
     # 初始 commit
-    (cwd / ".gitignore").write_text("__pycache__/\n.pandax/\n", encoding="utf-8")
+    (cwd / ".gitignore").write_text("__pycache__/\n.pandaone/\n", encoding="utf-8")
     subprocess.run(["git", "add", ".gitignore"], cwd=cwd, env=env, check=True)
     subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=cwd, env=env, check=True)
 
 
 @pytest.fixture
 def panda_project(tmp_path):
-    """初始化一个 PandaX 项目（未锁，便于直接 write）"""
+    """初始化一个 Pandaone AI Agent 项目（未锁，便于直接 write）"""
     _git_init(tmp_path)
     # 创建测试 .py 文件
     src = tmp_path / "main.py"
@@ -45,11 +45,11 @@ def panda_project(tmp_path):
     # 否则 init 会因 fingerprint mismatch 失败
     import hashlib
     from pathlib import Path
-    fp_path = Path.home() / ".pandax_fp.txt"
-    cur = hashlib.sha256((Path(__file__).parent.parent / "src" / "pandax" / "cli.py").read_bytes()).hexdigest()
+    fp_path = Path.home() / ".pandaone_fp.txt"
+    cur = hashlib.sha256((Path(__file__).parent.parent / "src" / "pandaone" / "cli.py").read_bytes()).hexdigest()
     fp_path.write_text(cur, encoding="utf-8")
-    # 初始化 PandaX
-    from pandax.cli import main as cli_main
+    # 初始化 Pandaone
+    from pandaone.cli import main as cli_main
     rc = cli_main(["init", "--root", str(tmp_path)])
     assert rc == 0, "init failed"
     # 不 lock（避免 L1 ReadOnly 阻止 write）
@@ -60,7 +60,7 @@ class TestAgentField:
     """测试 1: --agent 参数记录到 audit log"""
 
     def test_write_with_agent_field(self, panda_project):
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         rc = cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",
@@ -73,7 +73,7 @@ class TestAgentField:
         ])
         assert rc == 0
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert len(records) == 1
         rec = records[0]
@@ -83,7 +83,7 @@ class TestAgentField:
 
     def test_write_without_agent_defaults_to_user(self, panda_project):
         """未指定 --agent 时，应默认 'user:anonymous' 或类似（绝不抛错）"""
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         rc = cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",
@@ -95,14 +95,14 @@ class TestAgentField:
         ])
         assert rc == 0
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert len(records) == 1
         assert records[0].get("agent"), "agent field should have a default value"
 
     def test_rejected_write_records_agent(self, panda_project):
         """拒绝的写入也记录 agent（便于追溯是哪个 agent 多次违规）"""
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         # 故意缺 reason → 拒绝
         rc = cli_main([
             "write", "--root", str(panda_project),
@@ -116,7 +116,7 @@ class TestAgentField:
         ])
         assert rc == 1
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         assert any(r.get("status") == "REJECTED" and r.get("agent") == "trae" for r in records)
 
@@ -125,7 +125,7 @@ class TestDiffField:
     """测试 2: audit log 含 old_content / new_content"""
 
     def test_approved_write_stores_diff(self, panda_project):
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         rc = cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",
@@ -137,7 +137,7 @@ class TestDiffField:
         ])
         assert rc == 0
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         rec = records[0]
         assert rec["status"] == "APPROVED"
@@ -151,7 +151,7 @@ class TestDiffField:
 
     def test_diff_field_contains_key_string(self, panda_project):
         """old_content 必须包含被替换的原字符串"""
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         rc = cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",
@@ -163,7 +163,7 @@ class TestDiffField:
         ])
         assert rc == 0
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         rec = records[0]
         # 至少 old_content 中能找到 old string
@@ -174,7 +174,7 @@ class TestPanelFormat:
     """测试 3: _print_log 输出面板格式"""
 
     def test_print_log_contains_agent_panel(self, panda_project, capsys):
-        from pandax.cli import main as cli_main, _print_log
+        from pandaone.cli import main as cli_main, _print_log
         # 写入一条
         cli_main([
             "write", "--root", str(panda_project),
@@ -188,7 +188,7 @@ class TestPanelFormat:
         ])
 
         # 直接调用 _print_log
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         _print_log(records)
         captured = capsys.readouterr()
@@ -201,7 +201,7 @@ class TestPanelFormat:
         assert "Lines:" in output or "+" in output or "diff" in output.lower()
 
     def test_print_log_shows_diff_section(self, panda_project, capsys):
-        from pandax.cli import main as cli_main, _print_log
+        from pandaone.cli import main as cli_main, _print_log
         cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",
@@ -213,7 +213,7 @@ class TestPanelFormat:
             "--agent", "cursor",
         ])
 
-        audit_path = panda_project / ".pandax" / "pandax.jsonl"
+        audit_path = panda_project / ".pandaone" / "pandaone.jsonl"
         records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         _print_log(records)
         captured = capsys.readouterr()
@@ -223,10 +223,10 @@ class TestPanelFormat:
 
 
 class TestAgentFilter:
-    """测试 4: pandax log --agent=<name> 过滤"""
+    """测试 4: pandaone log --agent=<name> 过滤"""
 
     def test_log_filters_by_agent(self, panda_project, capsys):
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         # 写入3 条不同 agent
         for agent, old, new in [("claude-code", "x = 1", "x = 2"), ("cursor", "x = 2", "x = 3"), ("trae", "x = 3", "x = 4")]:
             cli_main([
@@ -253,10 +253,10 @@ class TestAgentFilter:
 
 
 class TestVerboseDiff:
-    """测试 5: pandax log --verbose 显示完整 diff"""
+    """测试 5: pandaone log --verbose 显示完整 diff"""
 
     def test_verbose_shows_unified_diff(self, panda_project, capsys):
-        from pandax.cli import main as cli_main
+        from pandaone.cli import main as cli_main
         cli_main([
             "write", "--root", str(panda_project),
             "--file", "main.py",

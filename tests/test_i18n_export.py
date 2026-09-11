@@ -29,7 +29,7 @@ def _run(args, cwd, lang="zh-CN"):
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     env["PANDAX_LANG"] = lang
     r = subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
     return r
@@ -38,7 +38,7 @@ def _run(args, cwd, lang="zh-CN"):
 def _setup_with_audit(tmp_path: Path) -> Path:
     r = _run(["init", "--root", str(tmp_path), "--force"], tmp_path)
     assert r.returncode == 0, f"init failed: {r.stderr}"
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     rec = {
         "id": "audit_test_export",
         "timestamp": "2026-01-01 12:00:00",
@@ -67,7 +67,7 @@ class TestExportLabelsI18n:
         r = _run(["log", "--format", "html", "--output", str(out), "--lang", "zh-CN"], project)
         assert r.returncode == 0
         content = out.read_text(encoding="utf-8")
-        assert "PandaX 审计报告" in content
+        assert "Pandaone AI Agent 审计报告" in content
         assert "导出时间" in content
         assert "记录数" in content
         # v0.7.3: 卡片格式用 <strong>标签: 值</strong> 而非 <th>
@@ -83,10 +83,10 @@ class TestExportLabelsI18n:
         assert r.returncode == 0
         content = out.read_text(encoding="utf-8")
         # Bug #26 回归：英文模式下不应有中文标签
-        assert "PandaX 审计报告" not in content, (
+        assert "Pandaone 审计报告" not in content, (
             f"Bug #26 回归：en 模式 html 含中文标题: {content[:200]}"
         )
-        assert "PandaX Audit Report" in content
+        assert "Pandaone AI Agent Audit Report" in content
         assert "Exported at" in content
         assert "Records" in content
         # v0.7.3: 卡片格式
@@ -101,7 +101,7 @@ class TestExportLabelsI18n:
         r = _run(["log", "--format", "md", "--output", str(out), "--lang", "en"], project)
         assert r.returncode == 0
         content = out.read_text(encoding="utf-8")
-        assert "# PandaX Audit Report" in content, (
+        assert "# Pandaone AI Agent Audit Report" in content, (
             f"Bug #26 回归：en md 缺英文标题: {content[:200]}"
         )
         assert "- Exported at:" in content
@@ -114,7 +114,7 @@ class TestExportLabelsI18n:
         r = _run(["log", "--format", "md", "--output", str(out), "--lang", "zh-CN"], project)
         assert r.returncode == 0
         content = out.read_text(encoding="utf-8")
-        assert "# PandaX 审计报告" in content
+        assert "# Pandaone AI Agent 审计报告" in content
         assert "- 导出时间:" in content
         assert "- 记录数:" in content
 
@@ -125,7 +125,7 @@ class TestExportLabelsI18n:
         r = _run(["log", "--format", "text", "--output", str(out), "--lang", "en"], project)
         assert r.returncode == 0
         content = out.read_text(encoding="utf-8")
-        assert "PandaX Audit Report" in content
+        assert "Pandaone AI Agent Audit Report" in content
         assert "Exported at:" in content
 
 

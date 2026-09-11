@@ -1,10 +1,10 @@
 """
 test_lock_auto_init.py
 =======================
-Bug #28 (方案 A) RED 测试：pandax lock 未初始化时自动调用 init。
+Bug #28 (方案 A) RED 测试：pandaone lock 未初始化时自动调用 init。
 
 第一性原理（用户痛点）：
-  - 首次用户右击文件夹 → PandaX → Lock
+  - 首次用户右击文件夹 → Pandaone AI Agent → Lock
   - 现状：失败 [ERROR] not initialized → 用户困惑 → 必须再点 Init
   - 修复：lock 检测到未 init 时自动调用 init（一步到位）
   - 反向控制：--no-auto-init 让高级用户分阶段操作
@@ -35,7 +35,7 @@ def _run(args, cwd, env_extra=None, lang="zh-CN"):
     if env_extra:
         env.update(env_extra)
     return subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
 
@@ -55,22 +55,22 @@ def _make_py_project(project: Path, file_count: int = 3):
 # ============================================================
 
 class TestLockAutoInit:
-    """Bug #28 — pandax lock 未初始化时自动 init（方案 A）"""
+    """Bug #28 — pandaone lock 未初始化时自动 init（方案 A）"""
 
     def test_lock_auto_init_when_uninitialized(self, tmp_path):
         """未 init 目录 lock 应自动 init + 锁定文件（一键到底）"""
         project = tmp_path / "fresh"
         _make_py_project(project)
 
-        # 关键断言：未 init 之前没有 .pandax/
-        assert not (project / ".pandax").exists()
+        # 关键断言：未 init 之前没有 .pandaone/
+        assert not (project / ".pandaone").exists()
 
         r = _run(["lock", "--root", str(project)], project, lang="zh-CN")
         assert r.returncode == 0, f"lock failed: {r.stderr}"
 
-        # 自动 init 应创建 .pandax/
-        assert (project / ".pandax" / "config.json").exists(), (
-            "Bug #28 回归：lock 未自动创建 .pandax/config.json"
+        # 自动 init 应创建 .pandaone/
+        assert (project / ".pandaone" / "config.json").exists(), (
+            "Bug #28 回归：lock 未自动创建 .pandaone/config.json"
         )
         # 应打印自动 init 提示
         assert "自动调用 init" in r.stdout or "info_lock_auto_init" in r.stdout or \
@@ -88,9 +88,9 @@ class TestLockAutoInit:
         assert r.returncode != 0, (
             f"Bug #28 回归：--no-auto-init 应报错，但仍成功: {r.stdout}"
         )
-        # 不应创建 .pandax/
-        assert not (project / ".pandax").exists(), (
-            "Bug #28 回归：--no-auto-init 仍创建了 .pandax/（应为禁止）"
+        # 不应创建 .pandaone/
+        assert not (project / ".pandaone").exists(), (
+            "Bug #28 回归：--no-auto-init 仍创建了 .pandaone/（应为禁止）"
         )
         # 应打印未初始化错误
         combined = r.stdout + r.stderr
@@ -104,7 +104,7 @@ class TestLockAutoInit:
         # 先正常 init
         r = _run(["init", "--root", str(project)], project)
         assert r.returncode == 0
-        config_mtime_before = (project / ".pandax" / "config.json").stat().st_mtime
+        config_mtime_before = (project / ".pandaone" / "config.json").stat().st_mtime
 
         # 等 1 秒确保 mtime 不同
         import time
@@ -114,7 +114,7 @@ class TestLockAutoInit:
         r = _run(["lock", "--root", str(project), "--no-auto-init"], project)
         assert r.returncode == 0, f"lock failed: {r.stderr}"
         # config.json 不应被重新写入
-        config_mtime_after = (project / ".pandax" / "config.json").stat().st_mtime
+        config_mtime_after = (project / ".pandaone" / "config.json").stat().st_mtime
         assert config_mtime_after == config_mtime_before, (
             f"Bug #28 回归：已 init 目录 lock 重复初始化（mtime 变化）"
         )
@@ -126,12 +126,12 @@ class TestLockAutoInit:
         _run(["init", "--root", str(project)], project)
 
         import time
-        mtime_before = (project / ".pandax" / "config.json").stat().st_mtime
+        mtime_before = (project / ".pandaone" / "config.json").stat().st_mtime
         time.sleep(1.1)
 
         r = _run(["lock", "--root", str(project)], project)
         assert r.returncode == 0
-        mtime_after = (project / ".pandax" / "config.json").stat().st_mtime
+        mtime_after = (project / ".pandaone" / "config.json").stat().st_mtime
         assert mtime_after == mtime_before, (
             f"Bug #28 回归：已 init 目录 lock 默认行为重复初始化"
         )
@@ -145,7 +145,7 @@ class TestLockAutoInit:
         assert r.returncode != 0, (
             f"Bug #28 回归：unlock 未 init 目录不应成功: {r.stdout}"
         )
-        assert not (project / ".pandax").exists(), (
+        assert not (project / ".pandaone").exists(), (
             "Bug #28 回归：unlock 触发了 init（不应触发）"
         )
         combined = r.stdout + r.stderr
@@ -188,7 +188,7 @@ class TestLockAutoInitAdversarial:
     """对抗式审查：极端场景下 auto-init 行为正确"""
 
     def test_lock_auto_init_does_not_overwrite_existing_config(self, tmp_path):
-        """如果目录里有别人的 config.json（不是 PandaX 的），不应被覆盖"""
+        """如果目录里有别人的 config.json（不是 Pandaone 的），不应被覆盖"""
         project = tmp_path / "has_other_config"
         _make_py_project(project)
         # 模拟其他工具的 config.json
@@ -196,14 +196,14 @@ class TestLockAutoInitAdversarial:
         original_content = '{"other_tool": "value"}'
         config_path.write_text(original_content, encoding="utf-8")
 
-        # 但 .pandax/config.json 不存在 → lock 应自动 init → 创建 .pandax/config.json
+        # 但 .pandaone/config.json 不存在 → lock 应自动 init → 创建 .pandaone/config.json
         # 而**项目根的 config.json**（受保护）不应被覆盖
         r = _run(["lock", "--root", str(project)], project)
         assert r.returncode == 0
         # 项目根 config.json（被 lock 锁定的）内容不变
         assert config_path.read_text(encoding="utf-8") == original_content
-        # .pandax/config.json 应被创建
-        assert (project / ".pandax" / "config.json").exists()
+        # .pandaone/config.json 应被创建
+        assert (project / ".pandaone" / "config.json").exists()
 
     def test_lock_auto_init_uses_default_extensions(self, tmp_path):
         """auto-init 应使用默认 17 种扩展名（不是空）"""
@@ -213,7 +213,7 @@ class TestLockAutoInitAdversarial:
         r = _run(["lock", "--root", str(project)], project)
         assert r.returncode == 0
 
-        config = json.loads((project / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((project / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert len(config["protected_extensions"]) >= 10, (
             f"auto-init 应使用默认扩展名，实际只有 {len(config['protected_extensions'])}"
         )

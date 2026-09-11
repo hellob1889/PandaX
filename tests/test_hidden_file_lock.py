@@ -29,12 +29,12 @@ SRC_DIR = ROOT_DIR / "src"
 
 
 def _run_cli(*args, cwd=None, env_extra=None):
-    """运行 pandax CLI"""
+    """运行 pandaone CLI"""
     env = os.environ.copy()
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     if env_extra:
         env.update(env_extra)
-    cmd = [sys.executable, "-m", "pandax", *args]
+    cmd = [sys.executable, "-m", "pandaone", *args]
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd or ROOT_DIR, env=env)
     return r.returncode, r.stdout, r.stderr
 
@@ -75,7 +75,7 @@ class TestLockIncludesDotfiles:
         (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
 
         # 修改 config 加入 .gitignore（默认不含）
-        config_path = tmp_path / ".pandax" / "config.json"
+        config_path = tmp_path / ".pandaone" / "config.json"
         cfg = json.loads(config_path.read_text(encoding="utf-8"))
         cfg["protected_extensions"] = [".py", ".gitignore"]
         config_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
@@ -91,7 +91,7 @@ class TestLockIncludesDotfiles:
         (tmp_path / ".env.production").write_text("ENV=prod\n", encoding="utf-8")
 
         # 修改 config 加入 .local / .production
-        config_path = tmp_path / ".pandax" / "config.json"
+        config_path = tmp_path / ".pandaone" / "config.json"
         cfg = json.loads(config_path.read_text(encoding="utf-8"))
         cfg["protected_extensions"] = [".py", ".local", ".production"]
         config_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
@@ -151,7 +151,7 @@ class TestWatchdogMonitorsDotfiles:
 
         # 直接实例化 handler 触发 on_modified
         sys.path.insert(0, str(ROOT_DIR))
-        from pandax_guard import PandaXHandler
+        from pandaone_guard import PandaXHandler
         handler = PandaXHandler(tmp_path)
 
         class FakeEvent:
@@ -163,7 +163,7 @@ class TestWatchdogMonitorsDotfiles:
         handler.on_modified(FakeEvent(str(env_file)))
 
         # 审计日志应有 UNAUTHORIZED 记录
-        audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+        audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
         records = [
             json.loads(line) for line in
             audit_path.read_text(encoding="utf-8").splitlines() if line.strip()

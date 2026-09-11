@@ -1,9 +1,9 @@
 """
 04_mcp_client.py
 ================
-PandaX MCP 协议客户端 demo
+Pandaone AI Agent MCP 协议客户端 demo
 
-演示：作为 AI Agent，通过 stdio JSON-RPC 调用 pandax_mcp server。
+演示：作为 AI Agent，通过 stdio JSON-RPC 调用 pandaone_mcp server。
 任何 MCP 客户端（Claude/Cursor/Trae）都能复用此逻辑。
 """
 import json
@@ -33,13 +33,13 @@ def main():
     project_root = sys.argv[1] if len(sys.argv) > 1 else "demo_04_mcp"
     project_root = str(Path(project_root).resolve())
 
-    print(f"\n[Demo] PandaX MCP Client")
+    print(f"\n[Demo] Pandaone MCP Client")
     print(f"  Project: {project_root}\n")
 
     # 启动 MCP server
-    print("[1] 启动 pandax-mcp server (stdio JSON-RPC)...")
+    print("[1] 启动 pandaone-mcp server (stdio JSON-RPC)...")
     proc = subprocess.Popen(
-        [sys.executable, "-m", "pandax_mcp"],
+        [sys.executable, "-m", "pandaone_mcp"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, bufsize=1,
     )
@@ -64,29 +64,29 @@ def main():
             print(f"    • {t['name']}: {t.get('description', '')[:60]}")
 
         # Step 3: 调用 init
-        banner("Step 3: pandax_init")
+        banner("Step 3: pandaone_init")
         resp = call_mcp(proc, "tools/call", {
-            "name": "pandax_init",
+            "name": "pandaone_init",
             "arguments": {"root": project_root},
         }, id_=3)
         content = "".join(c.get("text", "") for c in resp.get("result", {}).get("content", []))
         print(f"  Result: {content[:300]}...")
 
         # Step 4: 调用 write
-        banner("Step 4: pandax_write")
+        banner("Step 4: pandaone_write")
         # 先创建文件
         Path(project_root).mkdir(parents=True, exist_ok=True)
         main_py = Path(project_root) / "main.py"
         main_py.write_text("INITIAL = 1\n", encoding="utf-8")
 
         resp = call_mcp(proc, "tools/call", {
-            "name": "pandax_write",
+            "name": "pandaone_write",
             "arguments": {
                 "root": project_root,
                 "file": "main.py",
                 "reason": "MCP client demo 修改",
                 "problem": "演示 AI Agent 通过 MCP 写入",
-                "approach": "用 pandax_write 工具调用",
+                "approach": "用 pandaone_write 工具调用",
                 "old": "INITIAL = 1",
                 "new": "INITIAL = 2",
             },
@@ -95,9 +95,9 @@ def main():
         print(f"  Result: {content[:200]}")
 
         # Step 5: 查询状态
-        banner("Step 5: pandax_status")
+        banner("Step 5: pandaone_status")
         resp = call_mcp(proc, "tools/call", {
-            "name": "pandax_status",
+            "name": "pandaone_status",
             "arguments": {"root": project_root},
         }, id_=5)
         content = "".join(c.get("text", "") for c in resp.get("result", {}).get("content", []))

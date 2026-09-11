@@ -1,7 +1,7 @@
 ﻿"""
 test_watch.py
 =============
-RED 测试：pandax watch 命令
+RED 测试：pandaone watch 命令
 
 第一性原理：
   watch 是 watchdog 的"用户入口"。
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path, **kw) -> subprocess.CompletedProcess:
@@ -73,7 +73,7 @@ def test_watch_subcommand_exists():
 def test_watch_daemon_writes_pid(tmp_path):
     """watch --daemon 应后台启动并写 PID"""
     setup(tmp_path)
-    pid_path = tmp_path / ".pandax" / ".watchdog_pid"
+    pid_path = tmp_path / ".pandaone" / ".watchdog_pid"
 
     # 清理可能残留的
     kill_watchdog(pid_path)
@@ -115,7 +115,7 @@ def test_watch_daemon_writes_pid(tmp_path):
 def test_watch_daemon_creates_log(tmp_path):
     """watch --daemon 应写日志"""
     setup(tmp_path)
-    pid_path = tmp_path / ".pandax" / ".watchdog_pid"
+    pid_path = tmp_path / ".pandaone" / ".watchdog_pid"
 
     kill_watchdog(pid_path)
 
@@ -129,7 +129,7 @@ def test_watch_daemon_creates_log(tmp_path):
         # 给 watchdog 时间写
         time.sleep(1)
 
-        log_path = tmp_path / ".pandax" / "watchdog.log"
+        log_path = tmp_path / ".pandaone" / "watchdog.log"
         if log_path.exists():
             content = log_path.read_text(encoding="utf-8")
             assert "watchdog" in content.lower()

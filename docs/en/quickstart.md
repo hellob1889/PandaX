@@ -5,27 +5,27 @@
 ## Step 1: Install (30s)
 
 ```bash
-pip install pandax-guard
-pandax --version
-# pandax-guard v0.7.2
+pip install pandaone-guard
+pandaone --version
+# pandaone-guard v0.7.2
 ```
 
 ## Step 2: Init Project (10s)
 
 ```bash
 cd /path/to/your-project
-pandax init --root .
+pandaone init --root .
 ```
 
 Creates:
-- `.pandax/config.json` — 17 text + 24 binary extensions
-- `.pandax/pandax.jsonl` — audit log
-- `.pandax/binary_snapshots.json` — binary SHA256
+- `.pandaone/config.json` — 17 text + 24 binary extensions
+- `.pandaone/pandaone.jsonl` — audit log
+- `.pandaone/binary_snapshots.json` — binary SHA256
 
 ## Step 3: Lock Files (5s)
 
 ```bash
-pandax lock --root .
+pandaone lock --root .
 ```
 
 **All protected files become read-only**:
@@ -35,10 +35,10 @@ pandax lock --root .
 
 ## Step 4: Audit Write (30s)
 
-Don't edit directly — use `pandax write`:
+Don't edit directly — use `pandaone write`:
 
 ```bash
-pandax write \
+pandaone write \
     --file src/main.py \
     --reason "Fix user ID type annotation" \
     --problem "Original used int, could be None" \
@@ -56,19 +56,19 @@ Output:
 
 ```bash
 # CLI
-pandax log --last 10
+pandaone log --last 10
 
 # Export to Excel
-pandax log --format xlsx --output audit.xlsx
+pandaone log --format xlsx --output audit.xlsx
 
 # Export to PDF (with Chinese support)
-pandax log --format pdf --output audit.pdf
+pandaone log --format pdf --output audit.pdf
 ```
 
 ## Step 6: Status (5s)
 
 ```bash
-pandax status --root .
+pandaone status --root .
 ```
 
 Shows L1 lock, L2 watchdog, L5 fingerprint, recent audits.
@@ -77,8 +77,8 @@ Shows L1 lock, L2 watchdog, L5 fingerprint, recent audits.
 
 ## Next
 
-- **Protect Git commits**: `pandax install-hook --root .`
-- **Background monitoring**: `pandax watch --root . --daemon`
+- **Protect Git commits**: `pandaone install-hook --root .`
+- **Background monitoring**: `pandaone watch --root . --daemon`
 - **AI Agent integration**: [MCP Server](mcp-integration.md)
 - **CI integration**: [CI/CD](ci-integration.md)
 

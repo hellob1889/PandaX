@@ -1,12 +1,12 @@
 # MCP 集成
 
-> **让 AI Agent（Claude / Cursor / Trae）直接调用 PandaX**。
+> **让 AI Agent（Claude / Cursor / Trae）直接调用 Pandaone AI Agent**。
 
 ## 什么是 MCP？
 
 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) 是一个标准协议，让 AI Agent 通过 stdio JSON-RPC 调用外部工具。
 
-PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 IDE 管理进程生命周期。
+Pandaone 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 IDE 管理进程生命周期。
 
 ## 客户端配置
 
@@ -18,8 +18,8 @@ PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 ID
 ```json
 {
   "mcpServers": {
-    "pandax": {
-      "command": "pandax-mcp",
+    "pandaone": {
+      "command": "pandaone-mcp",
       "env": {}
     }
   }
@@ -33,8 +33,8 @@ PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 ID
 ```json
 {
   "mcpServers": {
-    "pandax": {
-      "command": "pandax-mcp"
+    "pandaone": {
+      "command": "pandaone-mcp"
     }
   }
 }
@@ -45,8 +45,8 @@ PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 ID
 在 Trae IDE 设置 → MCP → 添加：
 ```json
 {
-  "name": "pandax",
-  "command": "pandax-mcp",
+  "name": "pandaone",
+  "command": "pandaone-mcp",
   "args": []
 }
 ```
@@ -55,25 +55,25 @@ PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 ID
 
 | 工具名 | 用途 |
 |---|---|
-| `pandax_init` | 在指定目录初始化 PandaX |
-| `pandax_lock` | 锁定所有受保护扩展名的文件 |
-| `pandax_unlock` | 解除锁定 |
-| `pandax_write` | 审计写入（核心）|
-| `pandax_log` | 查询审计历史，支持 13 种导出格式 |
-| `pandax_status` | 显示项目状态仪表盘 |
-| `pandax_install_hook` | 安装 L3 pre-commit hook |
-| `pandax_watch` | 启动 watchdog 守护进程 |
-| `pandax_install_git` | 探测/安装 git |
-| `pandax_fingerprint_update` | 更新 CLI 自指纹 |
-| `pandax_ci` | L7 CI 验证（git diff vs audit log） |
+| `pandaone_init` | 在指定目录初始化 Pandaone |
+| `pandaone_lock` | 锁定所有受保护扩展名的文件 |
+| `pandaone_unlock` | 解除锁定 |
+| `pandaone_write` | 审计写入（核心）|
+| `pandaone_log` | 查询审计历史，支持 13 种导出格式 |
+| `pandaone_status` | 显示项目状态仪表盘 |
+| `pandaone_install_hook` | 安装 L3 pre-commit hook |
+| `pandaone_watch` | 启动 watchdog 守护进程 |
+| `pandaone_install_git` | 探测/安装 git |
+| `pandaone_fingerprint_update` | 更新 CLI 自指纹 |
+| `pandaone_ci` | L7 CI 验证（git diff vs audit log） |
 
 ## AI Agent 典型工作流
 
 ```
 1. AI Agent 接到任务："实现用户登录"
 2. Agent 思考：我需要写 src/auth.py
-3. Agent 检查：pandax_status → 项目已 init
-4. Agent 调用：pandax_write
+3. Agent 检查：pandaone_status → 项目已 init
+4. Agent 调用：pandaone_write
    - file: "src/auth.py"
    - reason: "实现用户登录功能"
    - problem: "用户系统缺少登录入口"
@@ -86,10 +86,10 @@ PandaX 实现为 **stdio JSON-RPC 2.0 server**——**无网络暴露**，由 ID
 
 ```bash
 # 启动 MCP server
-pandax-mcp
+pandaone-mcp
 
 # 在另一个终端发送 JSON-RPC 请求
-echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"test"}},"id":1}' | pandax-mcp
+echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"test"}},"id":1}' | pandaone-mcp
 ```
 
 返回：
@@ -99,7 +99,7 @@ echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"tes
   "id": 1,
   "result": {
     "protocolVersion": "2024-11-05",
-    "serverInfo": {"name": "pandax", "version": "0.6.2"},
+    "serverInfo": {"name": "pandaone", "version": "0.6.2"},
     "capabilities": {"tools": {}}
   }
 }
@@ -116,7 +116,7 @@ echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"tes
 
 ## 安全考虑
 
-MCP server 接收任意 JSON-RPC 输入。PandaX：
+MCP server 接收任意 JSON-RPC 输入。Pandaone：
 
 - ✅ 严格 JSON 解析（拒绝 malformed）
 - ✅ 每个 subprocess 调用有 timeout

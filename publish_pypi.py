@@ -34,7 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PYPROJECT = ROOT / "pyproject.toml"
 SETUP = ROOT / "setup.py"
-INIT = ROOT / "src" / "pandax" / "__init__.py"
+INIT = ROOT / "src" / "pandaone" / "__init__.py"
 DIST = ROOT / "dist"
 
 
@@ -101,8 +101,8 @@ def check_version_sync(target_version: str):
     # __init__.py — 动态检查（版本号运行时从 importlib.metadata 或 pyproject.toml 派生）
     sys.path.insert(0, str(ROOT / "src"))
     try:
-        import pandax as _pandax_pkg
-        init_ver = _pandax_pkg.__version__
+        import pandaone as _pandaone_pkg
+        init_ver = _pandaone_pkg.__version__
     except Exception as _exc:
         die(f"__init__.py __version__ 无法解析（{_exc}）")
     finally:
@@ -255,10 +255,10 @@ def upload(target: str, dry_run: bool):
     }[target]
 
     version = get_version()
-    whl = DIST / f"pandax_guard-{version}-py3-none-any.whl"
-    sdist = DIST / f"pandax_guard-{version}.tar.gz"
+    whl = DIST / f"pandaone_guard-{version}-py3-none-any.whl"
+    sdist = DIST / f"pandaone_guard-{version}.tar.gz"
     if not whl.exists() or not sdist.exists():
-        die(f"缺少 pandax-guard 构建产物: {whl} / {sdist}")
+        die(f"缺少 pandaone-guard 构建产物: {whl} / {sdist}")
 
     r = subprocess.run([
         sys.executable, "-m", "twine", "upload",
@@ -278,9 +278,9 @@ def print_preview(target: str):
     step("PyPI 页面预览")
     ver = get_version()
     if target == "pypi":
-        url = f"https://pypi.org/project/pandax-guard/{ver}/"
+        url = f"https://pypi.org/project/pandaone-guard/{ver}/"
     else:
-        url = f"https://test.pypi.org/project/pandax-guard/{ver}/"
+        url = f"https://test.pypi.org/project/pandaone-guard/{ver}/"
     print(f"\n{C.H}{url}{C.W}\n")
 
 
@@ -290,21 +290,21 @@ def show_install_instructions(target: str):
 
     if target == "pypi":
         print(f"\n{C.G}任何用户都可以用以下命令安装：{C.W}\n")
-        print(f"  pip install pandax-guard")
-        print(f"  pip install pandax-guard=={get_version()}")
-        print(f"  pip install pandax-guard --upgrade")
+        print(f"  pip install pandaone-guard")
+        print(f"  pip install pandaone-guard=={get_version()}")
+        print(f"  pip install pandaone-guard --upgrade")
     else:
         print(f"\n{C.G}TestPyPI 测试安装：{C.W}\n")
         print(f"  pip install --index-url https://test.pypi.org/simple/ \\")
         print(f"              --extra-index-url https://pypi.org/simple/ \\")
-        print(f"              pandax-guard")
+        print(f"              pandaone-guard")
 
 
 # ============================================================
 # 主流程
 # ============================================================
 def main():
-    parser = argparse.ArgumentParser(description="一键发布 pandax 到 PyPI")
+    parser = argparse.ArgumentParser(description="一键发布 pandaone 到 PyPI")
     parser.add_argument("--target", choices=["pypi", "testpypi"],
                         default="testpypi",
                         help="发布目标（默认 testpypi 干跑）")
@@ -315,7 +315,7 @@ def main():
     args = parser.parse_args()
 
     print(f"{C.H}{'=' * 60}{C.W}")
-    print(f"{C.H}  pandax 发布脚本 v1.0{C.W}")
+    print(f"{C.H}  pandaone 发布脚本 v1.0{C.W}")
     print(f"{C.H}  目标: {args.target.upper()}{C.W}")
     print(f"{C.H}  模式: {'DRY-RUN' if args.dry_run else '实际发布'}{C.W}")
     print(f"{C.H}{'=' * 60}{C.W}")

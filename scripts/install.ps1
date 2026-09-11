@@ -1,4 +1,4 @@
-# install.ps1 - PandaX one-shot installer (Windows)
+# install.ps1 - Pandaone AI Agent one-shot installer (Windows)
 # ====================================================
 # Adversarial review: ensures the environment is ready
 # right after the user clones the repo.
@@ -6,9 +6,9 @@
 # Steps:
 #   1. Check Python version (>= 3.10)
 #   2. Locate git (PATH or candidate dirs)
-#   3. Uninstall stale pandax from site-packages
+#   3. Uninstall stale pandaone from site-packages
 #   4. python -m pip install -e .  (--no-build-isolation)
-#   5. Verify pandax works (python -m pandax --version)
+#   5. Verify pandaone works (python -m pandaone --version)
 #   6. Run doctor.py --fix --persist-path
 #
 # Usage:
@@ -56,7 +56,7 @@ $WINDOWS_GIT_CANDIDATES = @(
 function Write-Banner {
     Write-Host ""
     Write-Host "================================================================"
-    Write-Host " PandaX installer - install.ps1"
+    Write-Host " Pandaone installer - install.ps1"
     Write-Host " Repo: $REPO_ROOT"
     Write-Host "================================================================"
     Write-Host ""
@@ -140,10 +140,10 @@ function Find-GitPath {
 }
 
 function Uninstall-StalePandax {
-    Write-Step "3/6 Remove stale pandax from site-packages"
-    $stale = & pip show pandax 2>&1 | Out-String
-    if ($stale -match "Name: pandax") {
-        Write-Warn "Stale pandax installed in site-packages"
+    Write-Step "3/6 Remove stale pandaone from site-packages"
+    $stale = & pip show pandaone 2>&1 | Out-String
+    if ($stale -match "Name: pandaone") {
+        Write-Warn "Stale pandaone installed in site-packages"
         $versionLine = ($stale | Select-String "Version:")
         if ($versionLine) {
             Write-Info ("version: " + $versionLine.ToString().Trim())
@@ -154,7 +154,7 @@ function Uninstall-StalePandax {
             if ([string]::IsNullOrEmpty($answer)) { $answer = "y" }
         }
         if ($answer -match "^[Yy]") {
-            pip uninstall pandax -y 2>&1 | Out-Null
+            pip uninstall pandaone -y 2>&1 | Out-Null
             if ($LASTEXITCODE -eq 0) {
                 Write-OK "Uninstalled"
             } else {
@@ -164,7 +164,7 @@ function Uninstall-StalePandax {
             Write-Info "Keeping stale version (version conflict risk accepted)"
         }
     } else {
-        Write-OK "No stale pandax"
+        Write-OK "No stale pandaone"
     }
 }
 
@@ -189,15 +189,15 @@ function Install-PandaxEditable {
 }
 
 function Verify-PandaxInstall {
-    Write-Step "5/6 Verify pandax works"
+    Write-Step "5/6 Verify pandaone works"
     try {
         # Avoid PowerShell parsing Python's __file__ / __version__ as object members
-        $check = python -m pandax --version 2>&1 | Out-String
-        if ($check -match "pandax v\d") {
+        $check = python -m pandaone --version 2>&1 | Out-String
+        if ($check -match "pandaone v\d") {
             Write-Host $check
-            Write-OK "pandax works (python -m pandax)"
+            Write-OK "pandaone works (python -m pandaone)"
         } else {
-            Write-Fail "pandax not importable"
+            Write-Fail "pandaone not importable"
             Write-Host $check
             return $false
         }
@@ -227,7 +227,7 @@ function Show-Help {
     Write-Host "Options:"
     Write-Host "  -SkipInstall   Skip pip install, only run doctor"
     Write-Host "  -SkipDoctor    Skip doctor verification"
-    Write-Host "  -Force         Auto-answer yes (uninstall stale pandax, etc)"
+    Write-Host "  -Force         Auto-answer yes (uninstall stale pandaone, etc)"
     Write-Host "  -Help          Show this help"
     Write-Host ""
     Write-Host "Examples:"
@@ -311,7 +311,7 @@ Write-Host " Install done in $($duration.ToString('mm\:ss'))"
 Write-Host "================================================================"
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  python -m pandax --version         # verify CLI"
+Write-Host "  python -m pandaone --version         # verify CLI"
 Write-Host "  python scripts/doctor.py           # detailed diagnosis"
 Write-Host "  python -m pytest tests/ -q         # run all tests"
 Write-Host ""

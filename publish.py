@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-publish.py — PandaX 推送到 GitHub 的辅助脚本
+publish.py — Pandaone AI Agent 推送到 GitHub 的辅助脚本
 
 用法:
   python publish.py             # 检查 + 提示下一步
@@ -64,8 +64,8 @@ def git_init_and_initial_commit():
 
     print("\n[2/4] 配置 git user (若无全局配置)...")
     if not run(["git", "config", "user.email"], cwd=ROOT).stdout.strip():
-        run(["git", "config", "user.email", "pandax@example.com"], cwd=ROOT)
-        run(["git", "config", "user.name", "PandaX Project"], cwd=ROOT)
+        run(["git", "config", "user.email", "pandaone@example.com"], cwd=ROOT)
+        run(["git", "config", "user.name", "Pandaone AI Agent Project"], cwd=ROOT)
 
     print("\n[3/4] git add...")
     r = run(["git", "add", "-A"], cwd=ROOT)
@@ -75,7 +75,7 @@ def git_init_and_initial_commit():
 
     print("\n[4/4] git commit...")
     r = run(["git", "commit", "-m",
-             "Initial commit: PandaX Phase 1+2+3 complete (59 tests passing)"],
+             "Initial commit: Pandaone Phase 1+2+3 complete (59 tests passing)"],
             cwd=ROOT)
     if r.returncode != 0:
         print(f"[ERROR] git commit 失败: {r.stderr}")
@@ -122,7 +122,7 @@ def add_remote_and_push(remote_url: str, branch: str = "main"):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PandaX GitHub 推送工具")
+    parser = argparse.ArgumentParser(description="Pandaone GitHub 推送工具")
     parser.add_argument("--init", action="store_true", help="首次：git init + initial commit")
     parser.add_argument("--push", metavar="URL", help="推送：传入 GitHub 仓库 URL")
     parser.add_argument("--branch", default="main", help="目标分支（默认 main）")
@@ -152,7 +152,7 @@ def main():
 
     # 默认：检查状态 + 提示
     print("=" * 60)
-    print("PandaX 推送状态检查")
+    print("Pandaone 推送状态检查")
     print("=" * 60)
     print()
 
@@ -162,7 +162,7 @@ def main():
         print("首次推送步骤：")
         print("  1. 在 GitHub 上创建空仓库（不要勾 README/.gitignore）")
         print(f"  2. python publish.py --init")
-        print(f"  3. python publish.py --push https://github.com/your-username/pandax.git")
+        print(f"  3. python publish.py --push https://github.com/your-username/pandaone.git")
         return 0
 
     print("[状态] 已经是 git 仓库")
@@ -174,7 +174,7 @@ def main():
         print()
         print("推送步骤：")
         print("  1. 在 GitHub 上创建空仓库（不要勾 README/.gitignore）")
-        print(f"  2. python publish.py --push https://github.com/your-username/pandax.git")
+        print(f"  2. python publish.py --push https://github.com/your-username/pandaone.git")
     return 0
 
 

@@ -9,7 +9,7 @@ Bug #23 + #24 RED 测试：watchdog dedupe + stdout flush。
   之前代码：每次 on_modified 都写 UNAUTHORIZED → 1 次实际改动产生 4 条记录（噪音污染）。
   修复：维护 (path, event_type) → last_fire_time 字典，2 秒窗口内视为重复并跳过。
 
-  #24：前台 pandax watch 的 print() 没 flush，输出被 Python 缓冲，
+  #24：前台 pandaone watch 的 print() 没 flush，输出被 Python 缓冲，
        用户看到 watch 启动后无任何输出（怀疑没运行）。修复：print(..., flush=True)。
 """
 import io
@@ -35,19 +35,19 @@ class TestWatchdogDedupe:
 
     def _setup_project(self, tmp_path):
         """建项目 + 锁定 main.py"""
-        from pandax_guard import PandaXHandler
-        # 初始化项目（直接写 .pandax 目录避免依赖 pandax init CLI）
-        pandax_dir = tmp_path / ".pandax"
-        pandax_dir.mkdir()
+        from pandaone_guard import PandaXHandler
+        # 初始化项目（直接写 .pandaone 目录避免依赖 pandaone init CLI）
+        pandaone_dir = tmp_path / ".pandaone"
+        pandaone_dir.mkdir()
         config = {
             "protected_extensions": [".py"],
             "binary_protected_extensions": [],
         }
-        (pandax_dir / "config.json").write_text(
+        (pandaone_dir / "config.json").write_text(
             json.dumps(config, ensure_ascii=False), encoding="utf-8",
         )
         # 确保没有 audit token
-        assert not (pandax_dir / ".audit_token").exists()
+        assert not (pandaone_dir / ".audit_token").exists()
         return PandaXHandler(tmp_path)
 
     def _make_modified_event(self, path: Path):
@@ -70,7 +70,7 @@ class TestWatchdogDedupe:
         # Bug #23 验证：应只有 1 条 UNAUTHORIZED 记录（不是 5 条）
         records = [
             json.loads(line)
-            for line in (tmp_path / ".pandax" / "pandax.jsonl").read_text(
+            for line in (tmp_path / ".pandaone" / "pandaone.jsonl").read_text(
                 encoding="utf-8",
             ).splitlines()
             if line.strip()
@@ -98,7 +98,7 @@ class TestWatchdogDedupe:
 
         records = [
             json.loads(line)
-            for line in (tmp_path / ".pandax" / "pandax.jsonl").read_text(
+            for line in (tmp_path / ".pandaone" / "pandaone.jsonl").read_text(
                 encoding="utf-8",
             ).splitlines()
             if line.strip()
@@ -121,7 +121,7 @@ class TestWatchdogDedupe:
 
         records = [
             json.loads(line)
-            for line in (tmp_path / ".pandax" / "pandax.jsonl").read_text(
+            for line in (tmp_path / ".pandaone" / "pandaone.jsonl").read_text(
                 encoding="utf-8",
             ).splitlines()
             if line.strip()
@@ -157,10 +157,10 @@ class TestWatchdogDedupe:
 class TestWatchdogStdoutFlush:
     """Bug #24 — watchdog 进程 print 必须显式 flush（不被 Python 缓冲）"""
 
-    def test_all_prints_in_pandax_guard_use_flush(self):
+    def test_all_prints_in_pandaone_guard_use_flush(self):
         """对抗式审查：所有 print() 必须显式 flush=True"""
-        # 静态扫描 src/pandax_guard/__main__.py
-        guard_path = SRC_DIR / "pandax_guard" / "__main__.py"
+        # 静态扫描 src/pandaone_guard/__main__.py
+        guard_path = SRC_DIR / "pandaone_guard" / "__main__.py"
         source = guard_path.read_text(encoding="utf-8")
 
         # 找出所有 print( 调用（用 AST 解析跨行场景更稳）
@@ -186,9 +186,9 @@ class TestWatchdogStdoutFlush:
             + "\n".join(f"  {p}" for p in bad_prints)
         )
 
-    def test_pandax_watch_daemon_sets_pythonunbuffered(self):
+    def test_pandaone_watch_daemon_sets_pythonunbuffered(self):
         """cli.py cmd_watch --daemon 子进程必须设 PYTHONUNBUFFERED=1"""
-        cli_path = SRC_DIR / "pandax" / "cli.py"
+        cli_path = SRC_DIR / "pandaone" / "cli.py"
         source = cli_path.read_text(encoding="utf-8")
 
         # 在 daemon 模式 subprocess.Popen 调用附近必须有 PYTHONUNBUFFERED

@@ -1,7 +1,7 @@
 ﻿"""
 test_log.py
 ===========
-RED 测试：pandax log 子命令
+RED 测试：pandaone log 子命令
 
 第一性原理：
   log 是审计系统的"读取端"。
@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -38,7 +38,7 @@ def setup_with_records(tmp_path: Path) -> Path:
     r = run(["init", "--root", str(tmp_path)], cwd=tmp_path)
     assert r.returncode == 0
 
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     records = [
         {"id": "audit_001", "status": "APPROVED", "file": "main.py",
          "reason": "修复bug1", "problem": "问题1描述", "approach": "方法1描述",
@@ -148,7 +148,7 @@ def test_log_rejected_only(tmp_path):
 
 def test_log_empty_when_no_init(tmp_path):
     """未 init 的目录 log 应优雅处理"""
-    # tmp_path 没有 .pandax/
+    # tmp_path 没有 .pandaone/
     r = run(["log", "--root", str(tmp_path)], cwd=tmp_path)
     # rc != 0 但不应崩溃
     assert r.returncode != 0, "未 init 的目录应报错"

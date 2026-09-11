@@ -7,7 +7,7 @@ test_i18n.py — i18n 模块单元测试
   - 自动检测 OS 语言
   - init() / get_lang() / set_lang() 优先级链
   - t() 函数 + 占位符 + fallback
-  - 持久化 ~/.pandax/config.json
+  - 持久化 ~/.pandaone/config.json
   - coverage_report() 准确性
   - available_languages() 列表
 """
@@ -18,7 +18,7 @@ from unittest import mock
 
 import pytest
 
-from pandax import i18n
+from pandaone import i18n
 
 
 @pytest.fixture(autouse=True)
@@ -90,16 +90,16 @@ class TestInit:
         assert i18n.get_lang() == "en"
 
     def test_init_persists_preference(self, tmp_path):
-        """init() 会写入 ~/.pandax/config.json"""
+        """init() 会写入 ~/.pandaone/config.json"""
         i18n.init("en")
-        config_path = tmp_path / ".pandax" / "config.json"
+        config_path = tmp_path / ".pandaone" / "config.json"
         assert config_path.exists()
         data = json.loads(config_path.read_text(encoding="utf-8"))
         assert data["lang"] == "en"
 
     def test_init_loads_existing_preference(self, tmp_path):
         """已有 config.json → 读取偏好"""
-        config_path = tmp_path / ".pandax"
+        config_path = tmp_path / ".pandaone"
         config_path.mkdir(parents=True, exist_ok=True)
         (config_path / "config.json").write_text(
             json.dumps({"lang": "en"}, ensure_ascii=False),
@@ -112,7 +112,7 @@ class TestInit:
 
     def test_init_picks_explicit_over_preference(self, tmp_path):
         """显式指定优先于持久化偏好"""
-        config_path = tmp_path / ".pandax"
+        config_path = tmp_path / ".pandaone"
         config_path.mkdir(parents=True, exist_ok=True)
         (config_path / "config.json").write_text(
             json.dumps({"lang": "en"}),
@@ -246,7 +246,7 @@ class TestTranslation:
         assert not diff_en, f"en has keys not in zh-CN: {diff_en}"
 
     def test_all_called_keys_are_defined(self):
-        """Bug #20 回归测试：src/pandax 中所有 t() 调用的 key 都必须在 zh-CN/en 中定义"""
+        """Bug #20 回归测试：src/pandaone 中所有 t() 调用的 key 都必须在 zh-CN/en 中定义"""
         import re
         from pathlib import Path
         src_dir = Path(i18n.__file__).parent
@@ -303,14 +303,14 @@ class TestPersistence:
     """测试持久化逻辑"""
 
     def test_save_user_pref_creates_dir(self, tmp_path):
-        """保存时自动创建 ~/.pandax/"""
+        """保存时自动创建 ~/.pandaone/"""
         with mock.patch.dict(os.environ, {"HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}):
             i18n._save_user_pref("en")
-            assert (tmp_path / ".pandax" / "config.json").exists()
+            assert (tmp_path / ".pandaone" / "config.json").exists()
 
     def test_save_preserves_other_keys(self, tmp_path):
         """保存时不覆盖其他键"""
-        config_dir = tmp_path / ".pandax"
+        config_dir = tmp_path / ".pandaone"
         config_dir.mkdir(parents=True, exist_ok=True)
         (config_dir / "config.json").write_text(
             json.dumps({"other_key": "value", "lang": "en"}, ensure_ascii=False),
@@ -330,7 +330,7 @@ class TestPersistence:
 
     def test_load_user_pref_handles_invalid_json(self, tmp_path):
         """config.json 损坏 → 返回 None（不崩溃）"""
-        config_dir = tmp_path / ".pandax"
+        config_dir = tmp_path / ".pandaone"
         config_dir.mkdir(parents=True, exist_ok=True)
         (config_dir / "config.json").write_text("not valid json", encoding="utf-8")
         with mock.patch.dict(os.environ, {"HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}):
@@ -342,36 +342,36 @@ class TestCliLangIntegration:
     """集成测试：CLI --lang 旗标与 i18n 模块协同"""
 
     def test_cli_lang_zh_cn(self):
-        """pandax --lang=zh-CN → 中文"""
+        """pandaone --lang=zh-CN → 中文"""
         import sys
         sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-        from pandax.cli import build_parser
+        from pandaone.cli import build_parser
         parser = build_parser()
         args = parser.parse_args(["--lang=zh-CN", "--version"])
         assert args.lang == "zh-CN"
 
     def test_cli_lang_en(self):
-        """pandax --lang=en → 英文"""
-        from pandax.cli import build_parser
+        """pandaone --lang=en → 英文"""
+        from pandaone.cli import build_parser
         parser = build_parser()
         args = parser.parse_args(["--lang=en", "--version"])
         assert args.lang == "en"
 
     def test_cli_default_lang_is_none(self):
         """不指定 --lang → None（自动检测）"""
-        from pandax.cli import build_parser
+        from pandaone.cli import build_parser
         parser = build_parser()
         args = parser.parse_args(["--version"])
         assert args.lang is None
 
     def test_cli_install_context_has_lang(self):
-        """pandax install-context 支持 --lang"""
-        from pandax.cli import build_parser
+        """pandaone install-context 支持 --lang"""
+        from pandaone.cli import build_parser
         parser = build_parser()
         args = parser.parse_args(["install-context", "--lang=en"])
         assert args.command == "install-context"
         assert args.lang == "en"
 
 
-# 导入 pandax.cli.t 用于 TestTranslation（避免 Python 导入顺序问题）
-from pandax.cli import t
+# 导入 pandaone.cli.t 用于 TestTranslation（避免 Python 导入顺序问题）
+from pandaone.cli import t

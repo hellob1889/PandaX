@@ -95,19 +95,19 @@ jobs:
           ## What's New in v0.7.3
 
           ### 🔍 Agent Identity · agent 身份追踪
-          每次 `pandax write` 现在记录调用方身份：
+          每次 `pandaone write` 现在记录调用方身份：
 
           ```bash
-          pandax write --agent claude-code ...   # Claude Code
-          pandax write --agent cursor ...         # Cursor
-          pandax write --agent trae ...           # Trae
-          pandax write --agent user:alice ...     # Human user
+          pandaone write --agent claude-code ...   # Claude Code
+          pandaone write --agent cursor ...         # Cursor
+          pandaone write --agent trae ...           # Trae
+          pandaone write --agent user:alice ...     # Human user
           ```
 
-          配合 `pandax log --agent=claude-code` 按 agent 过滤审计历史，`pandax status` 新增按 agent 分组的写入统计 top 5。
+          配合 `pandaone log --agent=claude-code` 按 agent 过滤审计历史，`pandaone status` 新增按 agent 分组的写入统计 top 5。
 
           ### 📜 Diff Capture + Panel UI · 彩色面板
-          `pandax log --verbose` 在终端显示 ANSI 彩色面板（含完整 diff）：
+          `pandaone log --verbose` 在终端显示 ANSI 彩色面板（含完整 diff）：
 
           ```
           ┌──────────────────────────────────────────────────────────┐
@@ -132,12 +132,12 @@ jobs:
           - 测试：342 passed, 1 skipped（+2 个 v0.7.3 专项测试）
           - i18n：新增 16 个双语 key
           - 兼容 `NO_COLOR` 环境变量
-          - PyPI：[pandax-guard 0.7.3](https://pypi.org/project/pandax-guard/0.7.3/)
+          - PyPI：[pandaone-guard 0.7.3](https://pypi.org/project/pandaone-guard/0.7.3/)
           - Trusted Publishing：tag push → GitHub Actions → OIDC → PyPI 自动
 
           ---
 
-          **Full Changelog**: https://github.com/hellob1889/PandaX/compare/v0.7.2...v0.7.3
+          **Full Changelog**: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.2...v0.7.3
           EOF
           # 将 heredoc 内容存到一个变量（去前导缩进）
           python3 -c "

@@ -1,7 +1,7 @@
 ﻿"""
 test_status.py
 ==============
-RED 测试：pandax status 命令
+RED 测试：pandaone status 命令
 
 第一性原理：
   status 是"项目审计全景仪表盘"。
@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -55,7 +55,7 @@ def test_status_after_init(tmp_path):
     assert r.returncode == 0, f"stderr={r.stderr}"
 
     # 应展示关键信息
-    assert "PandaX" in r.stdout
+    assert "Pandaone AI Agent" in r.stdout
     assert "L1" in r.stdout or "锁" in r.stdout or "lock" in r.stdout.lower()
 
 
@@ -64,7 +64,7 @@ def test_status_shows_watchdog_pid(tmp_path):
     setup(tmp_path)
 
     # 模拟 watchdog 写 PID
-    pid_path = tmp_path / ".pandax" / ".watchdog_pid"
+    pid_path = tmp_path / ".pandaone" / ".watchdog_pid"
     pid_path.write_text("12345", encoding="utf-8")
 
     r = run(["status", "--root", str(tmp_path)], cwd=tmp_path)
@@ -91,7 +91,7 @@ def test_status_shows_audit_count(tmp_path):
     setup(tmp_path)
 
     # 添加 2 条审计记录
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
     records = [
         {"id": "audit_001", "status": "APPROVED", "file": "main.py",
          "reason": "fix", "problem": "p", "approach": "a"},
@@ -110,7 +110,7 @@ def test_status_shows_audit_count(tmp_path):
 
 def test_status_handles_no_init(tmp_path):
     """未 init 的目录 status 应优雅处理"""
-    # tmp_path 没有 .pandax/
+    # tmp_path 没有 .pandaone/
     r = run(["status", "--root", str(tmp_path)], cwd=tmp_path)
     # 不应崩溃，rc != 0 + 信息提示
     assert r.returncode != 0

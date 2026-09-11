@@ -1,7 +1,7 @@
 """
 05_full_project.py
 ===================
-PandaX 完整 20 文件项目实战 demo
+Pandaone AI Agent 完整 20 文件项目实战 demo
 
 演示：用一个完整的"真实"项目（代码/配置/文档/前端/脚本/二进制）走完 7 层防御。
 """
@@ -26,7 +26,7 @@ def cli(args, cwd):
     env = os.environ.copy()
     env["PYTHONPATH"] = str(SRC) + os.pathsep + env.get("PYTHONPATH", "")
     env["PATH"] = str(Path(GIT).parent) + os.pathsep + env.get("PATH", "")
-    r = subprocess.run([sys.executable, "-m", "pandax", *args],
+    r = subprocess.run([sys.executable, "-m", "pandaone", *args],
                        cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
     return r.returncode, r.stdout
 
@@ -42,7 +42,7 @@ def git(args, cwd):
 
 def main():
     project = Path("demo_05_full").resolve()
-    print(f"\n[Demo] PandaX 完整 20 文件项目实战")
+    print(f"\n[Demo] Pandaone 完整 20 文件项目实战")
     print(f"  Project: {project}\n")
 
     if project.exists():
@@ -102,18 +102,18 @@ def main():
     print("  ✓ git initialized")
 
     # ============================================================
-    # pandax init
+    # pandaone init
     # ============================================================
-    banner("Step 3: pandax init")
+    banner("Step 3: pandaone init")
     rc, out = cli(["init", "--root", str(project)], str(project))
     for line in out.splitlines():
         if "[OK]" in line or "[snapshot]" in line:
             print(f"  {line.strip()}")
 
     # ============================================================
-    # pandax lock
+    # pandaone lock
     # ============================================================
-    banner("Step 4: pandax lock（保护所有受保护文件）")
+    banner("Step 4: pandaone lock（保护所有受保护文件）")
     rc, out = cli(["lock", "--root", str(project)], str(project))
     for line in out.splitlines():
         if "[OK]" in line:
@@ -193,7 +193,7 @@ def main():
         print(f"  ✓ L3 hook 拦截: rc={rc}")
         # 提取错误信息
         for line in (out + err).splitlines():
-            if "PandaX" in line or "未审计" in line:
+            if "Pandaone" in line or "未审计" in line:
                 print(f"    {line.strip()}")
                 break
     else:
