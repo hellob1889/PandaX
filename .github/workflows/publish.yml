@@ -84,7 +84,9 @@ jobs:
       - name: Verify metadata
         run: |
           ls -la dist/
-          timeout 60 python -m twine check dist/pandax_guard-0.7.2-py3-none-any.whl dist/pandax_guard-0.7.2.tar.gz || echo "twine check non-critical"
+          # Derive expected wheel/sdist names from the tag (strip leading 'v')
+          _ver="${GITHUB_REF_NAME#v}"
+          timeout 60 python -m twine check "dist/pandax_guard-${_ver}-py3-none-any.whl" "dist/pandax_guard-${_ver}.tar.gz" || echo "twine check non-critical"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -193,7 +195,7 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax-guard==0.7.2
+            pip install --upgrade pandax-guard==${GITHUB_REF_NAME#v}
             ```
 
             See [CHANGELOG.md](https://github.com/hellob1889/PandaX/blob/main/CHANGELOG.md) for details.
