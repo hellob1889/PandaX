@@ -1,8 +1,8 @@
-"""Pandax 文件夹图标切换模块(方案 A:desktop.ini 替换)。
+"""Pandaone AI Agent 文件夹图标切换模块(方案 A:desktop.ini 替换)。
 
 第一性原理:
 - Windows 资源管理器通过文件夹里的 `desktop.ini` 识别自定义图标
-- `IconFile=pandax_locked.ico` 引用 ICO 文件(相对或绝对路径)
+- `IconFile=pandax_locked.ico` 引用 ICO 文件(相对或绝对路径,文件名保留 PandaX 兼容命名)
 - `desktop.ini` 必须设 `+h +s`(系统+隐藏)才会被 explorer 当作系统配置
 - ICO 复制到 `<root>/.pandaone/icon/`(隐藏目录,避免污染用户目录)
 
