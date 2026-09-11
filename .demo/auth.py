@@ -1,1 +1,1 @@
-auth.py: bump PBKDF2 iterations 100k → 200k + salt rotation hook
+auth.py: switch PBKDF2 → argon2id
