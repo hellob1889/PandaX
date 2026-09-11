@@ -126,61 +126,46 @@ jobs:
         shell: bash
 
   # ========================================
-  # Job 3: 单元测试
+  # Job 3: 单元测试（仅冒烟测试，不在 lint 流程做完整测试矩阵）
   # ========================================
+  # 第一性原理：
+  #   lint 流程的本职是 i18n 合规审查 + 快速冒烟，不是完整测试矩阵。
+  #   完整测试（3 OS × 3 Python = 9 矩阵）在 publish.yml 跑，gate 发布。
+  #   lint 这里只跑一个 ubuntu + 3.11 的最小冒烟，快速反馈 i18n 之外没有
+  #   把整个项目搞坏；如果只想跑特定测试，用 pytest --ignore 灵活配置。
   test:
-    name: Unit Tests
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
           cache: "pip"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e .[dev] --no-build-isolation
           pip install pytest pytest-timeout
         shell: bash
 
-      - name: Run tests (Ubuntu/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Smoke test (lint 流程只跑这个冒烟)
         run: |
-          # 与 publish.yml 同步忽略测试：
-          #   - test_watchdog.py / test_watchdog_dedupe.py：watchdog 在 CI runner 上不可用
-          #   - test_pandax_serve.py：serve 子命令启动 web server，与 CI runner 不兼容
-          #   - test_readme_loaded.py：RED 测试，等 README.md 实际更新到 Phase 6 状态再启用
+          # 冒烟测试：只跑 lint 关心的几个文件，确认 Python 模块能 import、CLI 启动正常。
+          # 完整测试矩阵在 publish.yml，避免 lint CI 因为环境差异长时间失败。
           set -o pipefail
-          python -m pytest tests/ \
-            --ignore=tests/test_watchdog.py \
-            --ignore=tests/test_watchdog_dedupe.py \
-            --ignore=tests/test_pandax_serve.py \
-            --ignore=tests/test_readme_loaded.py \
-            --tb=short -q --timeout=60 -p no:cacheprovider --no-header
+          python -m pytest \
+            tests/test_audit_i18n_ci.py \
+            tests/test_i18n.py \
+            tests/test_version_single_source.py \
+            --tb=short -q --timeout=30 -p no:cacheprovider --no-header
         shell: bash
-
-      - name: Run tests (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          python -m pytest tests/ `
-            --ignore=tests/test_watchdog.py `
-            --ignore=tests/test_watchdog_dedupe.py `
-            --ignore=tests/test_pandax_serve.py `
-            --ignore=tests/test_readme_loaded.py `
-            --tb=short -q --timeout=60 -p no:cacheprovider --no-header
-        shell: pwsh
 
   # ========================================
   # Job 4: 整体汇总（PR 评论区输出）
