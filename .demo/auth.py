@@ -1,1 +1,1 @@
-auth.py: switch PBKDF2 → argon2id
+auth.py: zxcvbn password strength scoring
