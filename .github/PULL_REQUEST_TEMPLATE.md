@@ -21,7 +21,7 @@
 
 - [ ] 已运行 `pytest tests/`，结果：__ passed / __ failed / __ skipped
 - [ ] 已运行 `python scripts/audit_i18n.py`，结果：PASS / FAIL
-- [ ] 已运行 `pandax ci --root . --base origin/main`，结果：PASS / FAIL
+- [ ] 已运行 `pandaone ci --root . --base origin/main`，结果：PASS / FAIL
 
 ### 新增 / 修改的测试
 
@@ -32,9 +32,9 @@
 
 ## Audit 状态（重要！）
 
-PandaX 的 CI 会检查所有 push 都经过 `pandax write`。
+Pandaone AI Agent 的 CI 会检查所有 push 都经过 `pandaone write`。
 
-- [ ] 我已经通过 `pandax write` 记录本次所有改动（reason / problem / approach）
+- [ ] 我已经通过 `pandaone write` 记录本次所有改动（reason / problem / approach）
 - [ ] 本次改动**仅 workflow 文件**，PR 标题含 `[skip-audit]` 跳过审计
 - [ ] 本次改动**仅文档 / 示例 / assets**，PR 标题含 `[skip-audit]` 跳过审计
 - [ ] 其他情况说明：________

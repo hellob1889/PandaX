@@ -1,0 +1,40 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory;application/x-python;text/x-python;text/plain;text/x-shellscript;
+X-KDE-Priority=TopLevel
+X-KDE-StartupNotify=false
+X-KDE-Submenu=Pandaone AI Agent
+X-KDE-Icon=pandaone
+Comment=Pandaone audit tools (Pandaone 审计工具)
+Comment[zh_CN]=Pandaone 审计工具
+Comment[en]=Pandaone audit tools
+Actions=Init;Lock;Unlock;Status;
+
+[Desktop Action Init]
+Name=Pandaone 初始化此目录 (Init)
+Name[zh_CN]=Pandaone 初始化此目录 (Init)
+Name[en]=Pandaone Init
+Icon=pandaone
+Exec=konsole -e bash -c "cd '%d' && pandaone --silent --trust-default init --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Lock]
+Name=Pandaone 锁定此目录 (Lock)
+Name[zh_CN]=Pandaone 锁定此目录 (Lock)
+Name[en]=Pandaone Lock
+Icon=pandaone
+Exec=konsole -e bash -c "cd '%d' && pandaone --silent --trust-default lock --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Unlock]
+Name=Pandaone 解锁此目录 (Unlock)
+Name[zh_CN]=Pandaone 解锁此目录 (Unlock)
+Name[en]=Pandaone Unlock
+Icon=pandaone
+Exec=konsole -e bash -c "cd '%d' && pandaone --silent --trust-default unlock --root '%d'; echo; echo '--- Done ---'; read"
+
+[Desktop Action Status]
+Name=Pandaone 查看状态 (Status)
+Name[zh_CN]=Pandaone 查看状态 (Status)
+Name[en]=Pandaone Status
+Icon=pandaone
+Exec=konsole -e bash -c "cd '%d' && pandaone --silent --trust-default status --root '%d'; echo; echo '--- Done ---'; read"

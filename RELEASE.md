@@ -18,8 +18,8 @@
 在 PyPI 项目页面配置（项目创建后）：
 Configure on PyPI project page (after project is created):
 
-1. 创建项目：[https://pypi.org/manage/project/pandax-guard/](https://pypi.org/manage/project/pandax-guard/)
-   Create project: [https://pypi.org/manage/project/pandax-guard/](https://pypi.org/manage/project/pandax-guard/)
+1. 创建项目：[https://pypi.org/manage/project/pandaone-guard/](https://pypi.org/manage/project/pandaone-guard/)
+   Create project: [https://pypi.org/manage/project/pandaone-guard/](https://pypi.org/manage/project/pandaone-guard/)
    - 第一次发布需要先手动上传一次（见 Step 3）来创建项目
      First publish requires manual upload (see Step 3) to create project
    - 或者用 PyPI 的 **PEP 691 / API** 创建
@@ -31,7 +31,7 @@ Configure on PyPI project page (after project is created):
 4. 填写 / Fill in：
    Fill in:
    - Owner: `你的 GitHub 用户名` / `Your GitHub username`
-   - Repository: `PandaX`
+   - Repository: `Pandaone AI Agent`
    - Workflow filename: `publish.yml`
    - Environment name: `Any`（如果页面没有 Environment 字段，保持留空）
      `Any` (if no Environment field on page, leave blank)
@@ -43,7 +43,7 @@ Configure on PyPI project page (after project is created):
 # Only needed once — to create the PyPI project record
 pip install --upgrade twine build
 python -m build --no-isolation
-twine upload dist/pandax_guard-0.7.2-py3-none-any.whl dist/pandax_guard-0.7.2.tar.gz
+twine upload dist/pandaone_guard-0.7.2-py3-none-any.whl dist/pandaone_guard-0.7.2.tar.gz
 # 输入 username + password（启用 2FA 后用 token）
 # Enter username + password (after enabling 2FA, use token)
 ```
@@ -74,8 +74,8 @@ Verify PyPI page renders correctly before publishing:
 
 ```bash
 twine upload --repository testpypi dist/*
-# 在 https://test.pypi.org/project/pandax-guard/ 预览页面
-# Preview page at https://test.pypi.org/project/pandax-guard/
+# 在 https://test.pypi.org/project/pandaone-guard/ 预览页面
+# Preview page at https://test.pypi.org/project/pandaone-guard/
 ```
 
 ---
@@ -93,17 +93,17 @@ pytest tests/ -v
 
 # 2. 验证 CLI 命令完整
 # Verify CLI commands are complete
-pandax --version
-pandax --help
-pandax init --help
-pandax write --help
-pandax log --help
-pandax status --help
-pandax install-hook --help
-pandax watch --help
-pandax install-git --help
-pandax ci --help
-pandax-mcp  # MCP server stdio JSON-RPC
+pandaone --version
+pandaone --help
+pandaone init --help
+pandaone write --help
+pandaone log --help
+pandaone status --help
+pandaone install-hook --help
+pandaone watch --help
+pandaone install-git --help
+pandaone ci --help
+pandaone-mcp  # MCP server stdio JSON-RPC
 
 # 3. 验证 wheel + sdist 能正常构建
 # Verify wheel + sdist build correctly
@@ -154,8 +154,8 @@ pyproject.toml already includes:
 - ✅ keywords
 - ✅ 14 classifiers
 - ✅ 5 dependencies（核心）/ 5 dependencies (core)
-- ✅ 3 console_scripts（pandax / pandax-watchdog / pandax-mcp）
-  3 console_scripts (pandax / pandax-watchdog / pandax-mcp)
+- ✅ 3 console_scripts（pandaone / pandaone-watchdog / pandaone-mcp）
+  3 console_scripts (pandaone / pandaone-watchdog / pandaone-mcp)
 - ✅ optional-dependencies: dev / download
 - ✅ 4 project urls (Homepage/Documentation/Repository/Issues)
 
@@ -176,28 +176,28 @@ Test installation **immediately** after publishing:
 ```bash
 # 新建临时环境
 # Create temporary environment
-python -m venv /tmp/pandax-verify
-source /tmp/pandax-verify/bin/activate  # Windows: Scripts\activate
+python -m venv /tmp/pandaone-verify
+source /tmp/pandaone-verify/bin/activate  # Windows: Scripts\activate
 
 # 安装（生产）
 # Install (production)
-pip install pandax-guard
+pip install pandaone-guard
 # 或指定版本
 # Or pin version
-pip install pandax-guard==0.7.2
+pip install pandaone-guard==0.7.2
 
 # 验证
 # Verify
-pandax --version  # pandax-guard v0.7.2
-pandax init --help
-pandax init /tmp/test-project
-pandax write --root /tmp/test-project --file test.py \
+pandaone --version  # pandaone-guard v0.7.2
+pandaone init --help
+pandaone init /tmp/test-project
+pandaone write --root /tmp/test-project --file test.py \
     --reason "verify install" --problem "test" --approach "test" \
     --content "x = 1\n"
 
 # 测试 MCP server
 # Test MCP server
-echo '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}' | pandax-mcp
+echo '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}' | pandaone-mcp
 ```
 
 ---

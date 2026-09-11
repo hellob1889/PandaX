@@ -1,8 +1,8 @@
-# PandaX v0.7.0 真实场景 Bug 清单 / PandaX v0.7.0 Real-World Bug List
+# Pandaone AI Agent v0.7.0 真实场景 Bug 清单 / Pandaone v0.7.0 Real-World Bug List
 
-> **测试环境 / Test Environment**：Windows 11 + Python 3.11 + `pip install -e .` (PandaX 0.7.0)
+> **测试环境 / Test Environment**：Windows 11 + Python 3.11 + `pip install -e .` (Pandaone 0.7.0)
 > **测试时间 / Test Time**：2026-09-05
-> **测试项目 / Test Project**：`D:\pandax-test\`（单文件 test.py + README.md + .env + config.json）
+> **测试项目 / Test Project**：`D:\pandaone-test\`（单文件 test.py + README.md + .env + config.json）
 > **测试方法 / Test Method**：第一性原理 + 对抗式审查 / First Principles + Adversarial Review
 >
 > **总计 / Total**：15 个有效 Bug（1 个误判已撤销，2 个测试方法问题 / 15 valid bugs (1 misjudgment revoked, 2 test method issues)
@@ -30,7 +30,7 @@
 | 17 | 🟡 mid | status | status 输出完全没做 i18n，`--lang=en` 时仍中文 / status output not i18n'd, still Chinese when `--lang=en` |
 | 9 | 🟡 mid | write | reason 长度 < 5 字符被拒，中文短句易误伤 / reason length < 5 chars rejected, Chinese short phrases easily false-positive |
 | 10 | 🟡 mid | write | problem 长度 < 10 字符被拒，中文短句易误伤 / problem length < 10 chars rejected, Chinese short phrases easily false-positive |
-| 15 | 🟡 mid | install-context | PowerShell subprocess 在非 TTY 下不退出，pandax 永远等待 / PowerShell subprocess doesn't exit without TTY, pandax waits forever |
+| 15 | 🟡 mid | install-context | PowerShell subprocess 在非 TTY 下不退出，pandaone 永远等待 / PowerShell subprocess doesn't exit without TTY, pandaone waits forever |
 | 19 | 🟡 mid | status | status 报 Locked=N 但不检查当前 ReadOnly 实际状态 / status reports Locked=N but doesn't check actual ReadOnly state |
 | 20 | 🟡 mid | ci | ci 报 "empty repo" 但实际有文件 / ci reports "empty repo" but actually has files |
 | 21 | 🟡 mid | write / doctor | write 报 git not installed，doctor 报 git OK（检测不一致）/ write says git not installed, doctor says git OK (detection inconsistency) |
@@ -47,13 +47,13 @@
 
 **复现步骤 / Reproduction Steps**：
 ```bash
-# 1. 创建 PandaX项目
-# 1. Create PandaX project
-pandax init --root D:\test-write
+# 1. 创建 Pandaone项目
+# 1. Create Pandaone project
+pandaone init --root D:\test-write
 
 # 2. 锁定文件
 # 2. Lock file
-pandax lock --root D:\test-write
+pandaone lock --root D:\test-write
 #   → test.py mode=0o100444, IsReadOnly=True
 
 # 3. 标记文件为 hidden + system（attrib 命令）
@@ -62,7 +62,7 @@ attrib +h +s D:\test-write\test.py
 
 # 4. 试图 write（即使 reason/problem/approach 完美）
 # 4. Try to write (even with perfect reason/problem/approach)
-pandax write --root D:\test-write --file test.py \
+pandaone write --root D:\test-write --file test.py \
     --reason "..." --problem "..." --approach "..." \
     --old '...' --new '...'
 
@@ -94,8 +94,8 @@ target.write_text(new_content, encoding="utf-8")  # 抛 PermissionError → 文�
 
 ### Bug #12 v2 — write 默认严格，需 --force-write 显式覆盖锁定文件 / Bug #12 v2 — write default strict, requires explicit --force-write to overwrite locked files
 
-**新增风险点 / New Risk Point**：v1 修复只保证"写完后 mode 恢复"，但**没有阻止 write 主动解锁**。如果某个脚本/Agent 调用 `pandax write`，会自动 unlock→write→lock，**绕过用户意图**。
-v1 fix only ensures "mode restored after write", but **doesn't prevent write from actively unlocking**. If a script/Agent calls `pandax write`, it auto-unlock→write→lock, **bypassing user intent**.
+**新增风险点 / New Risk Point**：v1 修复只保证"写完后 mode 恢复"，但**没有阻止 write 主动解锁**。如果某个脚本/Agent 调用 `pandaone write`，会自动 unlock→write→lock，**绕过用户意图**。
+v1 fix only ensures "mode restored after write", but **doesn't prevent write from actively unlocking**. If a script/Agent calls `pandaone write`, it auto-unlock→write→lock, **bypassing user intent**.
 
 **改进设计**（第一性原则 + 对抗式审查）/ Improved Design (First Principles + Adversarial Review):
 1. **写命令默认严格**：检测目标文件 `os.access(W_OK)=False` → REJECTED / **write default strict**: check target file `os.access(W_OK)=False` → REJECTED
@@ -106,13 +106,13 @@ v1 fix only ensures "mode restored after write", but **doesn't prevent write fro
 - `test_write_rejects_readonly_without_force`: 锁定文件不带 --force-write → REJECTED
 - `test_write_accepts_readonly_with_force`: 锁定文件带 --force-write → APPROVED + 审计 force_write=true
 - `test_write_no_force_for_unlocked_file`: 未锁定文件不需要 --force-write 也能正常 write
-- E2E（`D:\pandax-test`）：5/5 检查全过（exit=0, file updated, file RE-LOCKED, force_write=true, commit_hash）
+- E2E（`D:\pandaone-test`）：5/5 检查全过（exit=0, file updated, file RE-LOCKED, force_write=true, commit_hash）
 
 **关键变更**（commit TBD）/ Key Changes (commit TBD):
-- `src/pandax/cli.py` line 236-242: argparse `--force-write` flag
-- `src/pandax/cli.py` line 638-644: cmd_write step 1.5 ReadOnly 前置检查 / cmd_write step 1.5 ReadOnly pre-check
-- `src/pandax/cli.py` line 776: APPROVED audit 记录 `force_write` 字段 / APPROVED audit records `force_write` field
-- `src/pandax/i18n.py` line 112/332: 新增 `write_reject_readonly_need_force` 双语言 key / add `write_reject_readonly_need_force` bilingual key
+- `src/pandaone/cli.py` line 236-242: argparse `--force-write` flag
+- `src/pandaone/cli.py` line 638-644: cmd_write step 1.5 ReadOnly 前置检查 / cmd_write step 1.5 ReadOnly pre-check
+- `src/pandaone/cli.py` line 776: APPROVED audit 记录 `force_write` 字段 / APPROVED audit records `force_write` field
+- `src/pandaone/i18n.py` line 112/332: 新增 `write_reject_readonly_need_force` 双语言 key / add `write_reject_readonly_need_force` bilingual key
 - `tests/test_write.py`: 现有 3 个 write 测试加 `--force-write` + 新增 3 个 v2 测试用例 / existing 3 write tests add `--force-write` + add 3 new v2 tests
 - `tests/test_e2e.py` + `tests/test_phase2_e2e.py`: 加 `--force-write` 适配新语义 / add `--force-write` adapting to new semantics
 
@@ -124,8 +124,8 @@ v1 fix only ensures "mode restored after write", but **doesn't prevent write fro
 
 **复现步骤 / Reproduction Steps**：
 ```powershell
-pandax uninstall-context  # 干净状态 / clean state
-pandax install-context --force
+pandaone uninstall-context  # 干净状态 / clean state
+pandaone install-context --force
 ```
 
 **结果 / Result**：`[1/4] Cleaning old entries...` 显示后**永久挂死**（180s+）/ shown then **permanently hangs** (180s+).
@@ -133,14 +133,14 @@ pandax install-context --force
 **根因 / Root Cause**：`installer/windows/install_context_menu.ps1` 和 `uninstall_context_menu.ps1` 使用：
 `installer/windows/install_context_menu.ps1` and `uninstall_context_menu.ps1` use:
 ```powershell
-Test-Path "HKCU:\Software\Classes\*\shell\PandaX"
+Test-Path "HKCU:\Software\Classes\*\shell\Pandaone"
 ```
 PS 把 `*` 当通配符，glob 整个 `HKCU:\Software\Classes\*`（上千 ProgID），可能进入死循环或挂死。
 PS treats `*` as wildcard, globs entire `HKCU:\Software\Classes\*` (thousands of ProgIDs), may enter infinite loop or hang.
 
 **修复 / Fix**：
 ```powershell
-Test-Path -LiteralPath "HKCU:\Software\Classes\*\shell\PandaX"
+Test-Path -LiteralPath "HKCU:\Software\Classes\*\shell\Pandaone"
 Remove-Item -LiteralPath $path -Recurse -Force
 New-Item -LiteralPath $path -Force | Out-Null
 ```
@@ -157,9 +157,9 @@ All `*` occurrences replaced with `-LiteralPath`.
 
 **复现 / Reproduction**：Bug #8 触发后 Ctrl+C，注册表残留 / Registry residue after Ctrl+C following Bug #8:
 ```
-HKCU\Software\Classes\*\shell\PandaX
-    (Default)  = "PandaX"
-    MUIVerb    = "PandaX 审计工具 / Audit Tools"
+HKCU\Software\Classes\*\shell\Pandaone
+    (Default)  = "Pandaone"
+    MUIVerb    = "Pandaone 审计工具 / Audit Tools"
 ```
 **缺 / Missing**：Icon, SubCommands, Init/Lock/Status/Unlock 子菜单及其 command 子键 / submenus and command subkeys.
 
@@ -177,7 +177,7 @@ Each `Install-CascadeMenu` call is **non-atomic** — writes main menu value fir
 
 **复现 / Reproduction**：
 ```bash
-pandax status --root D:\pandax-test
+pandaone status --root D:\pandaone-test
 # [L1 File Lock] Total .py files: 1
 # 但实际有 .py, .md, .json, .env 4 个受保护文件
 # but actually has .py, .md, .json, .env 4 protected files
@@ -193,8 +193,8 @@ pandax status --root D:\pandax-test
 
 **复现 / Reproduction**：
 ```bash
-pandax --lang=en status --root .   # ✅ 英文 / English
-pandax status --root . --lang=en   # ❌ 仍中文 / still Chinese
+pandaone --lang=en status --root .   # ✅ 英文 / English
+pandaone status --root . --lang=en   # ❌ 仍中文 / still Chinese
 ```
 
 **根因 / Root Cause**：`cli.py` argparse 在 `parse_known_args` 时，全局 `--lang` 在 `subcommand parser` 之后才解析。
@@ -211,7 +211,7 @@ pandax status --root . --lang=en   # ❌ 仍中文 / still Chinese
 
 **复现 / Reproduction**：
 ```bash
-pandax --lang=en log --recent 3
+pandaone --lang=en log --recent 3
 # 输出仍是：Reason: / Problem: / Approach: / attempted: / "problem 长度 < 10"
 # output still: Reason: / Problem: / Approach: / attempted: / "problem 长度 < 10"
 ```
@@ -228,9 +228,9 @@ Add `log_label_reason`, `log_label_problem`, etc. keys to i18n dict, and require
 
 **复现 / Reproduction**：
 ```bash
-pandax --lang=en status --root .
-# 输出："PandaX 状态仪表盘", "[L1 文件锁]", "总计 .py 文件", etc.
-# output: "PandaX 状态仪表盘", "[L1 文件锁]", "总计 .py 文件", etc.
+pandaone --lang=en status --root .
+# 输出："Pandaone 状态仪表盘", "[L1 文件锁]", "总计 .py 文件", etc.
+# output: "Pandaone 状态仪表盘", "[L1 文件锁]", "总计 .py 文件", etc.
 ```
 
 **根因 / Root Cause**：`cmd_status` 内字符串全部 hardcoded 中英混合 / All strings in `cmd_status` are hardcoded mixed Chinese-English.
@@ -243,8 +243,8 @@ pandax --lang=en status --root .
 
 **复现 / Reproduction**：
 ```bash
-pandax write --reason "测试写入" ...   # 4 字符 → REJECTED "reason 长度 < 5"
-pandax write --problem "原文件太简单" ...   # 9 字符 → REJECTED "problem 长度 < 10"
+pandaone write --reason "测试写入" ...   # 4 字符 → REJECTED "reason 长度 < 5"
+pandaone write --problem "原文件太简单" ...   # 9 字符 → REJECTED "problem 长度 < 10"
 ```
 
 **根因 / Root Cause**：长度检查用 `len(string)`（字节数？字符数？取决于编码）/ Length check uses `len(string)` (bytes? chars? depends on encoding).
@@ -258,8 +258,8 @@ pandax write --problem "原文件太简单" ...   # 9 字符 → REJECTED "probl
 
 ### Bug #15 🟡 mid — PowerShell subprocess 不退出 / Bug #15 🟡 mid — PowerShell subprocess doesn't exit
 
-**复现 / Reproduction**：`pandax uninstall-context` 在干净状态下输出 `[OK] Removed 0 registry entries.` 后**180 秒**仍不退出。
-`pandax uninstall-context` in clean state outputs `[OK] Removed 0 registry entries.` then **180 seconds** still doesn't exit.
+**复现 / Reproduction**：`pandaone uninstall-context` 在干净状态下输出 `[OK] Removed 0 registry entries.` 后**180 秒**仍不退出。
+`pandaone uninstall-context` in clean state outputs `[OK] Removed 0 registry entries.` then **180 seconds** still doesn't exit.
 
 **根因 / Root Cause**：`subprocess.run(cmd, check=False, env=env)` 缺 timeout；powershell 在缺 stdin 时进程可能不主动 exit。
 `subprocess.run(cmd, check=False, env=env)` lacks timeout; powershell without stdin may not actively exit.
@@ -296,13 +296,13 @@ os.chmod(path, old_mode)  # 恢复原 mode / restore original mode
 
 **复现 / Reproduction**：
 ```bash
-pandax lock   # mode=0o100444
-pandax write ...   # Bug #18，mode 被清 / Bug #18, mode cleared
-pandax status   # 仍报 Locked=1 / still reports Locked=1
+pandaone lock   # mode=0o100444
+pandaone write ...   # Bug #18，mode 被清 / Bug #18, mode cleared
+pandaone status   # 仍报 Locked=1 / still reports Locked=1
 ```
 
-**根因 / Root Cause**：status 用 `pandax.lock` 的内部 L1 metadata 判断（哪个文件被 lock 过），而非每次 `os.stat()` 实际检查。
-status uses internal L1 metadata from `pandax.lock` (which files were locked), not actual `os.stat()` check each time.
+**根因 / Root Cause**：status 用 `pandaone.lock` 的内部 L1 metadata 判断（哪个文件被 lock 过），而非每次 `os.stat()` 实际检查。
+status uses internal L1 metadata from `pandaone.lock` (which files were locked), not actual `os.stat()` check each time.
 
 **修复 / Fix**：status 改成每次实际 stat ReadOnly 标志，给出真实状态 / status changed to actually stat ReadOnly flag each time, giving real status.
 
@@ -312,13 +312,13 @@ status uses internal L1 metadata from `pandax.lock` (which files were locked), n
 
 **复现 / Reproduction**：
 ```bash
-pandax ci --root D:\pandax-test
+pandaone ci --root D:\pandaone-test
 # 输出 "Baseline: none (first commit, no history to compare)"
 # "repository is empty (no changes to audit)"
 ```
 
-**根因 / Root Cause**：D:\pandax-test 不是 git 仓库，ci 命令没有 git fallback 处理未初始化仓库的情况。
-D:\pandax-test is not a git repo; ci command lacks git fallback for uninitialized repo.
+**根因 / Root Cause**：D:\pandaone-test 不是 git 仓库，ci 命令没有 git fallback 处理未初始化仓库的情况。
+D:\pandaone-test is not a git repo; ci command lacks git fallback for uninitialized repo.
 
 **修复 / Fix**：
 1. ci 自动检测 `git status` 是否可用 / ci auto-detects if `git status` is available
@@ -331,8 +331,8 @@ D:\pandax-test is not a git repo; ci command lacks git fallback for uninitialize
 
 **复现 / Reproduction**：
 ```bash
-pandax doctor.py   # 12/12 OK, git OK
-pandax write ...   # [WARN] git not installed
+pandaone doctor.py   # 12/12 OK, git OK
+pandaone write ...   # [WARN] git not installed
 ```
 
 **根因 / Root Cause**：两处 git 检测代码路径不同 / Two git detection code paths differ.
@@ -345,7 +345,7 @@ pandax write ...   # [WARN] git not installed
 
 **复现 / Reproduction**：
 ```bash
-pandax --silent status --root .
+pandaone --silent status --root .
 # 仍然显示 ASCII banner + README summary
 # still shows ASCII banner + README summary
 ```
@@ -358,8 +358,8 @@ pandax --silent status --root .
 
 ### Bug #4 🟢 low — README summary 过时 / Bug #4 🟢 low — README summary outdated
 
-**复现 / Reproduction**：每次 `pandax` 启动都打印 README summary，但只到 Step 13 / Phase 2，实际已到 Phase 11 / Step 89+。
-Each `pandax` startup prints README summary but only up to Step 13 / Phase 2; actually at Phase 11 / Step 89+.
+**复现 / Reproduction**：每次 `pandaone` 启动都打印 README summary，但只到 Step 13 / Phase 2，实际已到 Phase 11 / Step 89+。
+Each `pandaone` startup prints README summary but only up to Step 13 / Phase 2; actually at Phase 11 / Step 89+.
 
 **根因 / Root Cause**：README summary 是 `__main__.py` 启动时打印的硬编码文本 / README summary is hardcoded text printed at `__main__.py` startup.
 
@@ -371,7 +371,7 @@ Each `pandax` startup prints README summary but only up to Step 13 / Phase 2; ac
 
 **复现 / Reproduction**：
 ```bash
-pandax log -n 3   # 显示全部 11 条记录 / shows all 11 records
+pandaone log -n 3   # 显示全部 11 条记录 / shows all 11 records
 ```
 
 **根因 / Root Cause**：argparse 中没有 `-n` 别名，只有 `--recent N` / argparse has no `-n` alias, only `--recent N`.
@@ -384,10 +384,10 @@ pandax log -n 3   # 显示全部 11 条记录 / shows all 11 records
 
 ### ~~Bug #1~~ 撤销 — lock 命令实际有效 / ~~Bug #1~~ Revoked — lock command actually works
 
-之前怀疑 `pandax lock` 在 Windows 上失效，实际测试：
-Previously suspected `pandax lock` ineffective on Windows; actual testing:
-- `pandax lock` 把 test.py/md/env/json 都从 0o100666 改成 0o100444 + IsReadOnly=True ✅ / `pandax lock` changes test.py/md/env/json from 0o100666 to 0o100444 + IsReadOnly=True ✅
-- `pandax unlock` 全部还原 ✅ / `pandax unlock` restores all ✅
+之前怀疑 `pandaone lock` 在 Windows 上失效，实际测试：
+Previously suspected `pandaone lock` ineffective on Windows; actual testing:
+- `pandaone lock` 把 test.py/md/env/json 都从 0o100666 改成 0o100444 + IsReadOnly=True ✅ / `pandaone lock` changes test.py/md/env/json from 0o100666 to 0o100444 + IsReadOnly=True ✅
+- `pandaone unlock` 全部还原 ✅ / `pandaone unlock` restores all ✅
 - 是 init 时已经自动 lock 了所有受保护文件，**lock 命令本身工作正常** / init already auto-locked all protected files; **lock command itself works fine**
 
 真正的问题是 **Bug #12（write 失败时 mode 恢复不完整）** / The real issue is **Bug #12 (mode restoration incomplete on write failure)**.
@@ -496,7 +496,7 @@ interpreter = handler["interpreter"] + ["-NoProfile", "-NonInteractive"]
 8. install-context 通配符阻塞 / install-context wildcard blocking
 9. reason 长度限制 / reason length limit
 10. problem 长度限制 / problem length limit
-11. ~~--old 找不到~~ **撤销**（PowerShell 引号问题，非 pandax bug）/ ~~--old not found~~ **Revoked** (PowerShell quote issue, not pandax bug)
+11. ~~--old 找不到~~ **撤销**（PowerShell 引号问题，非 pandaone bug）/ ~~--old not found~~ **Revoked** (PowerShell quote issue, not pandaone bug)
 12. **write 失败时 mode 不恢复（最严重，已修复）** / **write mode not restored on failure (most serious, fixed)**
 13. log -n 无效 / log -n ineffective
 14. log 在 lang=en 时仍中文（与 #6 关联）/ log still Chinese in lang=en (related to #6)
@@ -516,7 +516,7 @@ interpreter = handler["interpreter"] + ["-NoProfile", "-NonInteractive"]
   - `installer/windows/uninstall_context_menu.ps1`：同样改用 .NET API / Same .NET API
   - 完整注册表写入验证（37 行：Default + MUIVerb + Icon + SubCommands + 4 个子菜单带 command）/ Full registry write verification (37 lines)
 - **#12**（write 失败时 mode 恢复）/ **#12** (mode restoration on write failure):
-  - `src/pandax/cli.py` 重写 `cmd_write` step 4 为 try/except/finally / Rewrote `cmd_write` step 4 to try/except/finally
+  - `src/pandaone/cli.py` 重写 `cmd_write` step 4 为 try/except/finally / Rewrote `cmd_write` step 4 to try/except/finally
   - 新增 `_OldNotFoundError` 业务异常类 / Added `_OldNotFoundError` business exception class
   - finally 块始终 `os.chmod(target, mode)` 恢复**原始 mode** / finally block always `os.chmod(target, mode)` restores **original mode**
 

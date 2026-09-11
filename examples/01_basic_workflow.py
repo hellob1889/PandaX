@@ -1,7 +1,7 @@
 """
 01_basic_workflow.py
 ====================
-PandaX 基础工作流 demo
+Pandaone AI Agent 基础工作流 demo
 
 演示：init → lock → write → log → status 完整流程
 预期：每个步骤输出对应状态，所有 write 记录 APPROVED
@@ -61,17 +61,17 @@ def find_git():
 
 
 def find_git_root():
-    """找 pandax 项目的 src 目录（用于 PYTHONPATH）"""
+    """找 pandaone 项目的 src 目录（用于 PYTHONPATH）"""
     here = Path(__file__).resolve().parent
     # 向上找 src/
     for p in [here.parent, here.parent.parent]:
-        if (p / "src" / "pandax" / "__init__.py").exists():
+        if (p / "src" / "pandaone" / "__init__.py").exists():
             return p / "src"
     return None
 
 
 def run_cli(args, cwd=None, env_extra=None):
-    """运行 pandax CLI"""
+    """运行 pandaone CLI"""
     env = os.environ.copy()
     src_root = find_git_root()
     if src_root:
@@ -80,7 +80,7 @@ def run_cli(args, cwd=None, env_extra=None):
         env.update(env_extra)
 
     r = subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=str(cwd or Path.cwd()),
         env=env, capture_output=True, text=True, timeout=60,
     )
@@ -103,7 +103,7 @@ def run_git(args, cwd=None):
 
 def main():
     project = Path("demo_01_basic").resolve()
-    print(f"\n[Demo] PandaX 基础工作流 demo")
+    print(f"\n[Demo] Pandaone 基础工作流 demo")
     print(f"  Project: {project}\n")
 
     # 清理
@@ -144,16 +144,16 @@ def _force_unlock_and_rmtree(path):
     run_git(["config", "user.name", "Demo"], project)
     ok("git initialized")
 
-    # 2. pandax init
-    step("2/7] pandax init")
+    # 2. pandaone init
+    step("2/7] pandaone init")
     rc, out, _ = run_cli(["init", "--root", str(project)], project)
     for line in out.splitlines():
         if "[OK]" in line or "[snapshot]" in line:
             print(f"  {line.strip()}")
-    ok(f"PandaX initialized (rc={rc})")
+    ok(f"Pandaone initialized (rc={rc})")
 
-    # 3. pandax lock
-    step("3/7] pandax lock")
+    # 3. pandaone lock
+    step("3/7] pandaone lock")
     rc, out, _ = run_cli(["lock", "--root", str(project)], project)
     for line in out.splitlines():
         if "[OK]" in line or "锁定" in line:
@@ -170,7 +170,7 @@ def _force_unlock_and_rmtree(path):
         ok(f"PermissionError（{type(e).__name__}）— 文件被锁")
 
     # 5. 通过 write 修改
-    step("5/7] pandax write 合规修改")
+    step("5/7] pandaone write 合规修改")
     rc, out, _ = run_cli([
         "write", "--root", str(project),
         "--file", "src/hello.py",

@@ -1,7 +1,7 @@
 #!/bin/bash
 # 02_binary_files.sh
 # ============================================================
-# PandaX 二进制文件保护 demo
+# Pandaone AI Agent 二进制文件保护 demo
 # ============================================================
 # 演示：init 时建立 SHA256 snapshot → write 替换 → 检测篡改
 # 预期：直接覆盖 .png 后 status 显示 SHA256 mismatch
@@ -14,7 +14,7 @@ PROJECT="$(pwd)/demo_02_binary"
 GIT_EXE="$(command -v git)"
 
 echo -e "${B}============================================================${W}"
-echo -e "${B}  PandaX 二进制文件保护 demo${W}"
+echo -e "${B}  Pandaone 二进制文件保护 demo${W}"
 echo -e "${B}============================================================${W}"
 
 rm -rf "$PROJECT"
@@ -29,17 +29,17 @@ printf 'PK\x03\x04OLD_ZIP' > assets/data.zip
 ls -la assets/
 
 # 1. init
-echo -e "\n${Y}[2/5] pandax init（建立 snapshot）${W}"
-python -m pandax init --root "$PROJECT" 2>&1 | grep -E "snapshot|init" | tail -3
+echo -e "\n${Y}[2/5] pandaone init（建立 snapshot）${W}"
+python -m pandaone init --root "$PROJECT" 2>&1 | grep -E "snapshot|init" | tail -3
 
 # 查看 snapshot
 echo "  当前 snapshot:"
-cat .pandax/binary_snapshots.json | python -m json.tool | head -10
+cat .pandaone/binary_snapshots.json | python -m json.tool | head -10
 
 # 2. 合规 write 替换 logo
 echo -e "\n${Y}[3/5] 合规 write 替换 logo.png${W}"
 printf '\x89PNG\r\n\x1a\nNEW_LOGO_V2' > /tmp/new_logo.png
-python -m pandax write \
+python -m pandaone write \
   --root "$PROJECT" \
   --file assets/logo.png \
   --reason "升级 logo" \
@@ -48,7 +48,7 @@ python -m pandax write \
   --from-file /tmp/new_logo.png 2>&1 | tail -2
 
 echo "  ✓ snapshot 已更新:"
-cat .pandax/binary_snapshots.json | python -m json.tool | head -10
+cat .pandaone/binary_snapshots.json | python -m json.tool | head -10
 
 # 3. 攻击：直接覆盖 photo.jpg
 echo -e "\n${Y}[4/5] 攻击：直接覆盖 photo.jpg（绕过 write）${W}"
@@ -58,7 +58,7 @@ echo "  ⚠️  photo.jpg 已被覆盖（绕过 write）"
 
 # 4. status 显示 mismatch
 echo -e "\n${Y}[5/5] status 检测到篡改${W}"
-python -m pandax status --root "$PROJECT" 2>&1 | tail -15
+python -m pandaone status --root "$PROJECT" 2>&1 | tail -15
 
 echo -e "\n${B}============================================================${W}"
 echo -e "${B}  预期：status 显示 photo.jpg SHA256 mismatch${W}"

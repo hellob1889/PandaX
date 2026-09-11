@@ -42,6 +42,6 @@ updates:
 # 注意：
 # 1. Dependabot 默认 PR 标题格式：deps(pip): bump X from A.B.C to D.E.F
 # 2. PR 会触发 audit.yml CI（[skip-audit] 不需要，因为 Dependabot PR 都是依赖更新）
-#    但有个问题：Dependabot PR 不通过 pandax write，所以会被审计拦下
+#    但有个问题：Dependabot PR 不通过 pandaone write，所以会被审计拦下
 #    → PR 标题加 [skip-audit] 即可豁免
 # 3. setuptools 在 publish.yml 里有专门 pin（setuptools==80.10.2），Dependabot 不能升

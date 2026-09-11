@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-build.py — PandaX 完整打包脚本（Python 版，跨平台）
+build.py — Pandaone AI Agent 完整打包脚本（Python 版，跨平台）
 
 用法:
   python build.py
 
 步骤:
   1. 清理旧产物
-  2. PyInstaller 打包 pandax.exe
-  3. PyInstaller 打包 pandax_guard.exe
+  2. PyInstaller 打包 pandaone.exe
+  3. PyInstaller 打包 pandaone_guard.exe
   4. 合并 _internal 目录
   5. 准备安装包 staging
   6. 调用 Inno Setup 编译（如可用）
@@ -43,17 +43,17 @@ def clean():
             print(f"  删除: {d}")
 
 
-def build_pandax():
-    print("\n[2/6] 打包 pandax.exe...")
+def build_pandaone():
+    print("\n[2/6] 打包 pandaone.exe...")
     cmd = [
         sys.executable, "-m", "PyInstaller",
-        "--name", "pandax",
+        "--name", "pandaone",
         "--onedir",
         "--console",
         "--add-data", "README.md;.",
         "--add-data", "templates;templates",
-        "--add-data", "pandax.py;.",
-        "--add-data", "pandax_guard.py;.",
+        "--add-data", "pandaone.py;.",
+        "--add-data", "pandaone_guard.py;.",
         "--add-data", "install_hook.py;.",
         "--hidden-import", "watchdog.observers",
         "--hidden-import", "watchdog.events",
@@ -62,16 +62,16 @@ def build_pandax():
         "--exclude-module", "matplotlib",
         "--exclude-module", "numpy",
         "--noconfirm",
-        str(ROOT / "pandax.py"),
+        str(ROOT / "pandaone.py"),
     ]
     return run(cmd, cwd=ROOT)
 
 
 def build_watchdog():
-    print("\n[3/6] 打包 pandax_guard.exe...")
+    print("\n[3/6] 打包 pandaone_guard.exe...")
     cmd = [
         sys.executable, "-m", "PyInstaller",
-        "--name", "pandax_guard",
+        "--name", "pandaone_guard",
         "--onedir",
         "--console",
         "--hidden-import", "watchdog.observers",
@@ -79,15 +79,15 @@ def build_watchdog():
         "--hidden-import", "watchdog.observers.polling",
         "--exclude-module", "tkinter",
         "--noconfirm",
-        str(ROOT / "pandax_guard.py"),
+        str(ROOT / "pandaone_guard.py"),
     ]
     return run(cmd, cwd=ROOT)
 
 
 def merge_internals():
     print("\n[4/6] 合并 _internal 目录...")
-    src = ROOT / "dist" / "pandax_guard" / "_internal"
-    dst = ROOT / "dist" / "pandax" / "_internal"
+    src = ROOT / "dist" / "pandaone_guard" / "_internal"
+    dst = ROOT / "dist" / "pandaone" / "_internal"
     if src.exists() and dst.exists():
         for item in src.iterdir():
             target = dst / item.name
@@ -99,22 +99,22 @@ def merge_internals():
                 shutil.copy2(item, target)
         print(f"  合并 {len(list(src.iterdir()))} 个文件到 {dst}")
 
-    # 复制 pandax_guard.exe
-    src_exe = ROOT / "dist" / "pandax_guard" / "pandax_guard.exe"
-    dst_exe = ROOT / "dist" / "pandax" / "pandax_guard.exe"
+    # 复制 pandaone_guard.exe
+    src_exe = ROOT / "dist" / "pandaone_guard" / "pandaone_guard.exe"
+    dst_exe = ROOT / "dist" / "pandaone" / "pandaone_guard.exe"
     if src_exe.exists():
         shutil.copy2(src_exe, dst_exe)
         print(f"  复制 {dst_exe.name}")
 
-    # 删除 pandax_guard 目录
-    shutil.rmtree(ROOT / "dist" / "pandax_guard", ignore_errors=True)
+    # 删除 pandaone_guard 目录
+    shutil.rmtree(ROOT / "dist" / "pandaone_guard", ignore_errors=True)
 
 
 def prepare_staging():
     print("\n[5/6] 准备安装包 staging...")
     staging = ROOT / "installer" / "staging"
     staging.mkdir(parents=True, exist_ok=True)
-    src = ROOT / "dist" / "pandax"
+    src = ROOT / "dist" / "pandaone"
     for item in src.iterdir():
         target = staging / item.name
         if item.is_dir():
@@ -128,7 +128,7 @@ def prepare_staging():
 
 def try_inno_setup():
     print("\n[6/6] 尝试 Inno Setup 编译...")
-    iss = ROOT / "installer" / "pandax.iss"
+    iss = ROOT / "installer" / "pandaone.iss"
     if not iss.exists():
         print(f"  [WARN] 找不到 {iss}")
         return
@@ -163,15 +163,15 @@ def try_inno_setup():
 
 def main():
     print("=" * 60)
-    print("PandaX 完整打包脚本")
+    print("Pandaone 完整打包脚本")
     print("=" * 60)
 
     clean()
-    if build_pandax() != 0:
-        print("[ERROR] 打包 pandax.exe 失败")
+    if build_pandaone() != 0:
+        print("[ERROR] 打包 pandaone.exe 失败")
         return 1
     if build_watchdog() != 0:
-        print("[ERROR] 打包 pandax_guard.exe 失败")
+        print("[ERROR] 打包 pandaone_guard.exe 失败")
         return 1
     merge_internals()
     prepare_staging()
@@ -181,7 +181,7 @@ def main():
     print("[OK] 打包完成")
     print("=" * 60)
     print("\n产物:")
-    for exe in (ROOT / "dist" / "pandax").glob("*.exe"):
+    for exe in (ROOT / "dist" / "pandaone").glob("*.exe"):
         print(f"  - {exe.name} ({exe.stat().st_size:,} bytes)")
     print("\n分发目录:")
     staging = ROOT / "installer" / "staging"

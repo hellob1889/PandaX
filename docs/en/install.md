@@ -9,21 +9,21 @@
 ## One-line Install
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 ## Verify
 
 ```bash
-pandax --version
-# pandax-guard v0.7.2
+pandaone --version
+# pandaone-guard v0.7.2
 ```
 
 ## Dev Install
 
 ```bash
-git clone https://github.com/hellob1889/PandaX
-cd pandax
+git clone https://github.com/hellob1889/Pandaone-AI-Agent
+cd pandaone
 pip install -e .[dev]
 pytest tests/ -v
 # 340 passed
@@ -46,14 +46,14 @@ Auto-installed (all pure Python, cross-platform):
 ## Upgrade
 
 ```bash
-pip install pandax-guard --upgrade
+pip install pandaone-guard --upgrade
 ```
 
 ## Uninstall
 
 ```bash
-pip uninstall pandax-guard
-rm -rf ~/.pandax_fp.txt
+pip uninstall pandaone-guard
+rm -rf ~/.pandaone_fp.txt
 ```
 
 ---

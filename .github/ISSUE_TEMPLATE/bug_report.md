@@ -30,14 +30,14 @@ assignees: []
 
 - **OS**：Windows / macOS / Linux + 版本（如 Win 11 23H2）
 - **Python 版本**：`python --version` 输出
-- **PandaX 版本**：`pip show pandax-guard | grep Version` 输出
-- **安装方式**：PyPI (`pip install pandax-guard`) / Source (`pip install -e .`)
+- **Pandaone AI Agent 版本**：`pip show pandaone-guard | grep Version` 输出
+- **安装方式**：PyPI (`pip install pandaone-guard`) / Source (`pip install -e .`)
 - **git 版本**（如相关）：`git --version`
 
 ## 审计日志 / Audit Log（若相关）
 
 ```bash
-pandax log --last 20
+pandaone log --last 20
 ```
 
 输出请粘贴到下面：

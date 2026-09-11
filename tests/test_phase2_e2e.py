@@ -14,7 +14,7 @@ Phase 2 端到端测试：完整 L1+L2+L3+L5 链路
 测试场景：
   1. 完整 init → git init → 初始 commit
   2. 安装 pre-commit hook
-  3. 通过 pandax write 修改（合法）→ 成功 + 审计
+  3. 通过 pandaone write 修改（合法）→ 成功 + 审计
   4. shell bypass 修改 .py → L1 锁阻止，绕过
      → L2 watchdog 检测 → 写 UNAUTHORIZED 审计 + git checkout 回滚
      → L3 hook 阻止 git commit
@@ -34,10 +34,10 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from pandax_guard import PandaXHandler  # noqa: E402
+from pandaone_guard import PandaXHandler  # noqa: E402
 
-PANDAX = ROOT / "pandax_dev.py"
-INSTALL_HOOK = ROOT / "src" / "pandax" / "install_hook.py"
+PANDAX = ROOT / "pandaone_dev.py"
+INSTALL_HOOK = ROOT / "src" / "pandaone" / "install_hook.py"
 
 
 def run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -86,7 +86,7 @@ def test_full_defense_chain(tmp_path):
     project = setup_full(tmp_path)
     main_py = project / "main.py"
 
-    # ============ Phase 2A: 合法写入（通过 pandax write）============
+    # ============ Phase 2A: 合法写入（通过 pandaone write）============
     r = run([
         "write",
         "--root", str(project),
@@ -114,7 +114,7 @@ def test_full_defense_chain(tmp_path):
     # 文件被回滚
     assert "BYPASS" not in main_py.read_text(encoding="utf-8"), "watchdog 未回滚"
     # 审计日志有 UNAUTHORIZED 记录
-    audit_path = project / ".pandax" / "pandax.jsonl"
+    audit_path = project / ".pandaone" / "pandaone.jsonl"
     records = [
         json.loads(l) for l in
         audit_path.read_text(encoding="utf-8").splitlines() if l.strip()
@@ -131,7 +131,7 @@ def test_full_defense_chain(tmp_path):
         cwd=project, capture_output=True, text=True,
     )
     assert r.returncode != 0, "L3 hook 未阻止未审计 commit"
-    assert "pandax" in (r.stdout + r.stderr).lower() or "audit" in (r.stdout + r.stderr).lower()
+    assert "pandaone" in (r.stdout + r.stderr).lower() or "audit" in (r.stdout + r.stderr).lower()
 
     # ============ Phase 2D: status 显示告警 ============
     r = run(["status", "--root", str(project)], cwd=project)
@@ -153,15 +153,15 @@ def test_full_defense_chain(tmp_path):
     assert "UNAUTHORIZED" in out
 
 
-def test_l5_fingerprint_protects_pandax_itself(tmp_path):
-    """L5 自指纹：篡改 pandax.py 后 CLI 应拒绝运行"""
+def test_l5_fingerprint_protects_pandaone_itself(tmp_path):
+    """L5 自指纹：篡改 pandaone.py 后 CLI 应拒绝运行"""
     # 这个测试是间接的：通过 conftest.py 已验证
     # 这里只验证指纹文件存在 + 与 cli.py 一致
-    fp_path = Path.home() / ".pandax_fp.txt"
+    fp_path = Path.home() / ".pandaone_fp.txt"
     assert fp_path.exists(), "指纹文件未生成"
 
     import hashlib
-    expected = hashlib.sha256((ROOT / "src" / "pandax" / "cli.py").read_bytes()).hexdigest()
+    expected = hashlib.sha256((ROOT / "src" / "pandaone" / "cli.py").read_bytes()).hexdigest()
     actual = fp_path.read_text(encoding="utf-8").strip()
     assert actual == expected, f"指纹不一致: 存储={actual[:16]}, 期望={expected[:16]}"
 

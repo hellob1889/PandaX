@@ -1,7 +1,7 @@
 """
 test_protected_extensions.py
 ============================
-Phase 4.6 — 验证 PandaX 保护范围扩展到所有文本文件类型。
+Phase 4.6 — 验证 Pandaone AI Agent 保护范围扩展到所有文本文件类型。
 
 第一性原理：
   - 审计系统的"保护范围"必须能覆盖所有可执行/可误导的文件
@@ -23,13 +23,13 @@ SRC_DIR = ROOT_DIR / "src"
 
 
 def _run_cli(*args, cwd=None, env_extra=None):
-    """运行 pandax CLI，返回 (rc, stdout, stderr)"""
+    """运行 pandaone CLI，返回 (rc, stdout, stderr)"""
     import os
     env = os.environ.copy()
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     if env_extra:
         env.update(env_extra)
-    cmd = [sys.executable, "-m", "pandax", *args]
+    cmd = [sys.executable, "-m", "pandaone", *args]
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd or ROOT_DIR, env=env)
     return r.returncode, r.stdout, r.stderr
 
@@ -45,46 +45,46 @@ class TestInitDefaultExtensions:
         """init 默认应保护 .md"""
         rc, out, err = _run_cli("init", "--root", str(tmp_path))
         assert rc == 0, f"init 失败: {err}"
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert ".md" in config["protected_extensions"], f"应包含 .md，实际: {config['protected_extensions']}"
 
     def test_init_default_includes_json(self, tmp_path):
         """init 默认应保护 .json"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert ".json" in config["protected_extensions"]
 
     def test_init_default_includes_yaml(self, tmp_path):
         """init 默认应保护 .yaml/.yml"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert ".yaml" in config["protected_extensions"]
         assert ".yml" in config["protected_extensions"]
 
     def test_init_default_includes_html_css_js(self, tmp_path):
         """init 默认应保护前端文件"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         for ext in [".html", ".css", ".js"]:
             assert ext in config["protected_extensions"], f"应包含 {ext}"
 
     def test_init_default_includes_shell_scripts(self, tmp_path):
         """init 默认应保护 .sh/.bat/.ps1（可执行脚本）"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         for ext in [".sh", ".bat", ".ps1"]:
             assert ext in config["protected_extensions"], f"应包含 {ext}"
 
     def test_init_default_still_includes_py(self, tmp_path):
         """init 默认仍应包含 .py（向后兼容）"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert ".py" in config["protected_extensions"]
 
     def test_init_default_excludes_binary(self, tmp_path):
         """init 默认不应包含纯二进制格式（.png/.exe/.zip）"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         for ext in [".png", ".jpg", ".exe", ".zip"]:
             assert ext not in config["protected_extensions"], f"不应包含 {ext}"
 
@@ -96,7 +96,7 @@ class TestInitCustomExtensions:
         """init --ext .foo 应只保护 .foo"""
         rc, out, err = _run_cli("init", "--root", str(tmp_path), "--ext", ".foo", ".bar")
         assert rc == 0, f"init --ext 失败: {err}"
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert ".foo" in config["protected_extensions"]
         assert ".bar" in config["protected_extensions"]
 

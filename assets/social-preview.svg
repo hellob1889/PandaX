@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" font-family="-apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <!-- background gradient: deep code-editor night -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="55%" stop-color="#0e1830"/>
+      <stop offset="100%" stop-color="#101a3a"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="78%" cy="22%" r="55%">
+      <stop offset="0%" stop-color="#7afcff" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#7afcff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#7afcff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1b2547" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#0e1530" stop-opacity="0.92"/>
+    </linearGradient>
+    <linearGradient id="pill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6c45a"/>
+      <stop offset="100%" stop-color="#e89c2c"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff4d2"/>
+      <stop offset="60%" stop-color="#f6c45a"/>
+      <stop offset="100%" stop-color="#cf841a"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#halo)"/>
+
+  <!-- Faint code lines (left side, behind everything) -->
+  <g font-family="Menlo, Consolas, monospace" font-size="13" opacity="0.32" fill="#7afcff">
+    <text x="60" y="120">$ pip install pandaone</text>
+    <text x="60" y="148" fill="#9aa6cf">$ pandaone init</text>
+    <text x="60" y="176" fill="#5a8cf0">$ pandaone write src/payment.py \</text>
+    <text x="60" y="200" fill="#5a8cf0">    --reason "Round before transfer" \</text>
+    <text x="60" y="224" fill="#5a8cf0">    --problem "$50,001 on $50k bill" \</text>
+    <text x="60" y="248" fill="#5a8cf0">    --approach "ROUND_DOWN to cents"</text>
+    <text x="60" y="284" fill="#9aa6cf">[APPROVED] audit_a317b2c · 03:47</text>
+    <text x="60" y="312" fill="#9aa6cf">[APPROVED] audit_a317b2d · 03:48</text>
+    <text x="60" y="340" fill="#9aa6cf">[APPROVED] audit_a317b2e · 03:49</text>
+  </g>
+
+  <!-- Grid lines -->
+  <g stroke="#1c2a55" stroke-width="1" opacity="0.5">
+    <line x1="0" y1="80"  x2="1280" y2="80"/>
+    <line x1="0" y1="560" x2="1280" y2="560"/>
+  </g>
+
+  <!-- Decorative panda silhouette behind the title (subtle) -->
+  <g opacity="0.18" transform="translate(900,360)">
+    <circle cx="0"   cy="0"   r="80" fill="#000"/>
+    <circle cx="-58" cy="-72" r="32" fill="#000"/>
+    <circle cx="58"  cy="-72" r="32" fill="#000"/>
+    <circle cx="-50" cy="-66" r="14" fill="#fff"/>
+    <circle cx="50"  cy="-66" r="14" fill="#fff"/>
+    <circle cx="-50" cy="-66" r="7"  fill="#000"/>
+    <circle cx="50"  cy="-66" r="7"  fill="#000"/>
+    <ellipse cx="0" cy="20" rx="14" ry="10" fill="#fff"/>
+  </g>
+
+  <!-- Card: APPROVED audit receipt -->
+  <g transform="translate(60,360)">
+    <rect width="540" height="220" rx="18" fill="url(#card)" stroke="#3b4d8c" stroke-width="1.5"/>
+    <!-- status pill -->
+    <rect x="24" y="24" width="116" height="32" rx="16" fill="#1fbf6f"/>
+    <text x="82" y="45" font-size="15" font-weight="700" fill="#082014" text-anchor="middle" letter-spacing="1.2">APPROVED</text>
+    <text x="514" y="44" font-size="13" fill="#7e90c8" text-anchor="end" font-family="Menlo, Consolas, monospace">03:47 · audit_a317b2c</text>
+
+    <!-- receipt rows -->
+    <g font-family="Menlo, Consolas, monospace" font-size="14">
+      <text x="24"  y="92" fill="#7e90c8">File      </text><text x="120" y="92" fill="#e8eefc">src/payment.py</text>
+      <text x="24"  y="118" fill="#7e90c8">Agent     </text><text x="120" y="118" fill="#e8eefc">Claude Code (employee #3)</text>
+      <text x="24"  y="144" fill="#7e90c8">Reason    </text><text x="120" y="144" fill="#e8eefc">"Fix rounding"</text>
+      <text x="24"  y="170" fill="#7e90c8">Problem   </text><text x="120" y="170" fill="#e8eefc">"$50,001 on $50,000 bill"</text>
+      <text x="24"  y="196" fill="#7e90c8">Approach  </text><text x="120" y="196" fill="#e8eefc">"Round before transfer"</text>
+    </g>
+  </g>
+
+  <!-- Title block (right) -->
+  <g transform="translate(640,90)">
+    <text x="0" y="0" font-size="22" fill="#7e90c8" letter-spacing="2.5">v0.7.3 · AGENT CODE AUDIT</text>
+
+    <!-- main title with gradient fill -->
+    <text x="0" y="92" font-size="76" font-weight="800" fill="url(#titleFill)" filter="url(#glow)" letter-spacing="-1">Pandaone</text>
+    <text x="0" y="172" font-size="76" font-weight="800" fill="#e8eefc" letter-spacing="-1">AI Agent</text>
+
+    <text x="0" y="222" font-size="20" fill="#c8d3f5">Pandaone is your codebase's personal manager.</text>
+  </g>
+
+  <!-- Pill badge: install command -->
+  <g transform="translate(640,360)">
+    <rect width="270" height="44" rx="22" fill="url(#pill)"/>
+    <text x="135" y="29" font-size="17" font-weight="700" fill="#231400" text-anchor="middle" font-family="Menlo, Consolas, monospace">$ pip install pandaone</text>
+  </g>
+
+  <!-- Status badges row -->
+  <g transform="translate(640,422)" font-family="-apple-system, 'Segoe UI', sans-serif">
+    <g transform="translate(0,0)">
+      <rect width="118" height="30" rx="6" fill="#0f2c1c" stroke="#1fbf6f" stroke-width="1"/>
+      <circle cx="14" cy="15" r="4" fill="#1fbf6f"/>
+      <text x="26" y="20" font-size="12" fill="#bff5d8">Tests 342 passed</text>
+    </g>
+    <g transform="translate(126,0)">
+      <rect width="106" height="30" rx="6" fill="#102235" stroke="#3a93d0" stroke-width="1"/>
+      <circle cx="14" cy="15" r="4" fill="#3a93d0"/>
+      <text x="26" y="20" font-size="12" fill="#c9e3fb">Bugs 28 fixed</text>
+    </g>
+    <g transform="translate(240,0)">
+      <rect width="86" height="30" rx="6" fill="#102235" stroke="#7afcff" stroke-width="1"/>
+      <circle cx="14" cy="15" r="4" fill="#7afcff"/>
+      <text x="26" y="20" font-size="12" fill="#cdeefc">Lint passing</text>
+    </g>
+    <g transform="translate(334,0)">
+      <rect width="80" height="30" rx="6" fill="#102235" stroke="#b388ff" stroke-width="1"/>
+      <circle cx="14" cy="15" r="4" fill="#b388ff"/>
+      <text x="26" y="20" font-size="12" fill="#e1d2ff">CI passing</text>
+    </g>
+  </g>
+
+  <!-- Footer line -->
+  <text x="60" y="600" font-size="14" fill="#7e90c8" font-family="Menlo, Consolas, monospace">github.com/hellob1889/Pandaone-AI-Agent</text>
+  <text x="1220" y="600" font-size="14" fill="#7e90c8" text-anchor="end" font-family="Menlo, Consolas, monospace">7 Defense Layers · OIDC Trusted Publish</text>
+</svg>

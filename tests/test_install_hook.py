@@ -6,18 +6,18 @@ RED 测试：install_hook.py + pre-commit hook 模板
 第一性原理：
   L3 防御 = git pre-commit hook。
   即使 L1（文件锁）和 L2（watchdog）都被绕过，
-  直接 `git commit` 也应被拒绝（除非通过 pandax write）。
+  直接 `git commit` 也应被拒绝（除非通过 pandaone write）。
 
 机制：
   - pre-commit hook 检查 staged 是否有 .py 文件
-  - 如有，验证 .pandax/pandax.jsonl 也被 staged
+  - 如有，验证 .pandaone/pandaone.jsonl 也被 staged
   - 否则拒绝 commit
 
 测试策略：
   - 调用 install_hook.py 在 tmp_path
   - 验证 .git/hooks/pre-commit 被创建 + 可执行
-  - 手动 git commit（不通过 pandax write）应失败
-  - git commit 通过 pandax write 应成功
+  - 手动 git commit（不通过 pandaone write）应失败
+  - git commit 通过 pandaone write 应成功
 """
 import os
 import shutil
@@ -29,8 +29,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
-INSTALL_HOOK = ROOT / "src" / "pandax" / "install_hook.py"
+PANDAX = ROOT / "pandaone_dev.py"
+INSTALL_HOOK = ROOT / "src" / "pandaone" / "install_hook.py"
 TEMPLATE = ROOT / "templates" / "pre-commit-hook"
 
 
@@ -81,7 +81,7 @@ def test_install_hook_creates_git_hook(tmp_path):
 
     # 在 Windows 上"可执行"通过 file content 而非 mode
     content = hook_path.read_text(encoding="utf-8")
-    assert "pandax" in content.lower() or "PandaX" in content
+    assert "pandaone" in content.lower() or "Pandaone AI Agent" in content
 
 
 def test_install_hook_normalizes_to_lf(tmp_path):
@@ -110,7 +110,7 @@ def test_install_hook_normalizes_to_lf(tmp_path):
             )
             assert b"\r" not in hook_bytes, "hook 不应含裸 \\r"
             # 内容完整性
-            assert b"PandaX" in hook_bytes
+            assert b"Pandaone" in hook_bytes
             assert b"#!/bin/sh" in hook_bytes
         finally:
             template.write_bytes(raw)  # 还原
@@ -130,12 +130,12 @@ def test_pre_commit_blocks_manual_py_change(tmp_path):
     # 安装 hook
     run([str(INSTALL_HOOK), "--root", str(project)], cwd=project)
 
-    # 直接修改 .py（绕过 pandax write）
+    # 直接修改 .py（绕过 pandaone write）
     main_py = project / "main.py"
     main_py.chmod(main_py.stat().st_mode | stat.S_IWUSR)
     main_py.write_text("y = 999\n", encoding="utf-8")
 
-    # git add 但不通过 pandax write
+    # git add 但不通过 pandaone write
     subprocess.run(["git", "add", "main.py"], cwd=project, capture_output=True, text=True)
 
     # git commit 应失败
@@ -144,13 +144,13 @@ def test_pre_commit_blocks_manual_py_change(tmp_path):
         cwd=project, capture_output=True, text=True,
     )
     assert r.returncode != 0, "未审计的 .py commit 应被拒绝"
-    # 应有 pandax 错误信息
+    # 应有 pandaone 错误信息
     combined = (r.stdout + r.stderr).lower()
-    assert "pandax" in combined or "audit" in combined
+    assert "pandaone" in combined or "audit" in combined
 
 
 def test_pre_commit_allows_audited_change(tmp_path):
-    """通过 pandax write 改 .py 应自动 commit（含审计日志）"""
+    """通过 pandaone write 改 .py 应自动 commit（含审计日志）"""
     project = setup_git(tmp_path)
 
     # 安装 hook
@@ -161,14 +161,14 @@ def test_pre_commit_allows_audited_change(tmp_path):
         ["git", "log", "--oneline"], cwd=project, capture_output=True, text=True,
     ).stdout.strip().count("\n") + 1
 
-    # 通过 pandax write 修改
+    # 通过 pandaone write 修改
     r = run([
         str(PANDAX), "write",
         "--root", str(project),
         "--file", "main.py",
         "--reason", "通过审计修改测试",
         "--problem", "测试预提交钩子是否正确放行审计通过的提交",
-        "--approach", "使用pandax write命令走完整审计流程",
+        "--approach", "使用pandaone write命令走完整审计流程",
         "--old", "x = 1",
         "--new", "x = 100",
     ], cwd=project)

@@ -1,7 +1,7 @@
 """
 02_binary_files.py
 ===================
-PandaX 二进制文件保护 demo
+Pandaone AI Agent 二进制文件保护 demo
 
 演示：init 时建立 SHA256 snapshot → write 替换 → 检测篡改
 预期：直接覆盖 .png 后 status 显示 SHA256 mismatch
@@ -36,7 +36,7 @@ def ok(msg):
 def find_src():
     here = Path(__file__).resolve().parent
     for p in [here.parent, here.parent.parent]:
-        if (p / "src" / "pandax" / "__init__.py").exists():
+        if (p / "src" / "pandaone" / "__init__.py").exists():
             return p / "src"
     return None
 
@@ -53,7 +53,7 @@ def cli(args, cwd):
     src = find_src()
     if src:
         env["PYTHONPATH"] = str(src) + os.pathsep + env.get("PYTHONPATH", "")
-    r = subprocess.run([sys.executable, "-m", "pandax", *args],
+    r = subprocess.run([sys.executable, "-m", "pandaone", *args],
                        cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
     return r.returncode, r.stdout, r.stderr
 
@@ -71,7 +71,7 @@ def git(args, cwd):
 
 def main():
     project = Path("demo_02_binary").resolve()
-    print(f"\n[Demo] PandaX 二进制文件保护 demo")
+    print(f"\n[Demo] Pandaone 二进制文件保护 demo")
     print(f"  Project: {project}\n")
 
     if project.exists():
@@ -99,12 +99,12 @@ def main():
     # ============================================================
     # init + snapshot
     # ============================================================
-    step("2/5] pandax init（建立 snapshot）")
+    step("2/5] pandaone init（建立 snapshot）")
     rc, out, _ = cli(["init", "--root", str(project)], project)
     for line in out.splitlines():
         if "[OK]" in line or "snapshot" in line:
             print(f"  {line.strip()}")
-    snap_path = project / ".pandax" / "binary_snapshots.json"
+    snap_path = project / ".pandaone" / "binary_snapshots.json"
     ok(f"已建立 snapshot（{snap_path}）")
 
     # ============================================================

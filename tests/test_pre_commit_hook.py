@@ -18,7 +18,7 @@ import pytest
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = ROOT_DIR / "src"
-HOOK_SRC = ROOT_DIR / "src" / "pandax" / "templates" / "pre-commit-hook"
+HOOK_SRC = ROOT_DIR / "src" / "pandaone" / "templates" / "pre-commit-hook"
 
 GIT_CANDIDATES = [
     r"D:\软件\Git\cmd\git.exe",
@@ -42,13 +42,13 @@ def _setup_git_project(tmp_path):
     git = _git_exe()
     env["PATH"] = str(Path(git).parent) + os.pathsep + env.get("PATH", "")
 
-    # init pandax
-    r = subprocess.run([sys.executable, "-m", "pandax", "init", "--root", str(tmp_path)],
+    # init pandaone
+    r = subprocess.run([sys.executable, "-m", "pandaone", "init", "--root", str(tmp_path)],
                        cwd=str(tmp_path), env=env, capture_output=True)
     assert r.returncode == 0
 
     # 简化 config（只保护 .py 和 .md，避免太多默认扩展）
-    cfg_path = tmp_path / ".pandax" / "config.json"
+    cfg_path = tmp_path / ".pandaone" / "config.json"
     cfg = _json.loads(cfg_path.read_text(encoding="utf-8"))
     cfg["protected_extensions"] = [".py", ".md"]
     cfg_path.write_text(_json.dumps(cfg, indent=2), encoding="utf-8")
@@ -59,7 +59,7 @@ def _setup_git_project(tmp_path):
         subprocess.run([git] + cmd, cwd=str(tmp_path), env=env, capture_output=True)
 
     # 装 hook（通过 install-hook 自动复制 check.py）
-    r = subprocess.run([sys.executable, "-m", "pandax", "install-hook", "--root", str(tmp_path)],
+    r = subprocess.run([sys.executable, "-m", "pandaone", "install-hook", "--root", str(tmp_path)],
                        cwd=str(tmp_path), env=env, capture_output=True, text=True)
     assert r.returncode == 0, f"install-hook 失败: {r.stderr}"
 
@@ -72,7 +72,7 @@ def _run_git(args, cwd, env, git):
 
 
 def _add_approved_record(audit_path: Path, file: str):
-    """模拟 pandax write 添加 APPROVED 记录"""
+    """模拟 pandaone write 添加 APPROVED 记录"""
     import json as _json
     record = {
         "id": f"audit_{file.replace('/', '_').replace('.', '_')}",
@@ -102,8 +102,8 @@ class TestPreCommitHookBypassProtection:
         assert r.returncode != 0, f"hook 未拦截: rc={r.returncode}, out={r.stdout}, err={r.stderr}"
         combined = r.stdout + r.stderr
         assert any(s in combined for s in [
-            "未审计", "PandaX", "拒绝",  # 中文
-            "reject", "no APPROVED", "PandaX",  # 英文（pre-commit-check 的 t_safe fallback 也是中文，但允许英文）
+            "未审计", "Pandaone AI Agent", "拒绝",  # 中文
+            "reject", "no APPROVED", "Pandaone",  # 英文（pre-commit-check 的 t_safe fallback 也是中文，但允许英文）
         ]), f"hook 输出应包含拒绝信息: {combined[:300]}"
 
     def test_hook_rejects_unapproved_md(self, tmp_path):
@@ -125,7 +125,7 @@ class TestPreCommitHookBypassProtection:
         py_file.write_text("UNAUTHORIZED = True\n", encoding="utf-8")
         py_file.chmod(py_file.stat().st_mode | stat.S_IWUSR)
         # 添加 APPROVED 记录（模拟 write 已完成）
-        audit_path = project / ".pandax" / "pandax.jsonl"
+        audit_path = project / ".pandaone" / "pandaone.jsonl"
         _add_approved_record(audit_path, "main.py")
         _run_git(["add", "main.py"], project, env, git)
 

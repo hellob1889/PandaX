@@ -11,7 +11,7 @@ Phase 5 — 二进制文件 SHA256 快照机制。
   - 攻击：agent 直接覆盖 .png/.exe 篡改资源/二进制
     缓解：snapshot 记录 SHA256，watchdog 检测变化即告警
   - 攻击：snapshot 文件本身被篡改
-    缓解：snapshot 在 .pandax/，被外层审计体系保护
+    缓解：snapshot 在 .pandaone/，被外层审计体系保护
 """
 import base64
 import hashlib
@@ -27,13 +27,13 @@ SRC_DIR = ROOT_DIR / "src"
 
 
 def _run_cli(*args, cwd=None, env_extra=None):
-    """运行 pandax CLI"""
+    """运行 pandaone CLI"""
     import os
     env = os.environ.copy()
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     if env_extra:
         env.update(env_extra)
-    cmd = [sys.executable, "-m", "pandax", *args]
+    cmd = [sys.executable, "-m", "pandaone", *args]
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd or ROOT_DIR, env=env)
     return r.returncode, r.stdout, r.stderr
 
@@ -72,7 +72,7 @@ class TestInitBinarySnapshots:
     """init 应为二进制文件创建 SHA256 快照"""
 
     def test_init_creates_binary_snapshots_file(self, tmp_path):
-        """init 在有二进制文件的目录应创建 .pandax/binary_snapshots.json"""
+        """init 在有二进制文件的目录应创建 .pandaone/binary_snapshots.json"""
         # 准备二进制文件
         (tmp_path / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\nFAKE")
         (tmp_path / "report.pdf").write_bytes(b"%PDF-1.4\nFAKE")
@@ -80,7 +80,7 @@ class TestInitBinarySnapshots:
         rc, out, err = _run_cli("init", "--root", str(tmp_path))
         assert rc == 0, f"init 失败: {err}"
 
-        snap_path = tmp_path / ".pandax" / "binary_snapshots.json"
+        snap_path = tmp_path / ".pandaone" / "binary_snapshots.json"
         assert snap_path.exists(), "应创建 binary_snapshots.json"
 
     def test_init_snapshot_records_correct_sha256(self, tmp_path):
@@ -92,14 +92,14 @@ class TestInitBinarySnapshots:
 
         _run_cli("init", "--root", str(tmp_path))
 
-        snap = json.loads((tmp_path / ".pandax" / "binary_snapshots.json").read_text(encoding="utf-8"))
+        snap = json.loads((tmp_path / ".pandaone" / "binary_snapshots.json").read_text(encoding="utf-8"))
         assert snap["logo.png"] == _sha256(png_data)
         assert snap["report.pdf"] == _sha256(pdf_data)
 
     def test_init_default_includes_binary_extensions(self, tmp_path):
         """config 应默认包含二进制扩展名列表"""
         _run_cli("init", "--root", str(tmp_path))
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert "binary_protected_extensions" in config
         exts = config["binary_protected_extensions"]
         # 应包含常见格式
@@ -112,10 +112,10 @@ class TestInitBinarySnapshots:
 
         _run_cli("init", "--root", str(tmp_path), "--no-binary")
 
-        snap_path = tmp_path / ".pandax" / "binary_snapshots.json"
+        snap_path = tmp_path / ".pandaone" / "binary_snapshots.json"
         assert not snap_path.exists(), "--no-binary 时不应创建 snapshot"
 
-        config = json.loads((tmp_path / ".pandax" / "config.json").read_text(encoding="utf-8"))
+        config = json.loads((tmp_path / ".pandaone" / "config.json").read_text(encoding="utf-8"))
         assert config["binary_protected_extensions"] == []
 
 
@@ -155,7 +155,7 @@ class TestWriteBinaryFile:
         assert (tmp_path / "logo.png").read_bytes() == new_data
 
         # snapshot 应更新为新 SHA256
-        snap = json.loads((tmp_path / ".pandax" / "binary_snapshots.json").read_text(encoding="utf-8"))
+        snap = json.loads((tmp_path / ".pandaone" / "binary_snapshots.json").read_text(encoding="utf-8"))
         assert snap["logo.png"] == _sha256(new_data)
 
     def test_write_binary_with_content_base64(self, tmp_path):
@@ -228,7 +228,7 @@ class TestWatchdogBinary:
 
         # 直接实例化 handler 触发 on_modified
         sys.path.insert(0, str(ROOT_DIR))
-        from pandax_guard import PandaXHandler
+        from pandaone_guard import PandaXHandler
         handler = PandaXHandler(tmp_path)
 
         class FakeEvent:
@@ -239,7 +239,7 @@ class TestWatchdogBinary:
         handler.on_modified(FakeEvent(str(png_path)))
 
         # 应有 UNAUTHORIZED 记录
-        audit_path = tmp_path / ".pandax" / "pandax.jsonl"
+        audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
         records = [
             json.loads(line) for line in
             audit_path.read_text(encoding="utf-8").splitlines() if line.strip()

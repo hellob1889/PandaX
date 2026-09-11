@@ -1,12 +1,12 @@
 # MCP Integration
 
-> **Let AI Agents (Claude / Cursor / Trae) directly call PandaX.**
+> **Let AI Agents (Claude / Cursor / Trae) directly call Pandaone AI Agent.**
 
 ## What is MCP?
 
 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is a standard protocol for AI Agents to call external tools via stdio JSON-RPC.
 
-PandaX implements as a **stdio JSON-RPC 2.0 server** — **no network exposure**, IDE-managed process lifecycle.
+Pandaone implements as a **stdio JSON-RPC 2.0 server** — **no network exposure**, IDE-managed process lifecycle.
 
 ## Client Configuration
 
@@ -18,8 +18,8 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 ```json
 {
   "mcpServers": {
-    "pandax": {
-      "command": "pandax-mcp",
+    "pandaone": {
+      "command": "pandaone-mcp",
       "env": {}
     }
   }
@@ -33,8 +33,8 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 ```json
 {
   "mcpServers": {
-    "pandax": {
-      "command": "pandax-mcp"
+    "pandaone": {
+      "command": "pandaone-mcp"
     }
   }
 }
@@ -44,17 +44,17 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 | Tool | Purpose |
 |---|---|
-| `pandax_init` | Initialize PandaX in directory |
-| `pandax_lock` | Lock all protected files |
-| `pandax_unlock` | Unlock |
-| `pandax_write` | Audit write (core) |
-| `pandax_log` | Query audit history, 13 export formats |
-| `pandax_status` | Show project status dashboard |
-| `pandax_install_hook` | Install L3 pre-commit hook |
-| `pandax_watch` | Start watchdog daemon |
-| `pandax_install_git` | Probe/install git |
-| `pandax_fingerprint_update` | Update CLI self-fingerprint |
-| `pandax_ci` | L7 CI verification |
+| `pandaone_init` | Initialize Pandaone in directory |
+| `pandaone_lock` | Lock all protected files |
+| `pandaone_unlock` | Unlock |
+| `pandaone_write` | Audit write (core) |
+| `pandaone_log` | Query audit history, 13 export formats |
+| `pandaone_status` | Show project status dashboard |
+| `pandaone_install_hook` | Install L3 pre-commit hook |
+| `pandaone_watch` | Start watchdog daemon |
+| `pandaone_install_git` | Probe/install git |
+| `pandaone_fingerprint_update` | Update CLI self-fingerprint |
+| `pandaone_ci` | L7 CI verification |
 
 ## Why stdio over HTTP?
 
@@ -66,8 +66,8 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 ## Test MCP Manually
 
 ```bash
-pandax-mcp &
-echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"test"}},"id":1}' | pandax-mcp
+pandaone-mcp &
+echo '{"jsonrpc":"2.0","method":"initialize","params":{"clientInfo":{"name":"test"}},"id":1}' | pandaone-mcp
 ```
 
 Full demo: [examples/04_mcp_client.py](../../examples/04_mcp_client.py)

@@ -1,4 +1,4 @@
-"""测试 pandax_serve.py:watchdog 监视 + SSE 事件总线 + HTTP server。
+"""测试 pandaone_serve.py:watchdog 监视 + SSE 事件总线 + HTTP server。
 
 第一性原则:
   - SSE 推送必须 <100ms(watchdog → SSE)
@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pandax.pandax_serve import (
+from pandaone.pandaone_serve import (
     AuditEventBus, AuditFileMonitor, _find_free_port, HAS_WATCHDOG,
 )
 
@@ -97,29 +97,29 @@ class TestAuditFileMonitor:
     def test_start_returns_false_when_no_audit_file(self, tmp_path):
         bus = AuditEventBus()
         monitor = AuditFileMonitor(tmp_path, bus)
-        assert monitor.start() is False  # 没 .pandax/pandax.jsonl
+        assert monitor.start() is False  # 没 .pandaone/pandaone.jsonl
 
     @pytest.mark.skipif(not HAS_WATCHDOG, reason="watchdog 未安装")
     def test_start_returns_false_when_watchdog_missing(self, tmp_path):
         # 模拟 watchdog 缺失
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "pandax.jsonl").touch()
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "pandaone.jsonl").touch()
         bus = AuditEventBus()
         monitor = AuditFileMonitor(tmp_path, bus)
-        with patch("pandax.pandax_serve.HAS_WATCHDOG", False):
+        with patch("pandaone.pandaone_serve.HAS_WATCHDOG", False):
             assert monitor.start() is False
 
     @pytest.mark.skipif(not HAS_WATCHDOG, reason="watchdog 未安装")
     def test_monitor_publishes_history_on_start(self, tmp_path):
         """启动 monitor 时,历史记录应全部 publish。"""
-        (tmp_path / ".pandax").mkdir()
+        (tmp_path / ".pandaone").mkdir()
         # 写 3 条历史
         records = [
             {"status": "APPROVED", "id": f"h{i}", "file": "main.py",
              "reason": f"hist {i}", "timestamp": "2026-09-06 10:00:00"}
             for i in range(3)
         ]
-        with open(tmp_path / ".pandax" / "pandax.jsonl", "w", encoding="utf-8") as f:
+        with open(tmp_path / ".pandaone" / "pandaone.jsonl", "w", encoding="utf-8") as f:
             for r in records:
                 f.write(json.dumps(r) + "\n")
 
@@ -144,8 +144,8 @@ class TestAuditFileMonitor:
     @pytest.mark.skipif(not HAS_WATCHDOG, reason="watchdog 未安装")
     def test_monitor_publishes_new_writes(self, tmp_path):
         """启动后追加新行,应通过 watchdog 推送到 bus。"""
-        (tmp_path / ".pandax").mkdir()
-        audit = tmp_path / ".pandax" / "pandax.jsonl"
+        (tmp_path / ".pandaone").mkdir()
+        audit = tmp_path / ".pandaone" / "pandaone.jsonl"
         audit.touch()
 
         bus = AuditEventBus()
@@ -185,17 +185,17 @@ class TestServeHTTP:
 
     def test_get_index_html(self, tmp_path):
         import urllib.request
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        (tmp_path / ".pandax" / "pandax.jsonl").touch()
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        (tmp_path / ".pandaone" / "pandaone.jsonl").touch()
 
         server, monitor = start_server(tmp_path, port=19200, open_browser=False)
         try:
             with urllib.request.urlopen("http://127.0.0.1:19200/", timeout=5) as r:
                 html = r.read().decode("utf-8")
                 assert r.status == 200
-                assert "PandaX" in html
+                assert "Pandaone AI Agent" in html
                 assert "EventSource" in html
         finally:
             monitor.stop()
@@ -204,10 +204,10 @@ class TestServeHTTP:
 
     def test_api_ping(self, tmp_path):
         import urllib.request
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        (tmp_path / ".pandax" / "pandax.jsonl").touch()
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        (tmp_path / ".pandaone" / "pandaone.jsonl").touch()
 
         server, monitor = start_server(tmp_path, port=19201, open_browser=False)
         try:
@@ -221,10 +221,10 @@ class TestServeHTTP:
 
     def test_api_stats_with_real_audit(self, tmp_path):
         import urllib.request
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        audit = tmp_path / ".pandax" / "pandax.jsonl"
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        audit = tmp_path / ".pandaone" / "pandaone.jsonl"
         # 写一些混合状态的审计
         records = [
             {"status": "APPROVED", "id": "1"},
@@ -259,10 +259,10 @@ class TestServeSSE:
 
     def test_sse_sends_connected_event(self, tmp_path):
         import urllib.request
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        (tmp_path / ".pandax" / "pandax.jsonl").touch()
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        (tmp_path / ".pandaone" / "pandaone.jsonl").touch()
 
         server, monitor = start_server(tmp_path, port=19203, open_browser=False)
 
@@ -314,10 +314,10 @@ class TestServeSSE:
     def test_sse_pushes_new_audit_realtime(self, tmp_path):
         """端到端:写新审计 → SSE 立即推送 → 客户端收到。"""
         import urllib.request
-        from pandax.pandax_serve import start_server
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
-        audit = tmp_path / ".pandax" / "pandax.jsonl"
+        from pandaone.pandaone_serve import start_server
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
+        audit = tmp_path / ".pandaone" / "pandaone.jsonl"
         audit.touch()
 
         server, monitor = start_server(tmp_path, port=19204, open_browser=False)
@@ -380,11 +380,11 @@ class TestServeSSE:
 class TestCmdServe:
     def test_cmd_serve_rejects_non_init_directory(self, tmp_path):
         """未 init 目录应被拒绝(类似 cmd_lock)。"""
-        from pandax.cli import cmd_serve
+        from pandaone.cli import cmd_serve
         import argparse
         args = argparse.Namespace(root=str(tmp_path), port=8765)
         # cmd_serve 用 from import 引用 run_blocking,patch 源模块
-        with patch("pandax.pandax_serve.run_blocking") as mock_run:
+        with patch("pandaone.pandaone_serve.run_blocking") as mock_run:
             mock_run.return_value = 0
             rc = cmd_serve(args)
         assert rc == 1  # 未 init 应返回 1
@@ -392,12 +392,12 @@ class TestCmdServe:
 
     def test_cmd_serve_runs_blocking_for_init_dir(self, tmp_path):
         """已 init 目录应调用 run_blocking。"""
-        from pandax.cli import cmd_serve
-        (tmp_path / ".pandax").mkdir()
-        (tmp_path / ".pandax" / "config.json").write_text("{}")
+        from pandaone.cli import cmd_serve
+        (tmp_path / ".pandaone").mkdir()
+        (tmp_path / ".pandaone" / "config.json").write_text("{}")
         import argparse
         args = argparse.Namespace(root=str(tmp_path), port=8765)
-        with patch("pandax.pandax_serve.run_blocking") as mock_run:
+        with patch("pandaone.pandaone_serve.run_blocking") as mock_run:
             mock_run.return_value = 0
             rc = cmd_serve(args)
         assert rc == 0
@@ -417,13 +417,13 @@ class TestIndexHtml:
     def test_index_html_contains_key_elements(self):
         from importlib import resources
         try:
-            html = resources.files("pandax").joinpath("index.html").read_text("utf-8")
+            html = resources.files("pandaone").joinpath("index.html").read_text("utf-8")
         except Exception:
             # fallback
-            html = (Path(__file__).parent.parent / "src" / "pandax" / "index.html").read_text("utf-8")
+            html = (Path(__file__).parent.parent / "src" / "pandaone" / "index.html").read_text("utf-8")
 
         # 必要元素
-        assert "PandaX" in html
+        assert "Pandaone" in html
         assert "EventSource" in html  # SSE 客户端
         assert "🐼" in html  # 熊猫品牌
         assert "APPROVED" in html

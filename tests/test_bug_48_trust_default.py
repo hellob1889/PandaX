@@ -5,7 +5,7 @@ Bug #48 修复测试：--trust-default 自动接受新指纹（pip install --upg
 
 第一性原理：
   - pip install --upgrade 会改变 cli.py 内容 → fingerprint hash 变 → 所有命令失败
-  - 普通用户不知道 `pandax --update-fingerprint 0000` 这个密码命令
+  - 普通用户不知道 `pandaone --update-fingerprint 0000` 这个密码命令
   - 解决：--trust-default 自动用新 hash 覆盖（隐式信任）
   - 位置敏感性根因：argparse parse_known_args 把 --trust-default 当子命令的未知参数
   - 修复：main() 预扫描 argv，把 --trust-default 移到子命令前
@@ -29,7 +29,7 @@ def _run(args, cwd, lang="zh-CN"):
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     env["PANDAX_LANG"] = lang
     return subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
 
@@ -39,7 +39,7 @@ class TestBug48TrustDefaultPositionIndependent:
 
     def setup_method(self):
         """每个测试前保存原 fingerprint，测试后恢复"""
-        self.fp_path = Path.home() / ".pandax_fp.txt"
+        self.fp_path = Path.home() / ".pandaone_fp.txt"
         self.original_fp = None
         if self.fp_path.exists():
             self.original_fp = self.fp_path.read_text(encoding="utf-8")

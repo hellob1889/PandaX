@@ -1,4 +1,4 @@
-# PandaX v0.7.2 — Release Notes
+# Pandaone AI Agent v0.7.2 — Release Notes
 
 **Release date**: 2026-09-10
 **Status**: Stable
@@ -9,8 +9,8 @@
 
 ## 🎯 What's New / 新版本亮点
 
-PandaX v0.7.2 是 v0.7.1 之后的 **CI 发布工程化补丁版本**。重点是修复 `publish.yml` workflow 中 Tests job 在干净 ubuntu-latest 容器里 25 秒内 exit 1 的问题，并加入 pytest log 上传以便未来失败可诊断。
-PandaX v0.7.2 is a **CI release engineering patch version** following v0.7.1. It focuses on fixing the issue where the Tests job in the `publish.yml` workflow exits with code 1 within 25 seconds on a clean ubuntu-latest container, and adds pytest log upload for future failure diagnostics.
+Pandaone v0.7.2 是 v0.7.1 之后的 **CI 发布工程化补丁版本**。重点是修复 `publish.yml` workflow 中 Tests job 在干净 ubuntu-latest 容器里 25 秒内 exit 1 的问题，并加入 pytest log 上传以便未来失败可诊断。
+Pandaone v0.7.2 is a **CI release engineering patch version** following v0.7.1. It focuses on fixing the issue where the Tests job in the `publish.yml` workflow exits with code 1 within 25 seconds on a clean ubuntu-latest container, and adds pytest log upload for future failure diagnostics.
 
 ## 🐛 Bug 修复 / Bug Fixes
 
@@ -35,28 +35,28 @@ PandaX v0.7.2 is a **CI release engineering patch version** following v0.7.1. It
   When CI tests fail: `tee /tmp/pytest.log` + `actions/upload-artifact@v4`, artifact name `pytest-log-{run_id}`
 - **continue-on-error + 显式 fail step / explicit fail step**：解耦"上传日志"与"标红"，下次 CI 失败可以直接从 artifact 下载完整 pytest 输出
   Decouples "uploading logs" from "marking red"; next time CI fails, full pytest output can be downloaded directly from the artifact
-- **本地版本号一致性保障 / local version consistency guarantee**：清掉 `src/pandax.egg-info` 和 `src/pandax_guard.egg-info` 残留（之前会污染 `importlib.metadata.version()`）
-  Clear residual `src/pandax.egg-info` and `src/pandax_guard.egg-info` (previously polluted `importlib.metadata.version()`)
+- **本地版本号一致性保障 / local version consistency guarantee**：清掉 `src/pandaone.egg-info` 和 `src/pandaone_guard.egg-info` 残留（之前会污染 `importlib.metadata.version()`）
+  Clear residual `src/pandaone.egg-info` and `src/pandaone_guard.egg-info` (previously polluted `importlib.metadata.version()`)
 
 ## 📦 安装 / Installation
 
 ### pip（推荐 / Recommended）
 
 ```bash
-pip install pandax-guard==0.7.2
+pip install pandaone-guard==0.7.2
 ```
 
 ### 升级 / Upgrade
 
 ```bash
-pip install --upgrade pandax-guard
+pip install --upgrade pandaone-guard
 ```
 
 ### 源码开发模式 / Source Dev Mode
 
 ```bash
-git clone https://github.com/hellob1889/PandaX.git
-cd PandaX
+git clone https://github.com/hellob1889/Pandaone-AI-Agent.git
+cd Pandaone
 pip install -e .[dev]
 ```
 
@@ -84,7 +84,7 @@ v0.7.2 is fully consistent with v0.7.1 in behavior (only CI is fixed). All v0.7.
 
 欢迎提交 Issue 和 PR：
 Issues and PRs are welcome:
-- 仓库 / Repository: https://github.com/hellob1889/PandaX
+- 仓库 / Repository: https://github.com/hellob1889/Pandaone-AI-Agent
 - 文档 / Documentation: [README.md](README.md)
 - 审计防御层 / Audit Defense Layers: 7 层（L1 file chmod → L7 CI）
   7 layers (L1 file chmod → L7 CI)

@@ -17,7 +17,7 @@ def _run(args, cwd, env_extra=None):
     if env_extra:
         env.update(env_extra)
     return subprocess.run(
-        [sys.executable, "-m", "pandax", *args],
+        [sys.executable, "-m", "pandaone", *args],
         cwd=cwd, capture_output=True, text=True, env=env, timeout=15,
     )
 
@@ -32,7 +32,7 @@ def test_29_init_preserves_user_custom_field():
         project = Path(tmp) / "project"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
-        config_path = project / ".pandax" / "config.json"
+        config_path = project / ".pandaone" / "config.json"
         cfg = json.loads(config_path.read_text(encoding="utf-8"))
         cfg["my_team_policy"] = "require_pair_review"
         cfg["custom_threshold"] = 42
@@ -49,7 +49,7 @@ def test_29b_init_preserves_custom_extensions():
         project = Path(tmp) / "project"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
-        config_path = project / ".pandax" / "config.json"
+        config_path = project / ".pandaone" / "config.json"
         cfg = json.loads(config_path.read_text(encoding="utf-8"))
         cfg["protected_extensions"] = [".py", ".proto", ".thrift"]
         config_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -74,8 +74,8 @@ def test_30_lock_readonly_message_includes_filename():
         # 在 Windows 上让 os.chmod 失败：把 bad.py 设成目录然后删？难模拟
         # 改测：lock 在文件系统只读时
         _run(["init", "--root", str(project)], project)
-        # 创建 .pandax 子目录里塞只读文件试试
-        (project / ".pandax" / "config.json").chmod(0o444) if hasattr(os, "chmod") else None
+        # 创建 .pandaone 子目录里塞只读文件试试
+        (project / ".pandaone" / "config.json").chmod(0o444) if hasattr(os, "chmod") else None
         r = _run(["lock", "--root", str(project)], project)
         # 不应该 silent 失败
         assert r.returncode == 0  # 大部分文件应 lock 成功
@@ -101,13 +101,13 @@ def test_31_init_ext_empty_string_should_fail():
 # ============================================================
 
 def test_32_watch_daemon_without_daemon_flag_runs_foreground():
-    """Bug #32: pandax watch 不带 --daemon 应前台运行"""
+    """Bug #32: pandaone watch 不带 --daemon 应前台运行"""
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp) / "project"
         project.mkdir()
         _run(["init", "--root", str(project)], project)
         r = subprocess.run(
-            [sys.executable, "-m", "pandax", "watch", "--root", str(project), "--help"],
+            [sys.executable, "-m", "pandaone", "watch", "--root", str(project), "--help"],
             cwd=project, capture_output=True, text=True,
             env={**os.environ, "PYTHONPATH": str(SRC_DIR), "PANDAX_LANG": "zh-CN"},
             timeout=10,
@@ -126,7 +126,7 @@ def test_33_export_html_with_unicode_filename():
         project.mkdir()
         _run(["init", "--root", str(project)], project)
         # 写一条 audit 记录
-        audit_path = project / ".pandax" / "pandax.jsonl"
+        audit_path = project / ".pandaone" / "pandaone.jsonl"
         rec = {
             "id": "audit_001", "timestamp": "2026-01-01 12:00:00",
             "status": "APPROVED", "file": "main.py", "reason": "r",
@@ -144,7 +144,7 @@ def test_33_export_html_with_unicode_filename():
 # Bug #34: status 在 daemon 还运行时调用
 # ============================================================
 
-def test_34_status_on_no_pandax_dir_cleanly_errors():
+def test_34_status_on_no_pandaone_dir_cleanly_errors():
     """Bug #34: status 在未 init 目录应清楚报错"""
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp) / "fresh"

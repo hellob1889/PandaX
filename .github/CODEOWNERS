@@ -6,13 +6,13 @@
 *                                       @hellob1889
 
 # 核心 CLI（改一行影响所有用户）
-/src/pandax/cli.py                     @hellob1889
-/src/pandax/__main__.py                @hellob1889
-/src/pandax/__init__.py                @hellob1889
+/src/pandaone/cli.py                     @hellob1889
+/src/pandaone/__main__.py                @hellob1889
+/src/pandaone/__init__.py                @hellob1889
 
 # 审计核心（改这里影响所有审计流程）
-/src/pandax/i18n.py                    @hellob1889
-/src/pandax/exporters.py               @hellob1889
+/src/pandaone/i18n.py                    @hellob1889
+/src/pandaone/exporters.py               @hellob1889
 /tests/test_*.py                       @hellob1889
 
 # CI / 工作流（影响发版流程）
@@ -27,10 +27,10 @@
 /SECURITY.md                            @hellob1889
 
 # 安全敏感
-/src/pandax/cli.py                      @hellob1889  # 包含指纹校验逻辑
-/src/pandax/lock.py                     @hellob1889
-/src/pandax/watch.py                    @hellob1889
-/src/pandax/hook.py                     @hellob1889
+/src/pandaone/cli.py                      @hellob1889  # 包含指纹校验逻辑
+/src/pandaone/lock.py                     @hellob1889
+/src/pandaone/watch.py                    @hellob1889
+/src/pandaone/hook.py                     @hellob1889
 
 # Assets（图标 / banner）
 /assets/                                @hellob1889

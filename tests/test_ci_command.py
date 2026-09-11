@@ -1,16 +1,16 @@
 """
 test_ci_command.py
 ==================
-Phase 7 — pandax ci 子命令（GitHub Actions CI 集成）。
+Phase 7 — pandaone ci 子命令（GitHub Actions CI 集成）。
 
 第一性原理：
-  CI 的目的是验证"每个变更都有审计"——不能在 PR 中绕过 pandax write。
+  CI 的目的是验证"每个变更都有审计"——不能在 PR 中绕过 pandaone write。
   ci 子命令对比 git changed files vs audit log，缺一项就 fail。
 
 工作流：
   1. git diff --name-only origin/main..HEAD → 改动文件列表
   2. 过滤出受保护扩展名（text + binary）
-  3. 对比每个文件是否在 pandax.jsonl 有 APPROVED 记录
+  3. 对比每个文件是否在 pandaone.jsonl 有 APPROVED 记录
   4. 二进制：检查 binary_snapshots.json 中 SHA256 是否与最新 write 匹配
   5. 缺记录的文件 → 输出 + rc=1（fail CI）
   6. 全有 → rc=0（pass CI）
@@ -18,7 +18,7 @@ Phase 7 — pandax ci 子命令（GitHub Actions CI 集成）。
 对抗式审查：
   - 攻击：agent 直接 git commit 绕过 write
     缓解：CI 拒绝合并，要求补 write
-  - 攻击：删 pandax.jsonl 抹除痕迹
+  - 攻击：删 pandaone.jsonl 抹除痕迹
     缓解：CI 比 git 历史里的 audit 文件
   - 攻击：PR 不基于 main 分支
     缓解：用 --base 参数显式指定基线分支
@@ -37,13 +37,13 @@ SRC_DIR = ROOT_DIR / "src"
 
 
 def _run_cli(*args, cwd=None, env_extra=None):
-    """运行 pandax CLI"""
+    """运行 pandaone CLI"""
     import os as _os
     env = _os.environ.copy()
     env["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + env.get("PYTHONPATH", "")
     if env_extra:
         env.update(env_extra)
-    cmd = [sys.executable, "-m", "pandax", *args]
+    cmd = [sys.executable, "-m", "pandaone", *args]
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd or ROOT_DIR, env=env)
     return r.returncode, r.stdout, r.stderr
 
@@ -70,7 +70,7 @@ def _git(args, cwd, env_extra=None):
 
 def setup_git_project(tmp_path: Path) -> Path:
     """建 git 项目 + init + 初始文件 + 初始 commit"""
-    # init pandax
+    # init pandaone
     rc, out, err = _run_cli("init", "--root", str(tmp_path), cwd=tmp_path)
     assert rc == 0, f"init 失败: {err}"
 
@@ -104,7 +104,7 @@ class TestCiSubcommandExists:
         assert "ci" in out.lower(), f"ci 应在 --help 中: {out}"
 
     def test_ci_subcommand_help(self, tmp_path):
-        """pandax ci --help 应输出帮助"""
+        """pandaone ci --help 应输出帮助"""
         rc, out, err = _run_cli("ci", "--help")
         # argparse 在没参数时也接受 --help
         assert "ci" in out.lower() or "audit" in out.lower() or "audit" in err.lower()
@@ -127,13 +127,13 @@ class TestCiWithApprovedChanges:
     def test_ci_approved_text_change_passes(self, tmp_path):
         """write 过的文本文件变更应 pass ci"""
         project = setup_git_project(tmp_path)
-        # 通过 pandax write 改 main.py
+        # 通过 pandaone write 改 main.py
         rc, out, err = _run_cli(
             "write", "--root", str(project),
             "--file", "main.py",
             "--reason", "测试 CI 验证功能",
             "--problem", "需要确认 write 后 ci 通过",
-            "--approach", "通过 pandax write 修改并测试 ci",
+            "--approach", "通过 pandaone write 修改并测试 ci",
             "--old", "INITIAL = 1",
             "--new", "INITIAL = 2",
         )
@@ -234,7 +234,7 @@ class TestCiWithBaseBranch:
             "--file", "main.py",
             "--reason", "在 feature 分支上做修改准备 PR",
             "--problem", "准备开 PR 时需要先做一次合规修改",
-            "--approach", "通过 pandax write 修改后 git commit",
+            "--approach", "通过 pandaone write 修改后 git commit",
             "--old", "INITIAL = 1", "--new", "INITIAL = 3",
         )
         assert rc == 0, f"write 失败: {err}"
@@ -272,10 +272,10 @@ class TestCiGithubActionsYml:
         assert "name:" in content
         assert "on:" in content or "on " in content
         assert "jobs:" in content
-        # 应安装 pandax
+        # 应安装 pandaone
         assert "pip install" in content or "pip install" in content.lower()
-        # 应调用 pandax ci
-        assert "pandax ci" in content
+        # 应调用 pandaone ci
+        assert "pandaone ci" in content
 
     def test_workflow_triggers_on_pull_request(self):
         """workflow 应在 pull_request 时触发"""

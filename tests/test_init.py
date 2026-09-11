@@ -1,15 +1,15 @@
 ﻿"""
 test_init.py
 ============
-RED 测试：pandax init 子命令
+RED 测试：pandaone init 子命令
 
 第一性原理：
-  init 必须在当前文件夹创建 .pandax/ 目录 + config.json + pandax.jsonl。
+  init 必须在当前文件夹创建 .pandaone/ 目录 + config.json + pandaone.jsonl。
   这三个文件是审计系统存在的前提。
 
 测试策略：
   - 使用 pytest tmp_path 隔离文件系统
-  - 子进程调用 `python pandax.py init --root <tmp>`
+  - 子进程调用 `python pandaone.py init --root <tmp>`
   - 检查目录与文件是否创建
 """
 import json
@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PANDAX = ROOT / "pandax_dev.py"
+PANDAX = ROOT / "pandaone_dev.py"
 
 
 def run_init(target_dir: Path):
-    """调用 pandax init --root <target_dir>"""
+    """调用 pandaone init --root <target_dir>"""
     return subprocess.run(
         [sys.executable, str(PANDAX), "init", "--root", str(target_dir)],
         cwd=str(ROOT),
@@ -34,23 +34,23 @@ def run_init(target_dir: Path):
     )
 
 
-def test_init_creates_pandax_directory(tmp_path):
-    """init 后 .pandax/ 目录必须存在"""
+def test_init_creates_pandaone_directory(tmp_path):
+    """init 后 .pandaone/ 目录必须存在"""
     result = run_init(tmp_path)
     assert result.returncode == 0, (
         f"init 失败: rc={result.returncode}\nstderr: {result.stderr}"
     )
 
-    pandax_dir = tmp_path / ".pandax"
-    assert pandax_dir.exists(), f".pandax/ 目录未创建: {pandax_dir}"
-    assert pandax_dir.is_dir(), ".pandax 必须是目录"
+    pandaone_dir = tmp_path / ".pandaone"
+    assert pandaone_dir.exists(), f".pandaone/ 目录未创建: {pandaone_dir}"
+    assert pandaone_dir.is_dir(), ".pandaone 必须是目录"
 
 
 def test_init_creates_config_json(tmp_path):
-    """init 后 .pandax/config.json 必须存在且合法"""
+    """init 后 .pandaone/config.json 必须存在且合法"""
     run_init(tmp_path)
 
-    config_path = tmp_path / ".pandax" / "config.json"
+    config_path = tmp_path / ".pandaone" / "config.json"
     assert config_path.exists(), f"config.json 未创建: {config_path}"
 
     # 必须是合法 JSON
@@ -61,11 +61,11 @@ def test_init_creates_config_json(tmp_path):
 
 
 def test_init_creates_audit_log(tmp_path):
-    """init 后 .pandax/pandax.jsonl 必须存在（空文件可）"""
+    """init 后 .pandaone/pandaone.jsonl 必须存在（空文件可）"""
     run_init(tmp_path)
 
-    audit_path = tmp_path / ".pandax" / "pandax.jsonl"
-    assert audit_path.exists(), f"pandax.jsonl 未创建: {audit_path}"
+    audit_path = tmp_path / ".pandaone" / "pandaone.jsonl"
+    assert audit_path.exists(), f"pandaone.jsonl 未创建: {audit_path}"
 
 
 def test_init_idempotent(tmp_path):
@@ -84,7 +84,7 @@ def test_init_uses_specified_root(tmp_path):
 
     run_init(custom)
 
-    assert (custom / ".pandax").exists(), "--root 路径未生效"
+    assert (custom / ".pandaone").exists(), "--root 路径未生效"
 
 
 if __name__ == "__main__":

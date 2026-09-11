@@ -1,4 +1,4 @@
-# PandaX 使用示例集 / PandaX Usage Examples
+# Pandaone AI Agent 使用示例集 / Pandaone Usage Examples
 
 > **从真实终端捕获的完整工作流**——每一行输出都是真实执行的，非伪造。
 > **Complete workflows captured from real terminals** — every line of output is real, not fabricated.
@@ -7,25 +7,25 @@
 
 ## 示例 1: 首次初始化 / Example 1: First-Time Initialization
 
-**场景**：从空白项目开始，启动 PandaX 保护。
-**Scenario**: Start a blank project and activate PandaX protection.
+**场景**：从空白项目开始，启动 Pandaone 保护。
+**Scenario**: Start a blank project and activate Pandaone protection.
 
 ```bash
 $ cd my-project
-$ pandax init --root .
+$ pandaone init --root .
 ```
 
 **输出 / Output**：
 ```
 ================================================================
-PandaX CLI — README 摘要（每次启动自动加载）
+Pandaone CLI — README 摘要（每次启动自动加载）
 ================================================================
 
 【当前阶段】
   **Phase 2：监控加固（P1）**
 
 【已完成步骤】
-  - [x] **Step 9** — pandax_guard.py（文件监控 + 令牌 + 回滚）
+  - [x] **Step 9** — pandaone_guard.py（文件监控 + 令牌 + 回滚）
   - [x] **Step 10** — install_hook.py + pre-commit hook 模板
   - [x] **Step 11** — status 命令（锁状态 + watchdog 存活 + 指纹 + 上次审计）
   - [x] **Step 12** — watch 命令（前台/后台启动 watchdog）
@@ -33,16 +33,16 @@ PandaX CLI — README 摘要（每次启动自动加载）
 
 ================================================================
   [snapshot] 已记录 0 个二进制文件的 SHA256
-[OK] 已初始化: D:\my-project\.pandax
-  config: D:\my-project\.pandax\config.json
-  audit:  D:\my-project\.pandax\pandax.jsonl
-  binary_snapshots: D:\my-project\.pandax\binary_snapshots.json
+[OK] 已初始化: D:\my-project\.pandaone
+  config: D:\my-project\.pandaone\config.json
+  audit:  D:\my-project\.pandaone\pandaone.jsonl
+  binary_snapshots: D:\my-project\.pandaone\binary_snapshots.json
 ```
 
 **自动创建 / Auto-created**：
-- `.pandax/config.json` — 17 文本 + 24 二进制扩展名配置 / 17 text + 24 binary extension configuration
-- `.pandax/pandax.jsonl` — 审计日志（JSON Lines 追加写入）/ audit log (JSON Lines append-write)
-- `.pandax/binary_snapshots.json` — 二进制文件 SHA256 字典 / binary file SHA256 dictionary
+- `.pandaone/config.json` — 17 文本 + 24 二进制扩展名配置 / 17 text + 24 binary extension configuration
+- `.pandaone/pandaone.jsonl` — 审计日志（JSON Lines 追加写入）/ audit log (JSON Lines append-write)
+- `.pandaone/binary_snapshots.json` — 二进制文件 SHA256 字典 / binary file SHA256 dictionary
 
 ---
 
@@ -52,22 +52,22 @@ PandaX CLI — README 摘要（每次启动自动加载）
 **Scenario**: View the project's current state.
 
 ```bash
-$ pandax status --root .
+$ pandaone status --root .
 ```
 
 **输出 / Output**：
 ```
 ================================================================
-PandaX 状态仪表盘 — D:\my-project
+Pandaone 状态仪表盘 — D:\my-project
 ================================================================
 
 [L1 文件锁]
   总 .py 文件: 1
   已锁定: 0  |  未锁定: 1
-  [WARN] 有 1 个 .py 未锁定，建议运行 pandax lock
+  [WARN] 有 1 个 .py 未锁定，建议运行 pandaone lock
 
 [L2 watchdog]
-  状态: 未运行（建议: pandax watch --daemon）
+  状态: 未运行（建议: pandaone watch --daemon）
 
 [L5 自指纹]
   状态: 完整 OK (6e4c6098de398a25...)
@@ -85,7 +85,7 @@ PandaX 状态仪表盘 — D:\my-project
 ```
 
 **读法 / How to Read**：
-- `[WARN]` L1 未锁定 — 还没运行 `pandax lock`
+- `[WARN]` L1 未锁定 — 还没运行 `pandaone lock`
 - `[L2]` watchdog 未运行 — 监控未启用
 - `[L5] OK` — CLI 自身未被篡改
 
@@ -97,7 +97,7 @@ PandaX 状态仪表盘 — D:\my-project
 **Scenario**: AI Agent modifies a Python file — must fill in the audit reason.
 
 ```bash
-$ pandax write \
+$ pandaone write \
     --file src/app.py \
     --reason "添加版本号返回" \
     --problem "原 hello() 返回值无版本，调用方无法识别" \
@@ -113,7 +113,7 @@ $ pandax write \
 [APPROVED] {"status":"APPROVED","commit":"3d52141","audit_id":"audit_7ace3834","file":"src/app.py"}
 ```
 
-**审计记录**（追加写入 `pandax.jsonl`）：
+**审计记录**（追加写入 `pandaone.jsonl`）：
 ```json
 {
   "id": "audit_7ace3834",
@@ -137,7 +137,7 @@ $ pandax write \
 **Scenario**: Auditor / management review.
 
 ```bash
-$ pandax log --root . --format xlsx --output audit.xlsx
+$ pandaone log --root . --format xlsx --output audit.xlsx
 ```
 
 **输出 / Output**：
@@ -161,7 +161,7 @@ $ pandax log --root . --format xlsx --output audit.xlsx
 
 ```bash
 $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; do
-    pandax log --root . --format $fmt --output audit.$fmt
+    pandaone log --root . --format $fmt --output audit.$fmt
   done
 ```
 
@@ -196,7 +196,7 @@ $ for fmt in text csv json yaml md html xlsx docx pdf sqlite rst asciidoc tsv; d
 **Scenario**: Updating a logo image — audit gateway applies to binaries too.
 
 ```bash
-$ pandax write \
+$ pandaone write \
     --file assets/logo.png \
     --reason "升级 logo 为新设计" \
     --problem "旧 logo 与新品牌色不匹配" \
@@ -223,19 +223,19 @@ $ pandax write \
 **Scenario**: Enforce audit on every Git commit.
 
 ```bash
-$ pandax install-hook --root .
+$ pandaone install-hook --root .
 ```
 
 **输出 / Output**：
 ```
 [OK] pre-commit hook 已安装: D:\my-project\.git\hooks\pre-commit
-[OK] pre-commit-check.py 已复制: D:\my-project\.pandax\pre-commit-check.py
-[INFO] 内容: PandaX L3 防御（强化版：每个 staged 文件必须有 APPROVED 记录）
+[OK] pre-commit-check.py 已复制: D:\my-project\.pandaone\pre-commit-check.py
+[INFO] 内容: Pandaone L3 防御（强化版：每个 staged 文件必须有 APPROVED 记录）
 ```
 
 **安装内容 / Installation Contents**：
 - `.git/hooks/pre-commit` — shell 启动器（Git 调用）
-- `.pandax/pre-commit-check.py` — Python 校验逻辑（精确查每文件的 APPROVED 记录）
+- `.pandaone/pre-commit-check.py` — Python 校验逻辑（精确查每文件的 APPROVED 记录）
 
 ---
 
@@ -254,14 +254,14 @@ $ git commit -m "bypass"
 **输出 / Output**：
 ```
 ================================================================
-[PandaX] 拒绝提交: 以下文件没有 APPROVED 审计记录
+[Pandaone] 拒绝提交: 以下文件没有 APPROVED 审计记录
 ================================================================
 
 被 staged 的受保护文件:
   src/app.py
 
-请使用 pandax write 命令代替直接 git commit:
-  pandax write --file <FILE> --reason "..." --problem "..." --approach "..."
+请使用 pandaone write 命令代替直接 git commit:
+  pandaone write --file <FILE> --reason "..." --problem "..." --approach "..."
 
 如果确实要绕过审计 (不推荐), 使用: git commit --no-verify
 ```
@@ -279,8 +279,8 @@ $ git commit -m "bypass"
 ```json
 {
   "mcpServers": {
-    "pandax": {
-      "command": "pandax-mcp",
+    "pandaone": {
+      "command": "pandaone-mcp",
       "env": {}
     }
   }
@@ -297,20 +297,20 @@ $ git commit -m "bypass"
     "result": {
       "protocolVersion": "2024-11-05",
       "capabilities": {"tools": {}},
-      "serverInfo": {"name": "pandax", "version": "0.6.0"}
+      "serverInfo": {"name": "pandaone", "version": "0.6.0"}
     }
   }
 
 → tools/list
 ← 11 tools: [
-    "pandax_init", "pandax_lock", "pandax_unlock",
-    "pandax_write", "pandax_log", "pandax_status",
-    "pandax_install_hook", "pandax_watch",
-    "pandax_install_git", "pandax_fingerprint_update",
-    "pandax_ci"
+    "pandaone_init", "pandaone_lock", "pandaone_unlock",
+    "pandaone_write", "pandaone_log", "pandaone_status",
+    "pandaone_install_hook", "pandaone_watch",
+    "pandaone_install_git", "pandaone_fingerprint_update",
+    "pandaone_ci"
   ]
 
-→ tools/call: pandax_status
+→ tools/call: pandaone_status
 ← (完整 status 输出)
 ```
 
@@ -327,22 +327,22 @@ $ git commit -m "bypass"
 **Scenario**: After running multiple commands, full status.
 
 ```bash
-$ pandax status --root .
+$ pandaone status --root .
 ```
 
 **输出 / Output**：
 ```
 ================================================================
-PandaX 状态仪表盘 — D:\my-project
+Pandaone 状态仪表盘 — D:\my-project
 ================================================================
 
 [L1 文件锁]
   总 .py 文件: 2
   已锁定: 0  |  未锁定: 2
-  [WARN] 有 2 个 .py 未锁定，建议运行 pandax lock
+  [WARN] 有 2 个 .py 未锁定，建议运行 pandaone lock
 
 [L2 watchdog]
-  状态: 未运行（建议: pandax watch --daemon）
+  状态: 未运行（建议: pandaone watch --daemon）
 
 [L5 自指纹]
   状态: 完整 OK (6e4c6098de398a25...)
@@ -375,28 +375,28 @@ PandaX 状态仪表盘 — D:\my-project
 $ git checkout -b feature/add-cache
 
 # 2. 修改代码（合规路径）
-$ pandax write --file src/cache.py \
+$ pandaone write --file src/cache.py \
     --reason "添加 LRU 缓存减少 DB 查询" \
     --problem "每次请求都查 DB，性能瓶颈" \
     --approach "实现 LRU 缓存 + TTL 失效" \
     --content "$(cat cache_impl.py)"
 
 # 3. 替换数据库迁移脚本（SQL 文件也受保护）
-$ pandax write --file migrations/0003_add_cache.sql \
+$ pandaone write --file migrations/0003_add_cache.sql \
     --reason "添加 cache 表结构" \
     --problem "新功能需要持久化缓存" \
     --approach "建表 + 索引" \
     --content "$(cat migration.sql)"
 
 # 4. 更新文档
-$ pandax write --file docs/cache.md \
+$ pandaone write --file docs/cache.md \
     --reason "编写缓存模块使用文档" \
     --problem "团队成员不知道新缓存 API" \
     --approach "添加使用示例和注意事项" \
     --content "$(cat docs/cache.md)"
 
 # 5. 替换 logo（如果有视觉更新）
-$ pandax write --file assets/logo.png \
+$ pandaone write --file assets/logo.png \
     --reason "更新项目 logo" \
     --problem "品牌色升级" \
     --approach "用新 logo 替换" \
@@ -411,7 +411,7 @@ $ git commit -m "feat: add LRU cache layer"
 $ git push origin feature/add-cache
 
 # 8. 在 GitHub 提 PR
-# → GitHub Actions 自动跑 pandax ci
+# → GitHub Actions 自动跑 pandaone ci
 # → 自动评论审计摘要
 # → Reviewer 看到 4 条审计记录 + 完整的 reason/problem/approach
 ```
@@ -423,7 +423,7 @@ $ git push origin feature/add-cache
 
 ```bash
 # CI 输出（GitHub Actions 日志）
-$ pandax ci --root . --base origin/main
+$ pandaone ci --root . --base origin/main
 
 ================================================================
 [FAIL] 检测到 2 个未审计的变更：
@@ -437,7 +437,7 @@ $ pandax ci --root . --base origin/main
 **修复路径 / Fix Path**：
 ```bash
 # 1. 重新走 write 流程
-$ pandax write --file src/auth.py \
+$ pandaone write --file src/auth.py \
     --reason "..." --problem "..." --approach "..." \
     --old "..." --new "..."
 
@@ -472,8 +472,8 @@ All scripts include **real output** and **expected assertions**; running them on
 Although there are no video/screenshot attachments here, all examples are **real terminal output** (captured during development testing, not fabricated). We recommend users run them themselves:
 
 ```bash
-git clone https://github.com/hellob1889/PandaX
-cd pandax/examples
+git clone https://github.com/hellob1889/Pandaone-AI-Agent
+cd pandaone/examples
 bash 01_basic_workflow.sh   # 看真实终端输出
 ```
 

@@ -4,7 +4,7 @@ conftest.py
 pytest 全局配置：自动探测 git 路径并加入 PATH。
 
 第一性原理：
-  - git 是 PandaX 的关键依赖（用于自动 commit）
+  - git 是 Pandaone AI Agent 的关键依赖（用于自动 commit）
   - 用户可能 git 装在非默认路径（如 D:\软件\Git\）
   - 测试不应假设 git 在 PATH 中
 
@@ -56,7 +56,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
-# PYTHONPATH 让 subprocess 继承（开发模式下 `python -m pandax_guard` 能找到）
+# PYTHONPATH 让 subprocess 继承（开发模式下 `python -m pandaone_guard` 能找到）
 os.environ["PYTHONPATH"] = str(SRC_DIR) + os.pathsep + os.environ.get("PYTHONPATH", "")
 
 
@@ -70,12 +70,12 @@ if _git_dir:
 def verify_git_available():
     """全局 fixture：测试开始前确认 git 可用，否则 skip"""
     if not shutil.which("git"):
-        pytest.skip("git 未安装且未在 PATH 中找到，PandaX 测试需要 git")
+        pytest.skip("git 未安装且未在 PATH 中找到，Pandaone 测试需要 git")
 
 
 @pytest.fixture(autouse=True)
 def force_zh_cn_for_tests(request):
-    """全局 fixture（function-scope）：每个测试前后强制 ~/.pandax/config.json lang=zh-CN。
+    """全局 fixture（function-scope）：每个测试前后强制 ~/.pandaone/config.json lang=zh-CN。
 
     第一性原则（对抗式审查）：
       - 测试断言中包含中文字符串（如 '已安装'、'锁定'、'未运行'）。
@@ -90,7 +90,7 @@ def force_zh_cn_for_tests(request):
 
     性能：~200 测试 × 1ms 文件 IO = 0.2s，可接受。
     """
-    cfg_path = Path.home() / ".pandax" / "config.json"
+    cfg_path = Path.home() / ".pandaone" / "config.json"
     backup_existed = cfg_path.exists()
     backup_text = None
     if backup_existed:

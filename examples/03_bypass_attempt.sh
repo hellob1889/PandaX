@@ -1,7 +1,7 @@
 #!/bin/bash
 # 03_bypass_attempt.sh
 # ============================================================
-# PandaX 7 层防御实战 demo
+# Pandaone AI Agent 7 层防御实战 demo
 # ============================================================
 # 演示：尝试用各种方法绕过审计门禁，验证拦截
 # 预期：所有攻击都被对应层拦截
@@ -14,7 +14,7 @@ PROJECT="$(pwd)/demo_03_bypass"
 GIT_EXE="$(command -v git)"
 
 echo -e "${B}============================================================${W}"
-echo -e "${B}  PandaX 7 层防御实战 demo${W}"
+echo -e "${B}  Pandaone 7 层防御实战 demo${W}"
 echo -e "${B}  模拟攻击 → 验证拦截${W}"
 echo -e "${B}============================================================${W}"
 
@@ -27,8 +27,8 @@ cd "$PROJECT"
 "$GIT_EXE" config user.email "demo@example.com"
 "$GIT_EXE" config user.name "Demo"
 echo 'INITIAL = 1' > src/main.py
-python -m pandax init --root "$PROJECT" 2>&1 | tail -2
-python -m pandax lock --root "$PROJECT" 2>&1 | tail -2
+python -m pandaone init --root "$PROJECT" 2>&1 | tail -2
+python -m pandaone lock --root "$PROJECT" 2>&1 | tail -2
 
 # ================================================================
 # 攻击 1: 直接 write 锁定文件（L1 拦截）
@@ -54,7 +54,7 @@ echo -e "  现实：依赖 L2 watchdog 兜底"
 # 攻击 3: install-hook + 直接 git commit（攻击 L3）
 # ================================================================
 echo -e "\n${Y}[攻击 3/5] 装 hook + 提交新文件（攻击 L3）${W}"
-python -m pandax install-hook --root "$PROJECT" 2>&1 | tail -2
+python -m pandaone install-hook --root "$PROJECT" 2>&1 | tail -2
 
 # 创建新文件（不在 approved set） + 直接 commit
 echo 'EVIL_NEW = True' > src/evil.py
@@ -79,8 +79,8 @@ fi
 # ================================================================
 # 攻击 5: CI 验证（最终兜底）
 # ================================================================
-echo -e "\n${Y}[攻击 5/5] pandax ci（L7 最终验证）${W}"
-if python -m pandax ci --root "$PROJECT" --base HEAD~1 2>&1; then
+echo -e "\n${Y}[攻击 5/5] pandaone ci（L7 最终验证）${W}"
+if python -m pandaone ci --root "$PROJECT" --base HEAD~1 2>&1; then
   echo -e "  ${R}❌ BUG: L7 CI 失效！${W}"
   exit 1
 else

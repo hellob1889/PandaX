@@ -49,5 +49,5 @@ jobs:
 
 # 启用方法：
 # 1. Repo → Settings → Pages → Source: GitHub Actions
-# 2. 之后每次 push 到 main 都会自动部署 docs/ 到 https://hellob1889.github.io/PandaX/
+# 2. 之后每次 push 到 main 都会自动部署 docs/ 到 https://hellob1889.github.io/Pandaone AI Agent/
 # 3. 首次部署需要创建名为 `github-pages` 的 Environment（自动）
