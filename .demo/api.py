@@ -1,1 +1,1 @@
-api.py: User dataclass + get_user_by_id + list_users filter
+api.py: add offset/limit to list_users, default 50

@@ -1,1 +1,1 @@
-utils.py: slugify via re.sub chain + safe_read_text with size cap
+utils.py: slugify preserves unicode word chars
