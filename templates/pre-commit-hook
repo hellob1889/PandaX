@@ -20,7 +20,7 @@ if [ -z "$STAGED_PY" ]; then
 fi
 
 # 检查审计日志是否也被 staged
-STAGED_AUDIT=$(git diff --cached --name-only | grep '\.pandaone/agent_audit\.jsonl$' || true)
+STAGED_AUDIT=$(git diff --cached --name-only | grep '\.pandaone/pandaone\.jsonl$' || true)
 
 if [ -z "$STAGED_AUDIT" ]; then
     echo ""

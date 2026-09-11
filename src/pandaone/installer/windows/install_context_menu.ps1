@@ -1,4 +1,4 @@
-﻿﻿﻿# ============================================================
+﻿﻿﻿﻿﻿# ============================================================
 # Pandaone AI Agent Windows 右键菜单安装脚本
 # ============================================================
 #
@@ -84,7 +84,7 @@ function Find-PandaoneExe {
         "$env:ProgramFiles\Pandaone\pandaone.exe",
         "${env:ProgramFiles(x86)}\Pandaone\pandaone.exe",
         "$env:LOCALAPPDATA\Programs\Pandaone\pandaone.exe",
-        "$env:LOCALAPPDATA\Pandax\pandaone.exe",
+        "$env:LOCALAPPDATA\Pandaone\pandaone.exe",
         "$env:USERPROFILE\.local\bin\pandaone.exe"
     )
     foreach ($c in $candidates) {
@@ -161,7 +161,7 @@ function Remove-RegTree {
 function Install-CascadeMenu {
     param(
         [string]$RootKey,      # e.g. "Directory\shell"
-        [string]$PandaxPath
+        [string]$PandaonePath
     )
 
     $baseKey = "HKCU:\Software\Classes\$RootKey\Pandaone"
@@ -169,32 +169,32 @@ function Install-CascadeMenu {
     # 主菜单（cascade = submenu）
     Set-RegValue -Path $baseKey -Name '' -Type 'String' -Value 'Pandaone'
     Set-RegValue -Path $baseKey -Name 'MUIVerb' -Type 'String' -Value 'Pandaone 审计工具 / Audit Tools'
-    Set-RegValue -Path $baseKey -Name 'Icon' -Type 'String' -Value "`"$PandaxPath`",0"
+    Set-RegValue -Path $baseKey -Name 'Icon' -Type 'String' -Value "`"$PandaonePath`",0"
     Set-RegValue -Path $baseKey -Name 'SubCommands' -Type 'String' -Value ''
 
     # 1) Init
     $initKey = "$baseKey\shell\Init"
     Set-RegValue -Path $initKey -Name '' -Type 'String' -Value '初始化 Pandaone (init)'
-    Set-RegValue -Path $initKey -Name 'Icon' -Type 'String' -Value "`"$PandaxPath`",0"
-    Set-RegValue -Path "$initKey\command" -Name '' -Type 'String' -Value "`"$PandaxPath`" --silent --trust-default init --root `"%V`""
+    Set-RegValue -Path $initKey -Name 'Icon' -Type 'String' -Value "`"$PandaonePath`",0"
+    Set-RegValue -Path "$initKey\command" -Name '' -Type 'String' -Value "`"$PandaonePath`" --silent --trust-default init --root `"%V`""
 
     # 2) Lock
     $lockKey = "$baseKey\shell\Lock"
     Set-RegValue -Path $lockKey -Name '' -Type 'String' -Value '锁定文件 (lock)'
-    Set-RegValue -Path $lockKey -Name 'Icon' -Type 'String' -Value "`"$PandaxPath`",0"
-    Set-RegValue -Path "$lockKey\command" -Name '' -Type 'String' -Value "`"$PandaxPath`" --silent --trust-default lock --root `"%V`""
+    Set-RegValue -Path $lockKey -Name 'Icon' -Type 'String' -Value "`"$PandaonePath`",0"
+    Set-RegValue -Path "$lockKey\command" -Name '' -Type 'String' -Value "`"$PandaonePath`" --silent --trust-default lock --root `"%V`""
 
     # 3) Status
     $statusKey = "$baseKey\shell\Status"
     Set-RegValue -Path $statusKey -Name '' -Type 'String' -Value '查看状态 (status)'
-    Set-RegValue -Path $statusKey -Name 'Icon' -Type 'String' -Value "`"$PandaxPath`",0"
-    Set-RegValue -Path "$statusKey\command" -Name '' -Type 'String' -Value "`"$PandaxPath`" --silent --trust-default status --root `"%V`""
+    Set-RegValue -Path $statusKey -Name 'Icon' -Type 'String' -Value "`"$PandaonePath`",0"
+    Set-RegValue -Path "$statusKey\command" -Name '' -Type 'String' -Value "`"$PandaonePath`" --silent --trust-default status --root `"%V`""
 
     # 4) Unlock
     $unlockKey = "$baseKey\shell\Unlock"
     Set-RegValue -Path $unlockKey -Name '' -Type 'String' -Value '解锁文件 (unlock)'
-    Set-RegValue -Path $unlockKey -Name 'Icon' -Type 'String' -Value "`"$PandaxPath`",0"
-    Set-RegValue -Path "$unlockKey\command" -Name '' -Type 'String' -Value "`"$PandaxPath`" --silent --trust-default unlock --root `"%V`""
+    Set-RegValue -Path $unlockKey -Name 'Icon' -Type 'String' -Value "`"$PandaonePath`",0"
+    Set-RegValue -Path "$unlockKey\command" -Name '' -Type 'String' -Value "`"$PandaonePath`" --silent --trust-default unlock --root `"%V`""
 }
 
 # ============================================================
@@ -292,13 +292,13 @@ if ($commandSuffix) {
 }
 
 Write-Host $TXT_STEP_FILES
-Install-CascadeMenu -RootKey "*\shell" -PandaxPath $pandaonePath
+Install-CascadeMenu -RootKey "*\shell" -PandaonePath $pandaonePath
 
 Write-Host $TXT_STEP_DIRS
-Install-CascadeMenu -RootKey "Directory\shell" -PandaxPath $pandaonePath
+Install-CascadeMenu -RootKey "Directory\shell" -PandaonePath $pandaonePath
 
 Write-Host $TXT_STEP_BG
-Install-CascadeMenu -RootKey "Directory\Background\shell" -PandaxPath $pandaonePath
+Install-CascadeMenu -RootKey "Directory\Background\shell" -PandaonePath $pandaonePath
 
 # 刷新资源管理器
 Write-Host ""

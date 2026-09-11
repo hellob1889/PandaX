@@ -229,8 +229,8 @@ Make `pandaone init --root <path>` create `.pandaone/` infrastructure in the spe
 - config.json 字段严格对齐设计文档（version / project_root / protected_extensions / exclude_patterns / git_enabled / watchdog_enabled / min_*_length）
   config.json fields strictly align with design doc
 
-- agent_audit.jsonl 用 `Path.touch()` 创建空文件（首次存在即可）
-  agent_audit.jsonl created empty with `Path.touch()` (just needs to exist initially)
+- pandaone.jsonl 用 `Path.touch()` 创建空文件（首次存在即可）
+  pandaone.jsonl created empty with `Path.touch()` (just needs to exist initially)
 
 - `--root` 默认 "." 即当前目录
   `--root` defaults to "." (current directory)
@@ -244,7 +244,7 @@ Make `pandaone init --root <path>` create `.pandaone/` infrastructure in the spe
 
   - 创建合法 config.json（version / project_root / protected_extensions）/ Create valid config.json
 
-  - 创建 agent_audit.jsonl / Create agent_audit.jsonl
+  - 创建 pandaone.jsonl / Create pandaone.jsonl
 
   - 幂等（二次 init 不报错）/ Idempotent (second init doesn't error)
 
@@ -533,7 +533,7 @@ CLI probes git availability; auto-downloads portable version when missing.
 
 **对抗式审查 / Adversarial Review**：
 
-- 攻击：agent 篡改 agent_audit.jsonl / Attack: agent tampers agent_audit.jsonl
+- 攻击：agent 篡改 pandaone.jsonl / Attack: agent tampers pandaone.jsonl
 
 - 缓解：将来加 git commit 到 jsonl 文件本身（git 本身不可篡改）/ Mitigation: future add git commit on jsonl file itself
 
