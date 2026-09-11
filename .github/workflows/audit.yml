@@ -85,6 +85,28 @@ jobs:
             echo "$RECENT_MSGS" | sed 's/^/  - /'
             exit 0
           fi
+          # ----- 工作流文件改动自动跳过 -----
+          # 如果本次 push 只改动了 .github/workflows/（path filter 在 PR 阶段已排除，
+          # 但 push 阶段仍会触发），则不需要 pandax ci 验证：
+          #   - workflow 文件本身就是审计机制的载体
+          #   - 其变更不影响受审计代码的合规性
+          #   - .pandax/ 在 git 里不存在（被 gitignore），CI runner 跑 pandax ci 永远 exit 1
+          # 对比"本 commit 与其第一个 parent"（即"本次 push 引入的变更"）
+          WORKFLOW_ONLY=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+            | grep -v -E '^\.github/workflows/' \
+            | grep -v -E '^\.trae-html-share-packages/' \
+            | wc -l)
+          if [ "$WORKFLOW_ONLY" = "0" ]; then
+            echo "::notice::本次 push 仅改动 .github/workflows/，跳过 pandax ci 验证"
+            git diff --name-only HEAD~1 HEAD 2>/dev/null | sed 's/^/  - /'
+            exit 0
+          fi
+          # ----- 空 diff 自动跳过 -----
+          # push to main 时若 HEAD == origin/main（merge commit 刚 squash），diff 为空
+          if [ -z "$(git diff --name-only HEAD~1 HEAD 2>/dev/null)" ]; then
+            echo "::notice::HEAD~1..HEAD diff 为空，跳过 pandax ci 验证"
+            exit 0
+          fi
           # ----- 正常审计流程 -----
           BASE="origin/main"
           if ! git rev-parse --verify "$BASE" >/dev/null 2>&1; then
