@@ -1,0 +1,180 @@
+name: Setup Repo (one-shot)
+
+# 设计：push 这个文件本身 → 自动跑一次 → 启用 Pages / Discussions / 重写 v0.7.3 release notes
+# 跑完后无副作用，可安全保留在 main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/setup-repo.yml'
+      - 'assets/social-preview.png'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  discussions: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  setup:
+    name: Enable Pages + Discussions + Rewrite v0.7.3 Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable GitHub Pages (POST /pages)
+        id: pages
+        run: |
+          echo "==> Enable Pages (POST /repos/${{ github.repository }}/pages)"
+          HTTP_CODE=$(curl -s -o /tmp/pages_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/pages" \
+            -d '{"source":{"branch":"main","path":"/docs"}}')
+          echo "HTTP status: $HTTP_CODE"
+          cat /tmp/pages_resp.json
+          echo ""
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "409" ]; then
+            echo "::notice::Pages enabled (or already enabled)"
+          else
+            echo "::warning::Pages POST returned $HTTP_CODE - may need UI enable first"
+          fi
+
+      - name: Enable Discussions (PATCH repo features)
+        id: discussions
+        run: |
+          echo "==> Enable Discussions (PATCH /repos/${{ github.repository }})"
+          HTTP_CODE=$(curl -s -o /tmp/feat_resp.json -w "%{http_code}" \
+            -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}" \
+            -d '{"has_discussions":true}')
+          echo "HTTP status: $HTTP_CODE"
+          cat /tmp/feat_resp.json
+          echo ""
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "::notice::Discussions enabled"
+          else
+            echo "::warning::Discussions PATCH returned $HTTP_CODE"
+          fi
+
+      - name: Find v0.7.3 release ID
+        id: find_release
+        run: |
+          echo "==> Find v0.7.3 release (GET /repos/${{ github.repository }}/releases/tags/v0.7.3)"
+          HTTP_CODE=$(curl -s -o /tmp/rel_resp.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v0.7.3")
+          echo "HTTP status: $HTTP_CODE"
+          cat /tmp/rel_resp.json | head -c 500
+          echo ""
+          if [ "$HTTP_CODE" = "200" ]; then
+            REL_ID=$(cat /tmp/rel_resp.json | python -c "import sys,json; print(json.load(sys.stdin)['id'])")
+            echo "release_id=$REL_ID" >> $GITHUB_OUTPUT
+            echo "::notice::Found v0.7.3 release (id=$REL_ID)"
+          else
+            echo "::error::v0.7.3 release not found (HTTP $HTTP_CODE)"
+            exit 0  # don't fail the whole workflow
+          fi
+
+      - name: Rewrite v0.7.3 release body
+        if: steps.find_release.outputs.release_id
+        env:
+          RELEASE_ID: ${{ steps.find_release.outputs.release_id }}
+        run: |
+          echo "==> Rewrite v0.7.3 release body (PATCH /releases/$RELEASE_ID)"
+          cat > /tmp/release_body.md <<'EOF'
+          ## What's New in v0.7.3
+
+          ### 🔍 Agent Identity · agent 身份追踪
+          每次 `pandax write` 现在记录调用方身份：
+
+          ```bash
+          pandax write --agent claude-code ...   # Claude Code
+          pandax write --agent cursor ...         # Cursor
+          pandax write --agent trae ...           # Trae
+          pandax write --agent user:alice ...     # Human user
+          ```
+
+          配合 `pandax log --agent=claude-code` 按 agent 过滤审计历史，`pandax status` 新增按 agent 分组的写入统计 top 5。
+
+          ### 📜 Diff Capture + Panel UI · 彩色面板
+          `pandax log --verbose` 在终端显示 ANSI 彩色面板（含完整 diff）：
+
+          ```
+          ┌──────────────────────────────────────────────────────────┐
+          │ ✓ APPROVED · audit_a3f7b2c · 03:47 · by claude-code     │
+          ├──────────────────────────────────────────────────────────┤
+          │ 文件:    src/payment.py                                 │
+          │ commit:  a3f7b2c                                        │
+          │ 行数:   +1 / -1                                         │
+          │ 原因:    Fix rounding                                   │
+          │ 问题:    $50,001 on $50k bill                           │
+          │ 方法:    Round before transfer                          │
+          ├──────────────────────────────────────────────────────────┤
+          │ 差异                                                      │
+          │ -    x = round(value)                                   │
+          │ +    x = round(value, 2)                                │
+          └──────────────────────────────────────────────────────────┘
+          ```
+
+          HTML 导出同步升级为卡片式布局 + 可折叠 diff 详情。
+
+          ### 📊 统计
+          - 测试：342 passed, 1 skipped（+2 个 v0.7.3 专项测试）
+          - i18n：新增 16 个双语 key
+          - 兼容 `NO_COLOR` 环境变量
+          - PyPI：[pandax-guard 0.7.3](https://pypi.org/project/pandax-guard/0.7.3/)
+          - Trusted Publishing：tag push → GitHub Actions → OIDC → PyPI 自动
+
+          ---
+
+          **Full Changelog**: https://github.com/hellob1889/PandaX/compare/v0.7.2...v0.7.3
+          EOF
+          # 将 heredoc 内容存到一个变量（去前导缩进）
+          python3 -c "
+          import re
+          body = open('/tmp/release_body.md').read()
+          # 去除每行前 10 个空格（heredoc '    ' 前缀）
+          body = re.sub(r'^          ', '', body, flags=re.MULTILINE)
+          open('/tmp/release_body_clean.md', 'w').write(body)
+          print(body[:200])
+          "
+          BODY=$(python3 -c "import json; print(json.dumps(open('/tmp/release_body_clean.md').read()))")
+          HTTP_CODE=$(curl -s -o /tmp/rel_patch_resp.json -w "%{http_code}" \
+            -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID" \
+            -d "{\"body\":${BODY}}")
+          echo "HTTP status: $HTTP_CODE"
+          cat /tmp/rel_patch_resp.json | head -c 300
+          echo ""
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "::notice::Release body updated"
+          else
+            echo "::warning::Release PATCH returned $HTTP_CODE"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## ✅ Setup completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Pages enabled: see step 'Enable GitHub Pages'" >> $GITHUB_STEP_SUMMARY
+          echo "- Discussions enabled: see step 'Enable Discussions'" >> $GITHUB_STEP_SUMMARY
+          echo "- v0.7.3 release body rewritten: see step 'Rewrite v0.7.3 release body'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ⚠️ Still need manual UI action" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Social preview image**: Settings → General → Social preview → Upload \`assets/social-preview.png\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Branch protection**: Settings → Branches → Add rule on \`main\` (GITHUB_TOKEN doesn't have admin scope)" >> $GITHUB_STEP_SUMMARY
