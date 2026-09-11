@@ -47,9 +47,15 @@ pip install pandax-guard
 
 Your personal manager is on duty 24/7 — **before, during, and after every code change**. Every AI agent — Claude, Cursor, Trae — operates under one auditable protocol. **No exceptions. No bypass.**
 
+<p align="center">
+  <img src="assets/quick-demo.svg" alt="PandaX Quick Demo — 3-Step Workflow" width="1200"/>
+</p>
+
 > **AI Agent 代码审计门禁** — 让每一次代码改动都留下合规、可追溯的证据链。
 
 [![PyPI version](https://img.shields.io/pypi/v/pandax-guard?color=blue)](https://pypi.org/project/pandax-guard/)
+[![Downloads](https://pepy.tech/badge/pandax-guard)](https://pepy.tech/project/pandax-guard)
+[![Downloads/month](https://pepy.tech/badge/pandax-guard/month)](https://pepy.tech/project/pandax-guard)
 [![Python](https://img.shields.io/pypi/pyversions/pandax-guard)](https://pypi.org/project/pandax-guard/)
 [![License](https://img.shields.io/pypi/l/pandax-guard)](https://github.com/hellob1889/PandaX/blob/main/LICENSE)
 [![Tests](https://img.shields.io/badge/tests-340%20passed-brightgreen)](https://github.com/hellob1889/PandaX/actions/workflows/audit.yml)
