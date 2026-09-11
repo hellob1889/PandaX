@@ -224,6 +224,25 @@ TRANSLATIONS = {
         "log_unauth_detection": "  检测: {detection}",
         "log_unauth_action": "  操作: {action}",
 
+        # ============ v0.7.3: 面板 UI ============
+        "panel_file": "文件",
+        "panel_commit": "commit",
+        "panel_lines": "行数",
+        "panel_reason": "原因",
+        "panel_problem": "问题",
+        "panel_approach": "方法",
+        "panel_attempted": "尝试",
+        "panel_detection": "检测",
+        "panel_action": "操作",
+        "panel_diff": "差异",
+        "panel_force_write": "⚠ 强制写入已启用（绕过审计门禁）",
+        "panel_verbose_hint": "（使用 --verbose 查看完整 diff）",
+        "panel_agent_by": "by",
+        "panel_no_commit": "(无 commit)",
+        # ============ status (v0.7.3 agent stats) ============
+        "status_by_agent": "🤖 按 agent 统计活动 / Activity by Agent",
+        "status_writes": "次写入 / writes",
+
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] 脚本不存在: {path}",
         "err_unsupported_platform": "[ERROR] 不支持的平台: {platform}",
@@ -530,6 +549,25 @@ TRANSLATIONS = {
         "log_attempted": "  Attempted: reason={reason}, problem={problem}, approach={approach}",
         "log_unauth_detection": "  Detection: {detection}",
         "log_unauth_action": "  Action: {action}",
+
+        # ============ v0.7.3: panel UI ============
+        "panel_file": "File",
+        "panel_commit": "commit",
+        "panel_lines": "Lines",
+        "panel_reason": "Reason",
+        "panel_problem": "Problem",
+        "panel_approach": "Approach",
+        "panel_attempted": "Attempted",
+        "panel_detection": "Detection",
+        "panel_action": "Action",
+        "panel_diff": "Diff",
+        "panel_force_write": "⚠ Force write enabled (audit gateway bypassed)",
+        "panel_verbose_hint": "(use --verbose for full diff)",
+        "panel_agent_by": "by",
+        "panel_no_commit": "(no commit)",
+        # ============ status (v0.7.3 agent stats) ============
+        "status_by_agent": "🤖 Activity by Agent",
+        "status_writes": "writes",
 
         # ============ install-context / uninstall-context ============
         "err_script_not_found": "[ERROR] Script not found: {path}",

@@ -78,20 +78,22 @@ class TestLogLabelsI18n:
         assert "id=audit_test_001" not in r.stdout, (
             f"Bug #14 回归：log 含硬编码 'id=' 英文标签: {r.stdout}"
         )
-        # 应有 ID= 标签（无论中英都用 ID，因为是数据键）
-        assert "ID=" in r.stdout or "ID＝" in r.stdout
-        # 中文模式下文件标签应是"文件"
-        assert "文件=" in r.stdout, (
-            f"Bug #14 回归：log 缺中文'文件='标签: {r.stdout}"
+        # v0.7.3: 面板格式直接显示 ID，不再用 "ID=" 前缀
+        assert "audit_test_001" in r.stdout
+        # 中文模式下文件标签应是 "文件" (v0.7.3 面板格式)
+        assert "文件:" in r.stdout, (
+            f"v0.7.3 回归：log 缺中文'文件:'标签: {r.stdout}"
         )
 
     def test_log_en_uses_english_labels(self, tmp_path):
-        """en 模式：log 应输出英文 ID=/File="""
+        """en 模式：log 应输出英文 File= 等面板标签"""
         project = _setup_with_audit(tmp_path)
         r = _run(["log", "--lang", "en"], project)
         assert r.returncode == 0
-        assert "ID=audit_test_001" in r.stdout
-        assert "File=main.py" in r.stdout
+        # v0.7.3: 面板格式用 File: / ID 直接出现，不再带 ID= 前缀
+        assert "audit_test_001" in r.stdout
+        assert "File:" in r.stdout
+        assert "main.py" in r.stdout
 
     def test_log_zh_cn_uses_chinese_reason_label(self, tmp_path):
         """zh-CN 模式：log 应输出中文'原因:'标签"""

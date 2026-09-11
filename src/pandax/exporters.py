@@ -22,6 +22,7 @@ exporters.py — 多格式审计记录导出
   export_records(records, fmt="xlsx", path=Path("report.xlsx"))
 """
 import csv
+import html  # v0.7.3: for safe HTML escaping in card layout
 import json
 from datetime import datetime
 from pathlib import Path
@@ -118,7 +119,8 @@ def export_markdown(records: list[dict], path: Path):
 # ============================================================
 
 def export_html(records: list[dict], path: Path):
-    rows = []
+    # v0.7.3: 每条记录用卡片式布局，diff 字段可折叠展开
+    cards = []
     for r in records:
         status = r.get("status", "?")
         color = {
@@ -126,36 +128,63 @@ def export_html(records: list[dict], path: Path):
             "REJECTED": "#f85149",
             "UNAUTHORIZED": "#d29922",
         }.get(status, "#8b949e")
-        row = _row_to_dict(r)
-        reason = row["reason"] or row["rejection_reason"] or row["detection"]
-        rows.append(
-            f"<tr>"
-            f"<td>{row['timestamp']}</td>"
-            f"<td><span style='color:{color};font-weight:bold'>{status}</span></td>"
-            f"<td>{row['id']}</td>"
-            f"<td>{row['file']}</td>"
-            f"<td>{reason}</td>"
-            f"</tr>"
+        agent = r.get("agent", "user:anonymous")
+        # diff 块（仅 APPROVED 且有 old/new）
+        diff_block = ""
+        if status == "APPROVED" and (r.get("old_content") or r.get("new_content")):
+            old_lines = (r.get("old_content") or "").splitlines()
+            new_lines = (r.get("new_content") or "").splitlines()
+            old_html = "".join(
+                f"<div style='color:#f85149;background:#3d1f1f;padding:2px 6px;font-family:monospace;'>- {html.escape(line)}</div>"
+                for line in old_lines
+            )
+            new_html = "".join(
+                f"<div style='color:#3fb950;background:#1f3d2b;padding:2px 6px;font-family:monospace;'>+ {html.escape(line)}</div>"
+                for line in new_lines
+            )
+            diff_block = (
+                f"<details style='margin-top:8px;'><summary style='cursor:pointer;color:#58a6ff;'>"
+                f"{t('panel_diff')} (v0.7.3)</summary>"
+                f"<div style='margin-top:6px;background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:6px;'>"
+                f"{old_html}{new_html}"
+                f"</div></details>"
+            )
+        # 卡片
+        reason = r.get("reason") or r.get("rejection_reason") or r.get("detection") or ""
+        problem = r.get("problem") or ""
+        approach = r.get("approach") or ""
+        commit = r.get("commit_hash", "")[:12]
+        cards.append(
+            f"<div style='background:#161b22;border:1px solid #30363d;border-radius:6px;"
+            f"padding:12px;margin-bottom:12px;'>"
+            f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+            f"<div><span style='color:{color};font-weight:bold;font-size:14px;'>{status}</span> "
+            f"<span style='color:#8b949e;'>{r.get('id', '')}</span> "
+            f"<span style='color:#8b949e;font-size:12px;'>{r.get('timestamp', '')}</span></div>"
+            f"<div style='color:#58a6ff;font-size:12px;'>🤖 {html.escape(agent)}</div>"
+            f"</div>"
+            f"<div style='margin-top:8px;font-size:13px;'>"
+            f"<div><strong>{t('panel_file')}:</strong> <code>{html.escape(r.get('file', ''))}</code> "
+            f"<strong>{t('panel_commit')}:</strong> <code>{commit or '—'}</code></div>"
+            f"<div style='margin-top:4px;'><strong>{t('panel_reason')}:</strong> {html.escape(reason)}</div>"
+            + (f"<div><strong>{t('panel_problem')}:</strong> {html.escape(problem)}</div>" if problem else "")
+            + (f"<div><strong>{t('panel_approach')}:</strong> {html.escape(approach)}</div>" if approach else "")
+            + diff_block
+            + f"</div></div>"
         )
 
-    html = f"""<!DOCTYPE html>
+    body = f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>{t("export_title")}</title>
 <style>
 body {{ font-family: -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }}
 h1 {{ color: #f0f6fc; }}
-table {{ width: 100%; border-collapse: collapse; }}
-th, td {{ padding: 8px 12px; border: 1px solid #30363d; text-align: left; }}
-th {{ background: #1c2128; color: #f0f6fc; }}
 </style></head>
 <body>
 <h1>{t("export_title")}</h1>
 <p>{t("export_exported_at", ts=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))} | {t("export_summary", n=len(records))}</p>
-<table>
-<thead><tr><th>{t("export_col_time")}</th><th>{t("export_col_status")}</th><th>{t("export_col_id")}</th><th>{t("export_col_file")}</th><th>{t("export_col_reason")}</th></tr></thead>
-<tbody>{''.join(rows)}</tbody>
-</table>
+{''.join(cards)}
 </body></html>"""
-    path.write_text(html, encoding="utf-8")
+    path.write_text(body, encoding="utf-8")
 
 
 # ============================================================

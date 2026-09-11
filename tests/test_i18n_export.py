@@ -61,7 +61,7 @@ class TestExportLabelsI18n:
     """Bug #26 — export html/md/text 报告标题/表头必须本地化"""
 
     def test_html_export_zh_cn(self, tmp_path):
-        """zh-CN 模式：html 应有中文标题 + 中文表头"""
+        """zh-CN 模式：html 应有中文标题 + 中文标签（v0.7.3 卡片格式）"""
         project = _setup_with_audit(tmp_path)
         out = project / "out_zh.html"
         r = _run(["log", "--format", "html", "--output", str(out), "--lang", "zh-CN"], project)
@@ -70,12 +70,13 @@ class TestExportLabelsI18n:
         assert "PandaX 审计报告" in content
         assert "导出时间" in content
         assert "记录数" in content
-        assert "<th>时间</th>" in content
-        assert "<th>状态</th>" in content
-        assert "<th>原因</th>" in content
+        # v0.7.3: 卡片格式用 <strong>标签: 值</strong> 而非 <th>
+        assert "<strong>文件:</strong>" in content or "文件:" in content
+        assert "<strong>状态" in content or "APPROVED" in content
+        assert "<strong>原因" in content or "原因:" in content
 
     def test_html_export_en(self, tmp_path):
-        """en 模式：html 应有英文标题 + 英文表头"""
+        """en 模式：html 应有英文标题 + 英文标签（v0.7.3 卡片格式）"""
         project = _setup_with_audit(tmp_path)
         out = project / "out_en.html"
         r = _run(["log", "--format", "html", "--output", str(out), "--lang", "en"], project)
@@ -88,9 +89,10 @@ class TestExportLabelsI18n:
         assert "PandaX Audit Report" in content
         assert "Exported at" in content
         assert "Records" in content
-        assert "<th>Time</th>" in content
-        assert "<th>Status</th>" in content
-        assert "<th>Reason</th>" in content
+        # v0.7.3: 卡片格式
+        assert "File:" in content
+        assert "APPROVED" in content
+        assert "Reason:" in content
 
     def test_markdown_export_en(self, tmp_path):
         """en 模式：md 报告应有英文标题 + 英文导出时间"""

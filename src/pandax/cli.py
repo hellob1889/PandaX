@@ -240,6 +240,9 @@ def build_parser():
     log_p.add_argument("--output", "-o", default="", help="导出文件路径（与 --format 一起使用）")
     log_p.add_argument("--from", dest="from_date", default="", help="起始日期 YYYY-MM-DD")
     log_p.add_argument("--to", dest="to_date", default="", help="截止日期 YYYY-MM-DD")
+    # v0.7.3: agent 过滤 + verbose diff
+    log_p.add_argument("--agent", default="", help="按 agent 过滤（claude-code / cursor / trae 等）")
+    log_p.add_argument("--verbose", "-V", action="store_true", help="显示完整 diff 内容（默认仅首行）")
     # Bug #25 fix: 独立 export 子命令（语义清晰，不再借用 log）
     export_p = sub.add_parser(
         "export",
@@ -296,6 +299,12 @@ def build_parser():
             "允许覆盖 L1 锁定的文件（默认拒绝 ReadOnly 文件以确保审计门禁，"
             "加此标志走完整 unlock-write-lock 流程并审计记录 force_write=true）"
         ),
+    )
+    # v0.7.3: 记录调用 agent 身份
+    write_p.add_argument(
+        "--agent",
+        default="user:anonymous",
+        help="调用方身份（claude-code/cursor/trae/user:name 等，默认 user:anonymous）",
     )
 
     # Phase 9: OS 右键菜单集成
@@ -647,6 +656,41 @@ def _info_length(s: str) -> int:
     return n
 
 
+def _count_diff_lines(args, target: Path, removed: bool = False) -> int:
+    """v0.7.3: 计算 diff 行数"""
+    try:
+        if args.old and args.new:
+            if removed:
+                return max(1, args.old.count("\n") + 1)
+            else:
+                return max(1, args.new.count("\n") + 1)
+        elif args.content:
+            new_lines = max(1, args.content.count("\n") + 1)
+            if removed:
+                try:
+                    old_text = target.read_text(encoding="utf-8")
+                    return max(1, old_text.count("\n") + 1)
+                except Exception:
+                    return 0
+            return new_lines
+    except Exception:
+        return 0
+    return 0
+
+
+def _colorize(text: str, color: str) -> str:
+    """v0.7.3: ANSI 颜色"""
+    if os.environ.get("NO_COLOR"):
+        return text
+    codes = {
+        "red": "\033[31m", "green": "\033[32m", "yellow": "\033[33m",
+        "blue": "\033[34m", "magenta": "\033[35m", "cyan": "\033[36m",
+        "white": "\033[37m", "gray": "\033[90m", "bold": "\033[1m",
+        "reset": "\033[0m",
+    }
+    return f"{codes.get(color, '')}{text}{codes['reset']}"
+
+
 def _effective_suffix(path: Path) -> str:
     """
     Phase 4.6+: 返回文件的有效后缀（正确处理隐藏文件如 .env, .gitignore, .env.local）。
@@ -940,6 +984,7 @@ def cmd_write(args):
             "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "REJECTED",
             "file": target_rel,
+            "agent": getattr(args, "agent", "user:anonymous"),
             "rejection_reason": reject_reason,
             "attempted_reason": args.reason,
             "attempted_problem": args.problem,
@@ -1036,6 +1081,7 @@ def cmd_write(args):
             "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "status": "REJECTED",
             "file": target_rel,
+            "agent": getattr(args, "agent", "user:anonymous"),
             "rejection_reason": reason,
             "attempted_reason": args.reason,
             "attempted_problem": args.problem,
@@ -1053,17 +1099,37 @@ def cmd_write(args):
 
     # === [7] 写审计记录 ===
     audit_id = f"audit_{uuid.uuid4().hex[:8]}"
+    DIFF_MAX = 500
+    old_content_diff = ""
+    new_content_diff = ""
+    if not is_binary:
+        try:
+            full_new = target.read_text(encoding="utf-8")
+            if args.old:
+                full_old_reconstructed = full_new.replace(args.new, args.old, 1) if args.new in full_new else full_new
+            else:
+                full_old_reconstructed = ""
+            old_content_diff = full_old_reconstructed if len(full_old_reconstructed) <= DIFF_MAX else full_old_reconstructed[:DIFF_MAX] + "\n... (truncated)"
+            new_content_diff = full_new if len(full_new) <= DIFF_MAX else full_new[:DIFF_MAX] + "\n... (truncated)"
+        except Exception:
+            old_content_diff = ""
+            new_content_diff = ""
     record = {
         "id": audit_id,
         "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "status": "APPROVED",
         "file": target_rel,
+        "agent": getattr(args, "agent", "user:anonymous"),
         "reason": reason,
         "problem": problem,
         "approach": approach,
-        "commit_hash": "",  # 稍后填充
+        "commit_hash": "",
         "force_write": bool(getattr(args, "force_write", False)),
         "files_changed": [target_rel],
+        "old_content": old_content_diff,
+        "new_content": new_content_diff,
+        "lines_added": 0 if is_binary else _count_diff_lines(args, target, removed=False),
+        "lines_removed": 0 if is_binary else _count_diff_lines(args, target, removed=True),
     }
     with audit_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -1163,6 +1229,11 @@ def _query_records(args) -> tuple[list[dict], Path | None]:
     if getattr(args, "recent", 0) and getattr(args, "recent", 0) > 0:
         filtered = filtered[-args.recent:]
 
+    # v0.7.3: agent 过滤
+    if getattr(args, "agent", ""):
+        target_agent = args.agent
+        filtered = [r for r in filtered if r.get("agent") == target_agent]
+
     return filtered, root
 
 
@@ -1203,7 +1274,9 @@ def cmd_log(args):
         print(t("log_export_ok_format", n=len(filtered), fmt=args.format, path=out_path))
         return 0
 
+    _print_log._verbose = getattr(args, "verbose", False)
     _print_log(filtered)
+    _print_log._verbose = False
     return 0
 
 
@@ -1235,7 +1308,8 @@ def cmd_export(args):
 
 
 def _print_log(records: list[dict]):
-    """格式化输出审计记录"""
+    """格式化输出审计记录（v0.7.3 面板格式：who/what/when/diff）"""
+    verbose = getattr(_print_log, "_verbose", False)
     if not records:
         print(t("log_no_records"))
         return
@@ -1248,33 +1322,74 @@ def _print_log(records: list[dict]):
         status = rec.get("status", "?")
         rid = rec.get("id", "?")
         file_ = rec.get("file", "?")
-        # Bug #14 fix: id=/file= 标签本地化（之前硬编码英文）
-        print("\n" + t(
-            "log_record_header",
-            ts=ts,
-            status=status,
-            id_label=t("log_field_id"),
-            rid=rid,
-            file_label=t("log_field_file"),
-            file_=file_,
-        ))
+        agent = rec.get("agent", "user:anonymous")
         if status == "APPROVED":
-            print(f"  {t('log_field_reason')}:   {rec.get('reason', '')}")
-            print(f"  {t('log_field_problem')}:  {rec.get('problem', '')}")
-            print(f"  {t('log_field_approach')}: {rec.get('approach', '')}")
-            print(f"  {t('log_field_commit')}:   {rec.get('commit_hash', t('_log_no_commit'))}")
+            status_icon = _colorize("✓ APPROVED", "green")
         elif status == "REJECTED":
-            print(f"  {t('log_field_reason')}:   {rec.get('rejection_reason', '')}")
+            status_icon = _colorize("✗ REJECTED", "red")
+        elif status == "UNAUTHORIZED":
+            status_icon = _colorize("⚠ UNAUTHORIZED", "yellow")
+        else:
+            status_icon = status
+        header_line = f"{status_icon} · {rid} · {ts} · by {_colorize(agent, 'cyan')}"
+        print("\n┌" + "─" * 78 + "┐")
+        print(f"│ {header_line}")
+        print("├" + "─" * 78 + "┤")
+        commit = rec.get("commit_hash") or t("panel_no_commit")
+        print(f"│ {t('panel_file')}:    {file_}")
+        if commit != t("panel_no_commit"):
+            print(f"│ {t('panel_commit')}:  {commit[:12]}{'…' if len(commit) > 12 else ''}")
+        else:
+            print(f"│ {t('panel_commit')}:  {commit}")
+        if status == "APPROVED":
+            added = rec.get("lines_added", 0)
+            removed = rec.get("lines_removed", 0)
+            if added or removed:
+                print(f"│ {t('panel_lines')}:   {_colorize(f'+{added}', 'green')} / {_colorize(f'-{removed}', 'red')}")
+        if status == "APPROVED":
+            print(f"│ {t('panel_reason')}:    {rec.get('reason', '')}")
+            print(f"│ {t('panel_problem')}:   {rec.get('problem', '')}")
+            print(f"│ {t('panel_approach')}:  {rec.get('approach', '')}")
+            if rec.get("force_write"):
+                print(f"│ {t('panel_force_write')}")
+        elif status == "REJECTED":
+            print(f"│ {t('panel_reason')}:    {rec.get('rejection_reason', '')}")
             ar = rec.get('attempted_reason', '')
             ap = rec.get('attempted_problem', '')
             aa = rec.get('attempted_approach', '')
             if ar or ap or aa:
-                # Bug #6 fix: 替换 hardcoded "attempted: reason=..." 英文标签
-                print(t("log_attempted", reason=ar, problem=ap, approach=aa))
+                print(f"│ {t('panel_attempted')}:")
+                if ar:
+                    print(f"│   {t('panel_reason')}:    {ar}")
+                if ap:
+                    print(f"│   {t('panel_problem')}:   {ap}")
+                if aa:
+                    print(f"│   {t('panel_approach')}:  {aa}")
         elif status == "UNAUTHORIZED":
-            # Bug #6 fix: 替换 hardcoded "detection:" / "action:" 英文标签
-            print(t("log_unauth_detection", detection=rec.get('detection', '')))
-            print(t("log_unauth_action", action=rec.get('action', '')))
+            print(f"│ {t('panel_detection')}: {rec.get('detection', '')}")
+            print(f"│ {t('panel_action')}:    {rec.get('action', '')}")
+        old_c = rec.get("old_content", "")
+        new_c = rec.get("new_content", "")
+        if (old_c or new_c) and status == "APPROVED":
+            print("├" + "─" * 78 + "┤")
+            print(f"│ {_colorize(t('panel_diff'), 'bold')}")
+            if verbose:
+                if old_c:
+                    for line in old_c.splitlines():
+                        print(f"│ {_colorize('-', 'red')}    {line}")
+                if new_c:
+                    for line in new_c.splitlines():
+                        print(f"│ {_colorize('+', 'green')}    {line}")
+            else:
+                old_first = old_c.split("\n")[0] if old_c else ""
+                new_first = new_c.split("\n")[0] if new_c else ""
+                if old_first:
+                    print(f"│ {_colorize('-', 'red')}    {old_first[:70]}")
+                if new_first:
+                    print(f"│ {_colorize('+', 'green')}    {new_first[:70]}")
+                if (old_c.count("\n") > 1) or (new_c.count("\n") > 1):
+                    print(f"│   {_colorize(t('panel_verbose_hint'), 'gray')}")
+        print("└" + "─" * 78 + "┘")
     print()
     print("=" * 80)
 
@@ -1432,6 +1547,16 @@ def cmd_status(args):
             rid = rec.get("id", "?")
             f = rec.get("file", "?")
             print(f"  {ts}  {st:13}  {rid}  {f}")
+        # v0.7.3: 按 agent 分组活动统计
+        agent_counts: dict[str, int] = {}
+        for r in records:
+            a = r.get("agent", "user:anonymous")
+            agent_counts[a] = agent_counts.get(a, 0) + 1
+        if agent_counts:
+            print()
+            print(t("status_by_agent"))
+            for agent_name, n in sorted(agent_counts.items(), key=lambda kv: -kv[1])[:5]:
+                print(f"  {_colorize(agent_name, 'cyan'):30} {n} {t('status_writes')}")
     else:
         print(f"  {t('log_no_records')}")
     print()
