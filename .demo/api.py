@@ -1,1 +1,1 @@
-api.py: add offset/limit to list_users, default 50
+api.py: generate OpenAPI schema from dataclass
