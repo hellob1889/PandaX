@@ -1,1 +1,1 @@
-auth.py: PBKDF2 password hashing + constant-time token compare
+auth.py: bump PBKDF2 iterations 100k → 200k + salt rotation hook
