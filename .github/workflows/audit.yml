@@ -7,7 +7,7 @@ name: Pandaone AI Agent CI
 #   - push 到 main
 # 作用：
 #   - 安装 pandaone
-#   - 跑 pandaone ci 验证所有变更都有审计
+#   - 跑 pandax ci 验证所有变更都有审计（v0.7.4 未发布前用旧 CLI 名）
 #   - 失败则不合并
 
 on:
@@ -62,14 +62,14 @@ jobs:
           pip install --upgrade pip
           # PR #4 把 PyPI 分发名计划改为 pandaone-guard，但 v0.7.4 实际未发布。
           # 当前 PyPI 上仍是 pandax-guard（v0.7.3 是最新版）。
-          # 等 pandaone-guard v0.7.4 发布后再切回。
+          # 同样地，CLI 命令仍是 `pandax` 不是 `pandaone`，等 v0.7.4 发布后再切回。
           pip install pandax-guard
 
       - name: 探测/安装 git
         run: |
           git --version || (echo "Git 缺失，请先安装" && exit 1)
 
-      - name: 运行 pandaone ci 验证
+      - name: 运行 pandax ci 验证
         id: ci
         run: |
           # ----- [skip-audit] 跳过机制 -----
@@ -80,7 +80,7 @@ jobs:
           #   - README/docs-only 改动（不影响代码审计合规）
           RECENT_MSGS=$(git log -5 --pretty=format:'%s' 2>/dev/null || true)
           if echo "$RECENT_MSGS" | grep -q '\[skip-audit\]'; then
-            echo "::notice::检测到 [skip-audit] 标记，跳过 pandaone ci 验证"
+            echo "::notice::检测到 [skip-audit] 标记，跳过 pandax ci 验证"
             echo "最近 5 条 commit messages："
             echo "$RECENT_MSGS" | sed 's/^/  - /'
             exit 0
@@ -91,7 +91,7 @@ jobs:
             BASE="origin/master"
           fi
           echo "基线分支: $BASE"
-          pandaone ci --root . --base "$BASE"
+          pandax ci --root . --base "$BASE"
 
       - name: 失败时输出审计日志摘要
         if: failure()
@@ -118,11 +118,11 @@ jobs:
           script: |
             const fs = require('fs');
             let body = '## ❌ Pandaone CI 验证失败\n\n';
-            body += 'PR 中检测到 **未通过 pandaone write 审计**的变更。\n\n';
+            body += 'PR 中检测到 **未通过 pandax write 审计**的变更。\n\n';
             body += '### 修复方法\n\n';
             body += '对每个被标记的文件，在本地执行：\n\n';
             body += '```bash\n';
-            body += 'pandaone write --root . \\\n';
+            body += 'pandax write --root . \\\n';
             body += '  --file <文件路径> \\\n';
             body += '  --reason "<改动原因>" \\\n';
             body += '  --problem "<解决的具体问题>" \\\n';
