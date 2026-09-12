@@ -9,7 +9,7 @@
 ## One-line Install
 
 ```bash
-pip install pandaone-guard
+pip install pandax-guard
 ```
 
 ## Verify
@@ -46,13 +46,13 @@ Auto-installed (all pure Python, cross-platform):
 ## Upgrade
 
 ```bash
-pip install pandaone-guard --upgrade
+pip install pandax-guard --upgrade
 ```
 
 ## Uninstall
 
 ```bash
-pip uninstall pandaone-guard
+pip uninstall pandax-guard
 rm -rf ~/.pandaone_fp.txt
 ```
 

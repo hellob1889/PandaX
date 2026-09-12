@@ -15,7 +15,7 @@ PROJECT="$(pwd)/demo_01_basic"
 GIT_EXE="$(command -v git)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PY_EXE="$("$SCRIPT_DIR/_detect_python.sh")" || {
-    echo "请先运行: pip install pandaone-guard"
+    echo "请先运行: pip install pandax-guard"
     exit 1
 }
 

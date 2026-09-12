@@ -195,7 +195,9 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandaone-guard
+            # 临时回退：v0.7.4 发布到 PyPI 后切回 `pandaone-guard`
+            # 当前最新发布仍是 `pandax-guard` (PyPI v0.7.3)
+            pip install --upgrade pandax-guard
             ```
 
             See [CHANGELOG.md](https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/CHANGELOG.md) for details.
