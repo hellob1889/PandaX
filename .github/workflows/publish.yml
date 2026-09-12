@@ -3,11 +3,17 @@ name: Publish to PyPI
 # ============================================================
 # Trusted Publishing (OIDC) — 无需 API token
 # ============================================================
-# PyPI 端已配 pending publisher:
+# PyPI 端已配 trusted publisher for project `pandax-guard`:
 #   Owner: hellob1889
 #   Repository: Pandaone AI Agent
 #   Workflow: publish.yml
 #   Environment: Any（未配置 GitHub Environment）
+#
+# IMPORTANT: PyPI project name = `pandax-guard`（不是 pandaone-guard）
+# PR #4 把 src 内部代码 + CLI 命令名改成 pandaone（pandaone/, pandaone:main），
+# 但 PyPI 分发名仍是 `pandax-guard`（PEP 503 wheel 文件名 = pandax_guard-*）。
+# 这是有意的：PyPI 上 pandaone-guard 项目从未存在，跳过新建项目的成本。
+# 用户面：pip install pandax-guard → 得到 pandaone 命令（内部 brand 一致，外部 channel 一致）
 #
 # 触发规则 (按 tag 前缀):
 #   v*.*.*-test  → TestPyPI (例: v0.7.2-test)
@@ -195,9 +201,9 @@ jobs:
             ## Installation
 
             ```bash
-            # 临时回退：v0.7.4 发布到 PyPI 后切回 `pandaone-guard`
-            # 当前最新发布仍是 `pandax-guard` (PyPI v0.7.3)
             pip install --upgrade pandax-guard
             ```
+
+            This installs the `pandaone` CLI command (see the rename note in the v0.7.4 commit message — internal brand is Pandaone AI Agent, distribution channel stays pandax-guard to preserve the existing PyPI project's Trusted Publisher config).
 
             See [CHANGELOG.md](https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/CHANGELOG.md) for details.
