@@ -58,6 +58,9 @@ installer/Output/
 # Release artifacts(用户级输出,不入仓库 — 重新打包请跑 scripts/release.py)
 Pandaone-*-install.zip
 Pandaone-*.exe
+# 历史遗留的旧品牌名 install 包（PandaX 改名 Pandaone 之前的产物）
+PandaX-*-install.zip
+PandaX-*.exe
 
 # ============================================================
 # Workspace 临时产物（本次工作 session 产生，不入仓库）
