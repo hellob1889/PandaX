@@ -229,20 +229,20 @@ def cmd_init(args):
         }
         config_file.write_text(json.dumps(config, ensure_ascii=False, indent=2),
                                encoding="utf-8")
-        print(f"✅ 已创建 {config_file}")
+        print(f"✅ created {config_file}")
 
     log_file = pdir / AUDIT_LOG
     if not log_file.exists():
         log_file.touch()
-        print(f"✅ 已创建 {log_file}")
+        print(f"✅ created {log_file}")
 
     if not args.no_binary:
         bs_file = pdir / BINARY_SNAPSHOTS
         if not bs_file.exists():
             bs_file.write_text("{}", encoding="utf-8")
-            print(f"✅ 已创建 {bs_file}")
+            print(f"✅ created {bs_file}")
 
-    print(f"✅ Pandaone 在 {root} 初始化完成")
+    print(f"✅ Pandaone initialized at {root}")
 
 
 def cmd_lock(args):
@@ -254,7 +254,7 @@ def cmd_lock(args):
         if p.is_file() and is_protected(p, exts):
             lock_file(p)
             count += 1
-    print(f"🔒 已锁定 {count} 个受保护文件")
+    print(f"🔒 locked {count} files")
 
 
 def cmd_unlock(args):
@@ -266,7 +266,7 @@ def cmd_unlock(args):
         if p.is_file() and is_protected(p, exts):
             unlock_file(p)
             count += 1
-    print(f"🔓 已解锁 {count} 个受保护文件")
+    print(f"🔓 unlocked {count} files")
 
 
 def cmd_write(args):
@@ -282,24 +282,24 @@ def cmd_write(args):
 
     # 1. 验证必填字段
     if not args.reason or len(args.reason) < 5:
-        print("❌ --reason 必填，至少 5 字符")
+        print("❌ --reason required (min 5 chars)")
         sys.exit(1)
     if not args.problem or len(args.problem) < 10:
-        print("❌ --problem 必填，至少 10 字符")
+        print("❌ --problem required (min 10 chars)")
         sys.exit(1)
     if not args.approach or len(args.approach) < 10:
-        print("❌ --approach 必填，至少 10 字符")
+        print("❌ --approach required (min 10 chars)")
         sys.exit(1)
 
     # 2. 写文件
     if args.old is not None and args.new is not None:
         # 文本 in-place 替换
         if not file_path.exists():
-            print(f"❌ 文件不存在: {file_path}")
+            print(f"❌ file not found: {file_path}")
             sys.exit(1)
         old_content = file_path.read_text(encoding="utf-8", errors="replace")
         if args.old not in old_content:
-            print(f"❌ --old 字符串在文件中找不到")
+            print("❌ --old string not found in file")
             sys.exit(1)
         new_content = old_content.replace(args.old, args.new, 1)
         file_path.write_text(new_content, encoding="utf-8")
@@ -333,7 +333,7 @@ def cmd_write(args):
         new_hash = compute_fingerprint(data)
         kind = "binary-copy"
     else:
-        print("❌ 必须指定 --old/--new / --content / --content-base64 / --from-file 之一")
+        print("❌ must specify --old/--new / --content / --content-base64 / --from-file")
         sys.exit(1)
 
     # 3. 追加审计 jsonl
@@ -368,12 +368,12 @@ def cmd_write(args):
             cwd=str(root), capture_output=True, text=True, timeout=10,
         )
         if r_add.returncode != 0:
-            print(f"⚠️ git add 失败: {r_add.stderr.strip()}")
+            print(f"⚠️ git add failed: {r_add.stderr.strip()}")
     except Exception as e:
-        print(f"⚠️ git add 异常: {e}")
+        print(f"⚠️ git add exception: {e}")
 
-    print(f"✅ 已写入 {args.file}（kind={kind}, hash sha256={new_hash[:16]}...）")
-    print(f"✅ 审计 jsonl 已追加")
+    print(f"✅ wrote {args.file} (kind={kind}, sha256={new_hash[:16]}...)")
+    print("✅ audit jsonl appended")
 
 
 def cmd_log(args):
@@ -381,7 +381,7 @@ def cmd_log(args):
     root = Path(args.root).resolve()
     log_file = root / PANDAONE_DIR / AUDIT_LOG
     if not log_file.exists():
-        print("❌ 无审计日志")
+        print("❌ no audit log")
         return
     lines = log_file.read_text(encoding="utf-8").splitlines()
     if args.recent:
@@ -414,7 +414,7 @@ def cmd_log(args):
 
     if args.output:
         Path(args.output).write_text(out, encoding="utf-8")
-        print(f"✅ 已导出到 {args.output}")
+        print(f"✅ exported to {args.output}")
     else:
         print(out)
 
@@ -424,7 +424,7 @@ def cmd_status(args):
     root = Path(args.root).resolve()
     pdir = root / PANDAONE_DIR
     if not pdir.exists():
-        print(f"❌ Pandaone 未初始化（{pdir} 不存在）")
+        print(f"❌ Pandaone not initialized ({pdir} not found)")
         sys.exit(1)
 
     config = json.loads((pdir / CONFIG_FILE).read_text(encoding="utf-8"))
@@ -439,11 +439,11 @@ def cmd_status(args):
         phase_text = "（无 README.md）"
 
     print("=" * 64)
-    print("Pandaone AI Agent 状态")
+    print("Pandaone AI Agent Status")
     print("=" * 64)
     print(f"Root: {root}")
     print(f"Config: {config}")
-    print(f"审计记录数: {log_count}")
+    print(f"Audit records: {log_count}")
     print()
     print(phase_text)
 
@@ -453,13 +453,13 @@ def cmd_install_hook(args):
     root = Path(args.root).resolve()
     hook_dir = root / ".git" / "hooks"
     if not hook_dir.exists():
-        print("❌ .git/hooks 不存在（请先 git init）")
+        print("❌ .git/hooks not found (run git init first)")
         sys.exit(1)
     hook_file = hook_dir / "pre-commit"
     if args.uninstall:
         if hook_file.exists():
             hook_file.unlink()
-            print(f"✅ 已卸载 {hook_file}")
+            print(f"✅ uninstalled {hook_file}")
     else:
         content = """#!/bin/sh
 # Pandaone AI Agent pre-commit hook
@@ -470,7 +470,7 @@ pandaone ci --root . --base HEAD --head HEAD
         hook_file.write_text(content, encoding="utf-8")
         if os.name != "nt":
             hook_file.chmod(0o755)
-        print(f"✅ 已安装 {hook_file}")
+        print(f"✅ installed {hook_file}")
 
 
 def cmd_watch(args):
@@ -480,7 +480,7 @@ def cmd_watch(args):
         from watchdog.observers import Observer
         from watchdog.events import FileSystemEventHandler
     except ImportError:
-        print("❌ 需要 watchdog: pip install watchdog")
+        print("❌ watchdog required: pip install watchdog")
         sys.exit(1)
 
     root = Path(args.root).resolve()
@@ -496,13 +496,13 @@ def cmd_watch(args):
             config = json.loads(config_file.read_text(encoding="utf-8"))
             if is_protected(p, config["protected_extensions"]):
                 lock_file(p)
-                print(f"[watchdog] 重锁 {p.name}")
+                print(f"[watchdog] re-locked {p.name}")
 
     observer = Observer()
     observer.schedule(_Handler(), str(root), recursive=True)
     observer.start()
-    print(f"🐕 Pandaone watchdog 已启动（监控 {root}）")
-    print("Ctrl+C 停止")
+    print(f"🐕 Pandaone watchdog started (monitoring {root})")
+    print("Ctrl+C to stop")
     try:
         while True:
             time.sleep(1)
@@ -516,12 +516,12 @@ def cmd_install_git(args):
     # 仅占位实现：探测 git 是否可用
     r = subprocess.run([GIT, "--version"], capture_output=True, text=True)
     if r.returncode == 0:
-        print(f"✅ git 已安装: {r.stdout.strip()}")
+        print(f"✅ git installed: {r.stdout.strip()}")
         return
     if args.probe_only:
-        print("❌ git 未安装（仅探测）")
+        print("❌ git not installed (probe only)")
         sys.exit(1)
-    print("⚠️ 自动下载 git 未实现，请手动安装")
+    print("⚠️ auto-download not implemented, install manually")
 
 
 def cmd_ci(args):
@@ -541,7 +541,7 @@ def cmd_ci(args):
     # 1. 读取审计 jsonl
     log_file = root / PANDAONE_DIR / AUDIT_LOG
     if not log_file.exists():
-        print(f"❌ 无审计日志（{log_file} 不存在）")
+        print(f"❌ no audit log ({log_file} not found)")
         sys.exit(1)
     entries = []
     for line in log_file.read_text(encoding="utf-8").splitlines():
@@ -556,12 +556,12 @@ def cmd_ci(args):
         cwd=str(root), capture_output=True, text=True, timeout=30,
     )
     if r.returncode != 0:
-        print(f"❌ git diff 失败: {r.stderr.strip()}")
+        print(f"❌ git diff failed: {r.stderr.strip()}")
         sys.exit(1)
     changed_files = [f for f in r.stdout.splitlines() if f]
 
     if not changed_files:
-        print(f"✅ 无改动文件（base={base}, head={head}）")
+        print(f"✅ no changed files (base={base}, head={head})")
         return
 
     # 3. 对每个改动文件查 jsonl
@@ -574,15 +574,15 @@ def cmd_ci(args):
         matched = [e for e in entries if e.get("file") == f]
         if not matched:
             failed.append(f)
-            print(f"❌ {f}: 无审计记录")
+            print(f"❌ {f}: no audit record")
         else:
-            print(f"✅ {f}: {len(matched)} 条审计记录")
+            print(f"✅ {f}: {len(matched)} audit records")
 
     if failed:
-        print(f"\n❌ CI 失败：{len(failed)} 个文件无审计")
-        print("本地修复：对每个被标记的文件，执行 `pandaone write --file <path> ...`")
+        print(f"\n❌ CI failed: {len(failed)} files without audit")
+        print("Local fix: for each flagged file, run `pandaone write --file <path> ...`")
         sys.exit(1)
-    print(f"\n✅ CI 通过：所有 {len(changed_files)} 个改动文件都有审计")
+    print(f"\n✅ CI passed: all {len(changed_files)} changed files have audit")
 
 
 # ============================================================
@@ -601,7 +601,7 @@ def main():
     sub = parser.add_subparsers(dest="cmd")
 
     # init
-    p_init = sub.add_parser("init", help="初始化 Pandaone")
+    p_init = sub.add_parser("init", help="初始化Pandaone")
     p_init.add_argument("--ext", nargs="+", help="受保护扩展名列表")
     p_init.add_argument("--no-binary", action="store_true", help="禁用二进制快照")
 
