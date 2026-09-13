@@ -26,7 +26,8 @@ name: Publish to PyPI
 #   v*.*.*-test  → TestPyPI (例: v0.7.2-test)
 #   v*.*.*       → Production PyPI (例: v0.7.2)
 #
-# 也支持 workflow_dispatch 手动触发。
+# 也支持 workflow_dispatch 手动触发 — 现在也能自动建 GitHub Release
+# (PR #27 fix, 之前 dispatch 触发会跳过 Release 步骤)
 # ============================================================
 
 on:
@@ -43,6 +44,11 @@ on:
         options:
           - testpypi
           - pypi
+      tag_version:
+        description: "版本号（用于 dispatch 触发时建 tag/release），如 0.7.8。pypi 目标时必填。"
+        required: false
+        default: ""
+        type: string
 
 env:
   PYTHON_VERSION: "3.10"
@@ -222,10 +228,45 @@ jobs:
         if: ${{ (steps.target.outputs.target == 'pypi' || steps.target-dispatch.outputs.target == 'pypi') && steps.mode.outputs.mode == 'oidc' }}
         uses: pypa/gh-action-pypi-publish@release/v1
 
+      # ----------------------------------------------------------------
+      # Create GitHub Release (PR #27 fix)
+      # ----------------------------------------------------------------
+      # 守卫:
+      #   - push tag v*.*.* (非 -test)            → 建 release, tag = ref_name
+      #   - workflow_dispatch + target=pypi
+      #       + tag_version 非空                  → 建 release, tag = v$tag_version
+      #   - 其他                                  → 跳过
+      #
+      # tag_name 显式覆盖: dispatch 触发时 github.ref_name = main,
+      # 不覆盖就会创建 "main" release。
+      # ----------------------------------------------------------------
+      - name: Resolve release tag (dispatch)
+        id: release-tag-dispatch
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'pypi'
+        run: |
+          _v="${{ github.event.inputs.tag_version }}"
+          if [ -z "$_v" ]; then
+            echo "::error::tag_version input is required when target=pypi on workflow_dispatch"
+            exit 1
+          fi
+          # strip leading 'v' if user typed it
+          _v="${_v#v}"
+          echo "tag=v${_v}" >> "$GITHUB_OUTPUT"
+          echo "→ dispatch mode: will create tag=v${_v}"
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && !endsWith(github.ref_name, '-test')
+        if: |
+          (github.event_name == 'push'
+            && startsWith(github.ref, 'refs/tags/')
+            && !endsWith(github.ref_name, '-test'))
+          ||
+          (github.event_name == 'workflow_dispatch'
+            && github.event.inputs.target == 'pypi'
+            && steps.release-tag-dispatch.outputs.tag != '')
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ github.event_name == 'push' && github.ref_name || steps.release-tag-dispatch.outputs.tag }}
+          name: ${{ github.event_name == 'push' && github.ref_name || steps.release-tag-dispatch.outputs.tag }}
           files: dist/*
           generate_release_notes: true
           body: |
