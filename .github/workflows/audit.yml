@@ -10,12 +10,12 @@ name: Pandaone AI Agent CI
 #   - 跑 pandax ci 验证所有变更都有审计（v0.7.4 未发布前用旧 CLI 名）
 #   - 失败则不合并
 #
-# v0.7.5 变更（PR #18）：
+# v0.7.5 变更（PR #18 + #19）：
 #   - [skip-audit] 扫描范围从 commit subject (`%s`) 扩展到 subject+body (`%s%n%n%b`)
-#   - 这样写在 commit footer 的 [skip-audit] 标记（Git 社区惯例，同源于 Signed-off-by: /
-#     [skip ci] / [skip actions]）也能被识别
-#   - 根因：PR #17 (CHANGELOG.md v0.7.4 补段) footer 写 [skip-audit] 被旧逻辑漏检，导致 L7
-#     审计误判失败
+#   - 新增"docs-only / meta-only" 自动跳过路径：
+#       CHANGELOG.md / README*.md / docs/** / .github/PULL_REQUEST_TEMPLATE/**
+#       / .github/ISSUE_TEMPLATE/** / .github/CODEOWNERS / LICENSE* / NOTICE*
+#   - 新增 .github/PULL_REQUEST_TEMPLATE.md，引导贡献者在 docs-only PR 用 [skip-audit]
 
 on:
   pull_request:
@@ -109,6 +109,29 @@ jobs:
             | wc -l)
           if [ "$WORKFLOW_ONLY" = "0" ]; then
             echo "::notice::本次 push 仅改动 .github/workflows/，跳过 pandax ci 验证"
+            git diff --name-only HEAD~1 HEAD 2>/dev/null | sed 's/^/  - /'
+            exit 0
+          fi
+          # ----- docs-only / meta-only 自动跳过 (v0.7.5 新增) -----
+          # 如果本次 push 仅触及下列文档/元数据文件，则跳过 pandax ci 验证：
+          #   - CHANGELOG.md         （版本变更记录，不影响代码合规）
+          #   - README*.md            （项目根级 README）
+          #   - docs/**               （项目文档目录）
+          #   - .github/PULL_REQUEST_TEMPLATE/**
+          #   - .github/ISSUE_TEMPLATE/**
+          #   - .github/CODEOWNERS    （reviewer 配置）
+          #   - .github/CODE_OF_CONDUCT.md / CONTRIBUTING.md / SECURITY.md
+          #   - LICENSE / LICENSE-* / NOTICE
+          # 设计动机：PR #17 (CHANGELOG.md v0.7.4 补段) 让 audit 误判失败。这次把这类"纯文档/元数据"
+          # 改动纳入自动跳过，贡献者不再需要手动写 [skip-audit]。
+          # 注意：这里和 paths filter 的关系 ——
+          #   - PR 阶段：paths filter 包含 **/*.md 触发审计；push 阶段：没有 paths filter，必然触发
+          #   - 所以这里主要服务"push 到 main"的场景（PR 阶段可由贡献者写 [skip-audit] 兜底）
+          DOCS_ONLY=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+            | grep -v -E '^(CHANGELOG\.md|README[^/]*\.md|docs/|\.github/PULL_REQUEST_TEMPLATE/|\.github/ISSUE_TEMPLATE/|\.github/CODEOWNERS|\.github/CODE_OF_CONDUCT\.md|\.github/CONTRIBUTING\.md|\.github/SECURITY\.md|LICENSE[^/]*|NOTICE[^/]*)$' \
+            | wc -l)
+          if [ "$DOCS_ONLY" = "0" ]; then
+            echo "::notice::本次 push 仅改动 docs / meta 文件，跳过 pandax ci 验证"
             git diff --name-only HEAD~1 HEAD 2>/dev/null | sed 's/^/  - /'
             exit 0
           fi
