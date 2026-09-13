@@ -9,6 +9,13 @@ name: Pandaone AI Agent CI
 #   - 安装 pandaone
 #   - 跑 pandax ci 验证所有变更都有审计（v0.7.4 未发布前用旧 CLI 名）
 #   - 失败则不合并
+#
+# v0.7.5 变更（PR #18）：
+#   - [skip-audit] 扫描范围从 commit subject (`%s`) 扩展到 subject+body (`%s%n%n%b`)
+#   - 这样写在 commit footer 的 [skip-audit] 标记（Git 社区惯例，同源于 Signed-off-by: /
+#     [skip ci] / [skip actions]）也能被识别
+#   - 根因：PR #17 (CHANGELOG.md v0.7.4 补段) footer 写 [skip-audit] 被旧逻辑漏检，导致 L7
+#     审计误判失败
 
 on:
   pull_request:
@@ -73,14 +80,18 @@ jobs:
         id: ci
         run: |
           # ----- [skip-audit] 跳过机制 -----
-          # 如果最近 5 条 commit message 里包含 [skip-audit]，跳过本次审计。
+          # 如果最近 5 条 commit 的 subject 或 body 里包含 [skip-audit]，跳过本次审计。
+          # v0.7.5 起：扫描范围从 subject-only (`%s`) 扩展到 subject+body (`%s%n%n%b`)，以支持
+          # Git 社区惯例的 footer 标记写法（与 `Signed-off-by:` / `[skip ci]` / `[skip actions]` 等同源）。
+          # 修复背景：PR #17 (CHANGELOG.md v0.7.4 补段) 把 `[skip-audit]` 写在 footer，audit.yml 旧版
+          # 用 `%s` 只读 subject 漏检，导致 L7 审计误判失败。fix commit: 见 PR #18。
           # 适用场景：
           #   - 发布型 commit（已发版的代码不需要重新审计）
           #   - workflow / CI 脚手架改动（这些文件本身就是审计机制的载体）
           #   - README/docs-only 改动（不影响代码审计合规）
-          RECENT_MSGS=$(git log -5 --pretty=format:'%s' 2>/dev/null || true)
+          RECENT_MSGS=$(git log -5 --pretty=format:'%s%n%n%b' 2>/dev/null || true)
           if echo "$RECENT_MSGS" | grep -q '\[skip-audit\]'; then
-            echo "::notice::检测到 [skip-audit] 标记，跳过 pandax ci 验证"
+            echo "::notice::检测到 [skip-audit] 标记（subject 或 body），跳过 pandax ci 验证"
             echo "最近 5 条 commit messages："
             echo "$RECENT_MSGS" | sed 's/^/  - /'
             exit 0
