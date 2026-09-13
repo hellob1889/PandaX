@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install pandax-guard
+      - run: pip install pandaone-guard
       - run: pandaone ci --root . --base origin/main
 ```
 
@@ -37,7 +37,7 @@ audit:
   stage: test
   image: python:3.10
   before_script:
-    - pip install pandax-guard
+    - pip install pandaone-guard
   script:
     - pandaone ci --root . --base origin/main
   rules:

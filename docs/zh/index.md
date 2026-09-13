@@ -36,7 +36,7 @@ $50,000 ???            $50,000  src/payment.py
 **右边这一列，是你的代码库用一行命令就能变成的样子：**
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 你的专属经理 24/7 值班 —— **每一次代码改动的前、中、后都在场**。每一个 AI agent —— Claude、Cursor、Trae —— 都在同一条可审计的协议下工作。**无例外。不许绕行。**
@@ -75,7 +75,7 @@ Pandaone 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者�
 ## 一行安装
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 立即试用：[快速开始](quickstart.md) → [示例集](../EXAMPLES.md)

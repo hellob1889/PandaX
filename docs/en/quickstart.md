@@ -5,7 +5,7 @@
 ## Step 1: Install (30s)
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 pandaone --version
 # pandaone-guard v0.7.2
 ```
