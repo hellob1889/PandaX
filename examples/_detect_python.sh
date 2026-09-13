@@ -42,8 +42,8 @@ done
 echo "[ERROR] 没找到有 pandaone 的 Python 解释器" >&2
 echo "" >&2
 echo "请运行以下命令之一：" >&2
-echo "  pip install pandax-guard       # 系统默认 Python" >&2
-echo "  python -m pip install pandax-guard  # 显式 Python" >&2
+echo "  pip install pandaone-guard       # 系统默认 Python" >&2
+echo "  python -m pip install pandaone-guard  # 显式 Python" >&2
 echo "" >&2
 echo "如果已安装，可能是 PATH 问题。试试：" >&2
 echo "  python -c 'import pandaone; print(pandaone.__file__)'" >&2
