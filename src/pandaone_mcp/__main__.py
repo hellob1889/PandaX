@@ -93,35 +93,31 @@ TOOLS = [
                 "content_base64": {"type": "string",
                                    "description": "整文件二进制内容（base64）"},
                 "from_file": {"type": "string",
-                              "description": "从本地路径读取内容"},
+                              "description": "原文件路径（用于二进制）"},
             },
             "required": ["file", "reason", "problem", "approach"],
         },
     },
     {
         "name": "pandaone_log",
-        "description": "查询审计历史，支持过滤和导出（13 种格式：text/csv/tsv/json/yaml/md/html/xlsx/docx/pdf/sqlite/rst/asciidoc）",
+        "description": "查看审计日志（按文件/recent/格式过滤）",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "root": {"type": "string", "default": "."},
-                "recent": {"type": "integer", "default": 20,
-                           "description": "最近 N 条"},
-                "file": {"type": "string", "description": "按文件过滤"},
-                "rejected": {"type": "boolean", "default": False,
-                             "description": "只看拒绝记录"},
-                "unauthorized": {"type": "boolean", "default": False,
-                                 "description": "只看非授权写入"},
-                "format": {"type": "string",
-                           "description": "导出格式（text/csv/json/yaml/md/html/xlsx/docx/pdf/sqlite/rst/asciidoc/tsv）"},
+                "recent": {"type": "integer", "description": "最近 N 条"},
+                "file": {"type": "string", "description": "按文件路径过滤"},
+                "format": {"type": "string", "enum": ["text", "json", "csv", "tsv", "yaml", "md", "html", "xlsx", "docx", "pdf"]},
                 "output": {"type": "string", "description": "导出文件路径"},
+                "rejected": {"type": "boolean", "default": False, "description": "只看被拒绝的变更"},
+                "unauthorized": {"type": "boolean", "default": False, "description": "只看未授权的变更"},
             },
             "required": ["root"],
         },
     },
     {
         "name": "pandaone_status",
-        "description": "显示项目状态仪表盘（L1 锁 / L2 watchdog / L5 指纹 / 审计统计 / 二进制快照）",
+        "description": "查看 Pandaone 状态（保护文件 / 审计次数 / 锁定状态等）",
         "inputSchema": {
             "type": "object",
             "properties": {"root": {"type": "string", "default": "."}},
@@ -130,64 +126,60 @@ TOOLS = [
     },
     {
         "name": "pandaone_install_hook",
-        "description": "安装 pre-commit hook（L3 防御，git commit 时强制审计）",
+        "description": "安装/卸载 pre-commit hook",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "root": {"type": "string", "default": "."},
                 "uninstall": {"type": "boolean", "default": False,
-                              "description": "卸载而非安装"},
+                              "description": "True 则卸载"},
             },
             "required": ["root"],
         },
     },
     {
         "name": "pandaone_watch",
-        "description": "启动 watchdog 守护进程（L2 防御：实时监控+git checkout 回滚）",
+        "description": "启动 watchdog 守护进程（监控文件改动）",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "root": {"type": "string", "default": "."},
-                "daemon": {"type": "boolean", "default": False,
-                           "description": "后台运行"},
+                "daemon": {"type": "boolean", "default": False, "description": "后台守护模式"},
             },
             "required": ["root"],
         },
     },
     {
         "name": "pandaone_install_git",
-        "description": "探测/安装 git（缺失时自动下载 portable 版本）",
+        "description": "安装便携版 git（用于项目内 git hook，无需全局 git）",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "probe_only": {"type": "boolean", "default": True,
-                               "description": "只探测不下载"},
-                "auto_download": {"type": "boolean", "default": False,
-                                  "description": "自动下载 portable git"},
+                "probe_only": {"type": "boolean", "default": True, "description": "只探测，不下载"},
+                "auto_download": {"type": "boolean", "default": False, "description": "自动下载缺失的 git"},
             },
         },
     },
     {
         "name": "pandaone_fingerprint_update",
-        "description": "更新 pandaone 自身的 SHA256 指纹（合法修改 CLI源码后必须调用）",
+        "description": "更新密码指纹（用于 watch 守护进程鉴权）",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "password": {"type": "string", "default": "0000",
-                              "description": "更新密码（默认 0000）"},
+                "password": {"type": "string", "description": "新密码"},
             },
+            "required": ["password"],
         },
     },
     {
         "name": "pandaone_ci",
-        "description": "GitHub Actions CI 验证：检查 PR 所有变更是否都有审计记录（无审计 = rc=1）",
+        "description": "CI 审计验证：对比 base..head 的所有改动，确认每条变更都通过 pandaone write 审计",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "root": {"type": "string", "default": "."},
-                "base": {"type": "string", "default": "",
-                         "description": "基线分支（默认 main，缺失则 fallback 到 HEAD~1）"},
-                "head": {"type": "string", "default": "HEAD"},
+                "base": {"type": "string", "description": "基线分支", "default": "origin/main"},
+                "head": {"type": "string", "description": "对比分支", "default": "HEAD"},
             },
             "required": ["root"],
         },
@@ -195,48 +187,40 @@ TOOLS = [
 ]
 
 
-# ============================================================
-# 工具 handler（每个调用 subprocess 执行 CLI）
-# ============================================================
-def _run_cli(args: list, timeout: int = 30) -> dict:
-    """调用 pandaone CLI 子进程，返回 {returncode, stdout, stderr}"""
-    cmd = [sys.executable, "-m", "pandaone", *args]
+def _args_from(params, mapping):
+    """从 JSON-RPC 参数 dict 提取 --key value 对。mapping: list of (param_key, --flag)"""
+    out = []
+    for k, flag in mapping:
+        v = params.get(k)
+        if v is None:
+            continue
+        if isinstance(v, bool):
+            if v:
+                out.append(flag)
+        elif isinstance(v, list):
+            for item in v:
+                out.extend([flag, str(item)])
+        else:
+            out.extend([flag, str(v)])
+    return out
+
+
+def _run_cli(args, timeout=10):
+    """调用 pandaone CLI，捕获 stdout/stderr/returncode"""
     try:
         r = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env={**os.environ, "PYTHONPATH": str(SRC_DIR) + os.pathsep + os.environ.get("PYTHONPATH", "")},
+            ["pandaone"] + args,
+            capture_output=True, text=True, timeout=timeout,
         )
-        return {"returncode": r.returncode, "stdout": r.stdout, "stderr": r.stderr}
+        return {
+            "returncode": r.returncode,
+            "stdout": r.stdout,
+            "stderr": r.stderr,
+        }
     except subprocess.TimeoutExpired:
-        return {"returncode": -1, "stdout": "", "stderr": "timeout"}
+        return {"returncode": -1, "stdout": "", "stderr": f"Timeout after {timeout}s"}
     except Exception as e:
         return {"returncode": -1, "stdout": "", "stderr": str(e)}
-
-
-def _args_from(params: dict, mapping: list) -> list:
-    """把 MCP 参数映射成 CLI 参数列表
-
-    mapping: [(param_key, cli_flag_or_None), ...]
-    - param_key: MCP 参数名
-    - cli_flag: CLI 参数（如（"--root"）
-    - None 表示布尔开关（True 时加 flag）
-    """
-    out = []
-    for key, flag in mapping:
-        val = params.get(key)
-        if val is None or val is False:
-            continue
-        if flag is None:
-            # 布尔开关
-            continue
-        if isinstance(val, list):
-            out.extend([flag, *val])
-        else:
-            out.extend([flag, str(val)])
-    return out
 
 
 HANDLERS = {
@@ -260,7 +244,7 @@ HANDLERS = {
         ["install-hook", *_args_from(p, [("root", "--root"), ("uninstall", "--uninstall")])]),
     "pandaone_watch": lambda p: _run_cli(
         ["watch", *_args_from(p, [("root", "--root"), ("daemon", "--daemon")])],
-        timeout=5),  # watchdog 是长进程，5s 后 timeout 也 OK（实际是后台 spawn）
+        timeout=5),
     "pandaone_install_git": lambda p: _run_cli(
         ["install-git",
          *(["--probe-only"] if not p.get("auto_download") else []),
@@ -299,12 +283,11 @@ def _handle_request(req: dict) -> dict | None:
         result = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "pandaone", "version": "0.6.0"},
+            "serverInfo": {"name": "pandaone", "version": "0.7.7"},  # v0.7.7: 同步 pandaone-guard 版本
         }
         return _make_response(id_, result) if not is_notification else None
 
     elif method == "notifications/initialized":
-        # 客户端通知：已初始化。不需要响应
         return None
 
     elif method == "tools/list":
@@ -349,7 +332,6 @@ def _handle_request(req: dict) -> dict | None:
 # ============================================================
 def serve_stdio():
     """stdio JSON-RPC 2.0 服务器主循环"""
-    # 不缓冲 stdout，确保 JSON-RPC 消息立即到达客户端
     try:
         sys.stdout.reconfigure(line_buffering=True)
     except Exception:

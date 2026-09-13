@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pandaone-guard"
-version = "0.7.6"
+version = "0.7.7"
 description = "AI Agent code audit gateway (Pandaone AI Agent) - OS-level mandatory review of every code change"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
@@ -28,10 +28,10 @@ classifiers = [
 ]
 dependencies = [
     "watchdog>=3.0.0",
-    "openpyxl>=3.1.0",     # Excel export
-    "python-docx>=1.1.0",  # Word export
-    "reportlab>=4.0.0",    # PDF export
-    "pyyaml>=6.0",         # YAML export
+    "openpyxl>=3.1.0",
+    "python-docx>=1.1.0",
+    "reportlab>=4.0.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -40,47 +40,10 @@ dev = [
     "pytest-timeout>=2.0",
 ]
 download = [
-    "urllib3>=1.26",  # for portable git download
+    "urllib3>=1.26",
 ]
 
 [project.scripts]
 pandaone = "pandaone:main"
 pandaone-guard = "pandaone_guard:main"
 pandaone-mcp = "pandaone_mcp:main"
-
-[project.urls]
-Homepage = "https://github.com/hellob1889/Pandaone-AI-Agent"
-Documentation = "https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/README.md"
-Repository = "https://github.com/hellob1889/Pandaone-AI-Agent"
-Issues = "https://github.com/hellob1889/Pandaone-AI-Agent/issues"
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["pandaone*", "pandaone_guard*", "pandaone_mcp*"]
-exclude = ["tests*"]
-
-[tool.setuptools.package-data]
-pandaone = [
-    "templates/*.sh",
-    "templates/pre-commit-hook",
-    "README.md",
-    "banner.txt",
-    "pandax_locked.ico",
-    "pandax_unlocked.ico",
-    "index.html",
-    # Bug fix (右键菜单验证发现): installer/ 目录没被打包,
-    # 导致 site-packages/pandaone/ 下缺 installer/,`pandaone install-context` 报脚本不存在
-    "installer/windows/*.ps1",
-    "installer/macos/*.sh",
-    "installer/linux/*.sh",
-]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = "-v --tb=short"
