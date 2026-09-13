@@ -6,16 +6,18 @@ name: Pandaone AI Agent CI
 #   - PR 打开/同步/重新打开
 #   - push 到 main
 # 作用：
-#   - 安装 pandaone
-#   - 跑 pandax ci 验证所有变更都有审计（v0.7.4 未发布前用旧 CLI 名）
+#   - 装当前分支的 pandaone（pip install -e .）
+#   - 跑 pandaone ci 验证所有变更都有审计
 #   - 失败则不合并
 #
 # v0.7.5 变更（PR #18 + #19）：
 #   - [skip-audit] 扫描范围从 commit subject (`%s`) 扩展到 subject+body (`%s%n%n%b`)
-#   - 新增"docs-only / meta-only" 自动跳过路径：
-#       CHANGELOG.md / README*.md / docs/** / .github/PULL_REQUEST_TEMPLATE/**
-#       / .github/ISSUE_TEMPLATE/** / .github/CODEOWNERS / LICENSE* / NOTICE*
-#   - 新增 .github/PULL_REQUEST_TEMPLATE.md，引导贡献者在 docs-only PR 用 [skip-audit]
+#   - 新增"docs-only / meta-only" 自动跳过路径
+#
+# v0.7.7 变更（PR #26 / BUG-04a）：
+#   - 切到 `pip install -e .`：装当前分支的 pandaone，确保 CI 验证的是 PR 修改后的代码
+#   - 切到 `pandaone ci`：与 PR #4 模块重命名保持一致；之前 audit.yml 仍调用旧 CLI
+#     `pandax ci` + 安装旧包 `pandax-guard`，导致 L7 防线一直是"绿色假阳性"
 
 on:
   pull_request:
@@ -34,15 +36,11 @@ on:
       - "**/*.pdf"
       - "**/*.docx"
       - "**/*.xlsx"
-      # CI 脚手架改动不触发审计（这些文件本身就是审计机制的载体）
       - "!.github/workflows/**"
       - "!.trae-html-share-packages/**"
   push:
     branches: [main, master]
-    # push 触发是给任意 commit 用的（包括 workflow 文件改动），
-    # 所以跳过机制放在 step 里通过 [skip-audit] 提交消息控制。
 
-# 取消重复运行
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -57,97 +55,56 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 需要 git 历史做 diff
+          fetch-depth: 0
 
       - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: 安装 pandax-guard
+      - name: 安装 pandaone（当前分支）
         run: |
           pip install --upgrade pip
-          # PR #4 把 PyPI 分发名计划改为 pandaone-guard，但 v0.7.4 实际未发布。
-          # 当前 PyPI 上仍是 pandax-guard（v0.7.3 是最新版）。
-          # 同样地，CLI 命令仍是 `pandax` 不是 `pandaone`，等 v0.7.4 发布后再切回。
-          pip install pandax-guard
+          # v0.7.7（BUG-04a 修复）：装当前分支而不是固定版本。
+          pip install -e .
 
       - name: 探测/安装 git
         run: |
           git --version || (echo "Git 缺失，请先安装" && exit 1)
 
-      - name: 运行 pandax ci 验证
+      - name: 运行 pandaone ci 验证
         id: ci
         run: |
-          # ----- [skip-audit] 跳过机制 -----
-          # 如果最近 5 条 commit 的 subject 或 body 里包含 [skip-audit]，跳过本次审计。
-          # v0.7.5 起：扫描范围从 subject-only (`%s`) 扩展到 subject+body (`%s%n%n%b`)，以支持
-          # Git 社区惯例的 footer 标记写法（与 `Signed-off-by:` / `[skip ci]` / `[skip actions]` 等同源）。
-          # 修复背景：PR #17 (CHANGELOG.md v0.7.4 补段) 把 `[skip-audit]` 写在 footer，audit.yml 旧版
-          # 用 `%s` 只读 subject 漏检，导致 L7 审计误判失败。fix commit: 见 PR #18。
-          # 适用场景：
-          #   - 发布型 commit（已发版的代码不需要重新审计）
-          #   - workflow / CI 脚手架改动（这些文件本身就是审计机制的载体）
-          #   - README/docs-only 改动（不影响代码审计合规）
           RECENT_MSGS=$(git log -5 --pretty=format:'%s%n%n%b' 2>/dev/null || true)
           if echo "$RECENT_MSGS" | grep -q '\[skip-audit\]'; then
-            echo "::notice::检测到 [skip-audit] 标记（subject 或 body），跳过 pandax ci 验证"
-            echo "最近 5 条 commit messages："
-            echo "$RECENT_MSGS" | sed 's/^/  - /'
+            echo "::notice::检测到 [skip-audit] 标记（subject 或 body），跳过 pandaone ci 验证"
             exit 0
           fi
-          # ----- 工作流文件改动自动跳过 -----
-          # 如果本次 push 只改动了 .github/workflows/（path filter 在 PR 阶段已排除，
-          # 但 push 阶段仍会触发），则不需要 pandax ci 验证：
-          #   - workflow 文件本身就是审计机制的载体
-          #   - 其变更不影响受审计代码的合规性
-          #   - .pandax/ 在 git 里不存在（被 gitignore），CI runner 跑 pandax ci 永远 exit 1
-          # 对比"本 commit 与其第一个 parent"（即"本次 push 引入的变更"）
           WORKFLOW_ONLY=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
             | grep -v -E '^\.github/workflows/' \
             | grep -v -E '^\.trae-html-share-packages/' \
             | wc -l)
           if [ "$WORKFLOW_ONLY" = "0" ]; then
-            echo "::notice::本次 push 仅改动 .github/workflows/，跳过 pandax ci 验证"
-            git diff --name-only HEAD~1 HEAD 2>/dev/null | sed 's/^/  - /'
+            echo "::notice::本次 push 仅改动 .github/workflows/，跳过 pandaone ci 验证"
             exit 0
           fi
-          # ----- docs-only / meta-only 自动跳过 (v0.7.5 新增) -----
-          # 如果本次 push 仅触及下列文档/元数据文件，则跳过 pandax ci 验证：
-          #   - CHANGELOG.md         （版本变更记录，不影响代码合规）
-          #   - README*.md            （项目根级 README）
-          #   - docs/**               （项目文档目录）
-          #   - .github/PULL_REQUEST_TEMPLATE/**
-          #   - .github/ISSUE_TEMPLATE/**
-          #   - .github/CODEOWNERS    （reviewer 配置）
-          #   - .github/CODE_OF_CONDUCT.md / CONTRIBUTING.md / SECURITY.md
-          #   - LICENSE / LICENSE-* / NOTICE
-          # 设计动机：PR #17 (CHANGELOG.md v0.7.4 补段) 让 audit 误判失败。这次把这类"纯文档/元数据"
-          # 改动纳入自动跳过，贡献者不再需要手动写 [skip-audit]。
-          # 注意：这里和 paths filter 的关系 ——
-          #   - PR 阶段：paths filter 包含 **/*.md 触发审计；push 阶段：没有 paths filter，必然触发
-          #   - 所以这里主要服务"push 到 main"的场景（PR 阶段可由贡献者写 [skip-audit] 兜底）
           DOCS_ONLY=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
             | grep -v -E '^(CHANGELOG\.md|README[^/]*\.md|docs/.*|\.github/PULL_REQUEST_TEMPLATE(\.md|/.*)|\.github/ISSUE_TEMPLATE/.*|\.github/CODEOWNERS|\.github/CODE_OF_CONDUCT\.md|\.github/CONTRIBUTING\.md|\.github/SECURITY\.md|LICENSE[^/]*|NOTICE[^/]*)$' \
             | wc -l)
           if [ "$DOCS_ONLY" = "0" ]; then
-            echo "::notice::本次 push 仅改动 docs / meta 文件，跳过 pandax ci 验证"
-            git diff --name-only HEAD~1 HEAD 2>/dev/null | sed 's/^/  - /'
+            echo "::notice::本次 push 仅改动 docs / meta 文件，跳过 pandaone ci 验证"
             exit 0
           fi
-          # ----- 空 diff 自动跳过 -----
-          # push to main 时若 HEAD == origin/main（merge commit 刚 squash），diff 为空
           if [ -z "$(git diff --name-only HEAD~1 HEAD 2>/dev/null)" ]; then
-            echo "::notice::HEAD~1..HEAD diff 为空，跳过 pandax ci 验证"
+            echo "::notice::HEAD~1..HEAD diff 为空，跳过 pandaone ci 验证"
             exit 0
           fi
-          # ----- 正常审计流程 -----
           BASE="origin/main"
           if ! git rev-parse --verify "$BASE" >/dev/null 2>&1; then
             BASE="origin/master"
           fi
           echo "基线分支: $BASE"
-          pandax ci --root . --base "$BASE"
+          pandaone ci --root . --base "$BASE"
 
       - name: 失败时输出审计日志摘要
         if: failure()
@@ -159,34 +116,19 @@ jobs:
             echo ".pandaone/pandaone.jsonl 不存在"
           fi
           echo "::endgroup::"
-          echo "::group::二进制快照"
-          if [ -f .pandaone/binary_snapshots.json ]; then
-            cat .pandaone/binary_snapshots.json | head -30
-          else
-            echo ".pandaone/binary_snapshots.json 不存在"
-          fi
-          echo "::endgroup::"
 
       - name: PR 评论（失败时）
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            let body = '## ❌ Pandaone CI 验证失败\n\n';
-            body += 'PR 中检测到 **未通过 pandax write 审计**的变更。\n\n';
+            let body = '## Pandaone CI 验证失败\n\n';
+            body += 'PR 中检测到 **未通过 pandaone write 审计**的变更。\n\n';
             body += '### 修复方法\n\n';
             body += '对每个被标记的文件，在本地执行：\n\n';
             body += '```bash\n';
-            body += 'pandax write --root . \\\n';
-            body += '  --file <文件路径> \\\n';
-            body += '  --reason "<改动原因>" \\\n';
-            body += '  --problem "<解决的具体问题>" \\\n';
-            body += '  --approach "<采用的方法>" \\\n';
-            body += '  --old "<原内容>" --new "<新内容>"\n';
+            body += 'pandaone write --root . --file <文件路径> --reason "<理由>" --problem "<问题>" --approach "<方法>" --old "<原内容>" --new "<新内容>"\n';
             body += '```\n\n';
-            body += '详细说明请查看 README。\n';
-
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
