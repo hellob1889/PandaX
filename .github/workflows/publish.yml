@@ -1,13 +1,20 @@
 name: Publish to PyPI
 
 # ============================================================
-# Trusted Publishing (OIDC) — 无需 API token
+# Trusted Publishing (OIDC) — 默认；API token — fallback
 # ============================================================
-# PyPI 端已配 trusted publisher for project `pandax-guard`:
+# PyPI 端原本为 trusted publisher 配置：
 #   Owner: hellob1889
 #   Repository: Pandaone AI Agent
 #   Workflow: publish.yml
 #   Environment: Any（未配置 GitHub Environment）
+#
+# 但实际 publish 出现 invalid-publisher 错误（PyPI 上找不到匹配的 publisher）。
+# 怀疑 pandax-guard 项目是 legacy API token 模式而非 Trusted Publisher 模式。
+#
+# 本 PR 加入 fallback：
+#   - 如果 secret PYPI_API_TOKEN 存在 → 用 API token（password=secret, username=__token__）
+#   - 否则 → 默认 OIDC Trusted Publishing
 #
 # IMPORTANT: PyPI project name = `pandax-guard`（不是 pandaone-guard）
 # PR #4 把 src 内部代码 + CLI 命令名改成 pandaone（pandaone/, pandaone:main），
@@ -177,14 +184,42 @@ jobs:
         run: |
           echo "target=${{ github.event.inputs.target }}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to TestPyPI
-        if: ${{ steps.target.outputs.target == 'testpypi' || steps.target-dispatch.outputs.target == 'testpypi' }}
+      - name: Detect publish mode
+        id: mode
+        run: |
+          if [ -n "$PYPI_API_TOKEN" ]; then
+            echo "mode=token" >> "$GITHUB_OUTPUT"
+            echo "→ Using API token (PYPI_API_TOKEN secret present)"
+          else
+            echo "mode=oidc" >> "$GITHUB_OUTPUT"
+            echo "→ Using OIDC Trusted Publishing"
+          fi
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Publish to TestPyPI (API token)
+        if: ${{ (steps.target.outputs.target == 'testpypi' || steps.target-dispatch.outputs.target == 'testpypi') && steps.mode.outputs.mode == 'token' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          username: __token__
+
+      - name: Publish to TestPyPI (OIDC)
+        if: ${{ (steps.target.outputs.target == 'testpypi' || steps.target-dispatch.outputs.target == 'testpypi') && steps.mode.outputs.mode == 'oidc' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
 
-      - name: Publish to Production PyPI
-        if: ${{ steps.target.outputs.target == 'pypi' || steps.target-dispatch.outputs.target == 'pypi' }}
+      - name: Publish to Production PyPI (API token)
+        if: ${{ (steps.target.outputs.target == 'pypi' || steps.target-dispatch.outputs.target == 'pypi') && steps.mode.outputs.mode == 'token' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          username: __token__
+
+      - name: Publish to Production PyPI (OIDC)
+        if: ${{ (steps.target.outputs.target == 'pypi' || steps.target-dispatch.outputs.target == 'pypi') && steps.mode.outputs.mode == 'oidc' }}
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Create GitHub Release
