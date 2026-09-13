@@ -10,17 +10,17 @@ name: Publish to PyPI
 #   Environment: Any（未配置 GitHub Environment）
 #
 # 但实际 publish 出现 invalid-publisher 错误（PyPI 上找不到匹配的 publisher）。
-# 怀疑 pandax-guard 项目是 legacy API token 模式而非 Trusted Publisher 模式。
+# 怀疑 pandaone-guard 项目是 legacy API token 模式而非 Trusted Publisher 模式。
 #
 # 本 PR 加入 fallback：
 #   - 如果 secret PYPI_API_TOKEN 存在 → 用 API token（password=secret, username=__token__）
 #   - 否则 → 默认 OIDC Trusted Publishing
 #
-# IMPORTANT: PyPI project name = `pandax-guard`（不是 pandaone-guard）
+# IMPORTANT: PyPI project name = `pandaone-guard`（不是 pandaone-guard）
 # PR #4 把 src 内部代码 + CLI 命令名改成 pandaone（pandaone/, pandaone:main），
-# 但 PyPI 分发名仍是 `pandax-guard`（PEP 503 wheel 文件名 = pandax_guard-*）。
+# 但 PyPI 分发名仍是 `pandaone-guard`（PEP 503 wheel 文件名 = pandax_guard-*）。
 # 这是有意的：PyPI 上 pandaone-guard 项目从未存在，跳过新建项目的成本。
-# 用户面：pip install pandax-guard → 得到 pandaone 命令（内部 brand 一致，外部 channel 一致）
+# 用户面：pip install pandaone-guard → 得到 pandaone 命令（内部 brand 一致，外部 channel 一致）
 #
 # 触发规则 (按 tag 前缀):
 #   v*.*.*-test  → TestPyPI (例: v0.7.2-test)
@@ -236,9 +236,9 @@ jobs:
             ## Installation
 
             ```bash
-            pip install --upgrade pandax-guard
+            pip install --upgrade pandaone-guard
             ```
 
-            This installs the `pandaone` CLI command (see the rename note in the v0.7.4 commit message — internal brand is Pandaone AI Agent, distribution channel stays pandax-guard to preserve the existing PyPI project's Trusted Publisher config).
+            This installs the `pandaone` CLI command (see the rename note in the v0.7.4 commit message — internal brand is Pandaone AI Agent, distribution channel stays pandaone-guard to preserve the existing PyPI project's Trusted Publisher config).
 
             See [CHANGELOG.md](https://github.com/hellob1889/Pandaone-AI-Agent/blob/main/CHANGELOG.md) for details.
