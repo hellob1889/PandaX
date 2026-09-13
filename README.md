@@ -42,7 +42,7 @@ $50,000 ???            $50,000  src/payment.py
 **The right column is how yours will look with one command:**
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 Your personal manager is on duty 24/7 — **before, during, and after every code change**. Every AI agent — Claude, Cursor, Trae — operates under one auditable protocol. **No exceptions. No bypass.**
@@ -100,7 +100,7 @@ Pandaone 是一个 **7 层防御体系**，强制 AI Agent（或任何开发者�
 **方式 A：从 PyPI 安装（最简单）**
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 
 # 一键装上右键菜单（Windows / macOS / Linux 自动检测）
 pandaone install-context
@@ -322,7 +322,7 @@ which records reason / problem / approach as immutable audit evidence.
 **Option A: from PyPI (easiest)**
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 **Option B: from source (recommended for developers, includes latest i18n + CI lint)**
