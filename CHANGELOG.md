@@ -136,7 +136,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`src/pandax/i18n.py`**：i18n 引擎（**184 keys** × 2 语言，100% 覆盖）
 - **`--lang=zh-CN|en` 旗标**：CLI 语言切换
 - **自动检测 OS 语言**：Windows `GetUserDefaultLocaleName` + Unix `LANG` + `locale` 模块
-- **持久化偏好**：`~/.pandax/config.json` 保存用户语言选择
+- **持久化偏好**：`~/.pandax/config.json` 保存用户语言偏好
 
 ### Added (CI / 自动化 / Automation)
 - **`scripts/audit_i18n.py`**：对抗式审查脚本
@@ -181,7 +181,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pandax ci --root . --base main` subcommand
 - `.github/workflows/audit.yml`: auto-run on pull_request + push
 - Auto-comment on failed PR via `actions/github-script`
-- `pandax_ci` MCP tool
 
 ### Tests
 - 129 passed
@@ -242,11 +241,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.7.3]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.2...v0.7.1
-[0.6.2]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.1...v0.6.2
+[0.6.2]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.1...v0.6.0
 [0.6.1]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.6.0...v0.6.0
 [0.6.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.5.0...v0.5.0
 [0.5.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.4.0...v0.4.0
 [0.4.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.3.0...v0.3.0
 [0.3.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.2.0...v0.2.0
-[0.2.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.1.0...v0.1.0
+[0.2.0]: https://github.com/hellob1889/Pandaone-AI-Agent/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/hellob1889/Pandaone-AI-Agent/releases/tag/v0.1.0
