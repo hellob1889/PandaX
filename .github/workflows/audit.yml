@@ -128,7 +128,7 @@ jobs:
           #   - PR 阶段：paths filter 包含 **/*.md 触发审计；push 阶段：没有 paths filter，必然触发
           #   - 所以这里主要服务"push 到 main"的场景（PR 阶段可由贡献者写 [skip-audit] 兜底）
           DOCS_ONLY=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
-            | grep -v -E '^(CHANGELOG\.md|README[^/]*\.md|docs/|\.github/PULL_REQUEST_TEMPLATE/|\.github/ISSUE_TEMPLATE/|\.github/CODEOWNERS|\.github/CODE_OF_CONDUCT\.md|\.github/CONTRIBUTING\.md|\.github/SECURITY\.md|LICENSE[^/]*|NOTICE[^/]*)$' \
+            | grep -v -E '^(CHANGELOG\.md|README[^/]*\.md|docs/.*|\.github/PULL_REQUEST_TEMPLATE(\.md|/.*)|\.github/ISSUE_TEMPLATE/.*|\.github/CODEOWNERS|\.github/CODE_OF_CONDUCT\.md|\.github/CONTRIBUTING\.md|\.github/SECURITY\.md|LICENSE[^/]*|NOTICE[^/]*)$' \
             | wc -l)
           if [ "$DOCS_ONLY" = "0" ]; then
             echo "::notice::本次 push 仅改动 docs / meta 文件，跳过 pandax ci 验证"
