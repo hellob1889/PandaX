@@ -5,6 +5,45 @@ All notable changes to Pandaone AI Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.5] - 2026-09-13
+
+### Fixed (CI 审计机制加固 / CI Audit Mechanism Hardening)
+
+- **PR #18** — audit.yml `[skip-audit]` 检测范围从 commit subject-only (`%s`) 扩展到 subject+body (`%s%n%n%b`)。修复 PR #17 (CHANGELOG.md v0.7.4 补段) 把 `[skip-audit]` 写在 footer 却被旧逻辑漏检、L7 审计误判失败的问题。footer 标记写法现在和 `Signed-off-by:` / `[skip ci]` / `[skip actions]` 等 Git 社区惯例对齐
+- **PR #19** — audit.yml 新增"docs-only / meta-only" 自动跳过机制。push 仅触及下列文件时自动跳过 pandax ci 验证，贡献者**无需**手动写 `[skip-audit]`：
+  - `CHANGELOG.md` / `README*.md`（含 `README.md` / `README-zh.md` 等）
+  - `docs/**`
+  - `.github/PULL_REQUEST_TEMPLATE/**` / `.github/PULL_REQUEST_TEMPLATE.md` / `.github/ISSUE_TEMPLATE/**`
+  - `.github/CODEOWNERS` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md` / `SECURITY.md`
+  - `LICENSE` / `LICENSE-*` / `LICENSE.md` / `LICENSE.txt` / `NOTICE*`
+- **PR #20** — docs-only regex bug 修复。PR #19 引入的 regex 用了 literal `docs/$` 形式（缺少 `.*` 后缀），导致 `docs/foo.md`、`docs/sub/nested/file.md`、`.github/PULL_REQUEST_TEMPLATE/foo.md` 等不匹配 → 仍触发 audit。PR #20 改成 `docs/.*` + `.github/PULL_REQUEST_TEMPLATE(\.md|/.*)`，本地用 bash `grep -E` 验证 23 个 docs 路径全部 SKIP ✅、4 个代码路径正确 AUDIT ✅
+
+### Added (PR Template / 贡献者引导)
+
+- `.github/PULL_REQUEST_TEMPLATE.md`（v0.7.4 之前已存在，本 release 进一步强化）— "Audit 状态" 区块明确列出 4 种情况：
+  1. 已通过 `pandaone write` 记录所有改动
+  2. 仅 workflow 文件改动 → `[skip-audit]`
+  3. 仅文档 / 示例 / assets 改动 → `[skip-audit]`（**v0.7.5 起也可省略，docs-only 自动跳过**）
+  4. 其他情况说明
+
+### Repository Cleanup / 仓库清理
+
+- **远端分支清理**：`docs/changelog-v074`（squash merge auto-delete 自动清）、`fix/audit-yml-skip-marker-body-scan`（PR #18 squash 后手动 API 删）、`chore/cleanup-stale-deployment`（部署清理用，任务完成后强删）
+- **远端 tag 清理**：`v0.7.1-test`（实验分支 tag，无对应 release）
+- **Deployment `6362252475` 清理** — v0.7.1-test 实验 deployment（3 天前失败的 publish run 残留）通过一次性 cleanup workflow（`github-actions[bot]`）自动加 `inactive` status，UI 不再显示为 "Active"
+
+### Stats
+
+- **测试**：342 passed, 1 skipped（无回归）
+- **PyPI**：无新发布（v0.7.4 仍是最新）
+- **main HEAD**：`2635cfde9b2e2a7b0382aed7d6b3ae287caf2b1c`
+- **PRs in this release**：#17 + #18 + #19 + #20（其中 #17 是 v0.7.4 补 CHANGELOG，#18/#19/#20 是 v0.7.5 CI 修复）
+
+### Notes
+
+- 本 release 是**纯 CI/仓库工程化变更**，不影响 PyPI 包内容，也不影响受审计业务代码
+- 下一 release (v0.7.6) 计划：切回 `pandaone-guard` PyPI 包名（需先在 PyPI 建新项目 + 配置 Trusted Publisher），把临时回退 (PR #12) 还原
+
 ## [0.7.4] - 2026-09-13
 
 ### Changed (Rebrand: PandaX → Pandaone AI Agent)
