@@ -5,6 +5,56 @@ All notable changes to Pandaone AI Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.6] - 2026-09-13
+
+### Changed (品牌切回 / Rebrand Cutover)
+
+- **PyPI 分发名从 `pandax-guard` 切回 `pandaone-guard`** (PR #23)：
+  - `pyproject.toml` `name = "pandaone-guard"`,`version = "0.7.6"`
+  - 13 个用户面文件:`pandax-guard` → `pandaone-guard` (还原 PR #12 临时回退)
+  - 发布到 PyPI 后用户可执行 `pip install pandaone-guard`
+- **PyPI `pandaone-guard` 项目自动创建**：M1+M2 阶段在 PyPI `/manage/account/publishing/` 配 pending trusted publisher（GitHub Actions from `hellob1889/Pandaone-AI-Agent`, workflow `publish.yml`）。第一次 OIDC upload 时 PyPI 自动建项目
+- **PyPI `pandax-guard` 项目保留**(不动)——不破坏现有 `pip install pandax-guard` 用户,v0.7.4 仍是其最新版
+
+### Distribution 命名约定(永久)
+
+| 包名 | 含义 | 引用 |
+|---|---|---|
+| `pandax-guard` | PyPI 旧分发名(2026-09-13 之前的发布) | 仅向后兼容,v0.7.4 是其最后一个 release |
+| `pandaone-guard` | PyPI 新分发名(品牌 Pandaone AI Agent) | 主分发,本 release 起 |
+| `pandaone` | Python `import` 包名(PR #4 改名,自 v0.7.4 起) | `from pandaone.cli import main` |
+| `pandax` | Python `import` 旧别名(向后兼容) | `import pandax` 仍可用 |
+| `pandaone` | CLI 主命令(PR #4 改名) | `pandaone --version` |
+| `pandax` | CLI 旧命令别名(向后兼容) | `pandax --version` 仍可用 |
+
+### Migration Guide (从 pandax-guard 升级到 pandaone-guard)
+
+```bash
+# 1. 卸载旧包
+pip uninstall pandax-guard
+
+# 2. 安装新包
+pip install pandaone-guard
+
+# 3. 验证
+pandaone --version  # 应输出: pandaone-guard v0.7.6
+```
+
+### Stats
+
+- **测试**：342 passed, 1 skipped（无回归）
+- **PyPI**：[pandaone-guard 0.7.6](https://pypi.org/project/pandaone-guard/0.7.6/)（首次发布到新包名）
+- **GitHub Release**：[v0.7.6](https://github.com/hellob1889/Pandaone-AI-Agent/releases/tag/v0.7.6)
+- **PRs in this release**：#23 + #22 (#22 是 v0.7.6 plan 文档,docs-only)
+- **Trusted Publisher**：在 PyPI 配的 pending trusted publisher 自动激活(从 pending 转为 active)
+
+### Notes
+
+- 本 release 是**纯品牌切回**,不影响业务代码
+- 内部 Python 包 `import` 路径(自 v0.7.4 已切到 `pandaone`)保持不变
+- CLI 命令(自 v0.7.4 已切到 `pandaone`)保持不变
+- 向后兼容别名(`import pandax` / `pandax` CLI)保持不变
+
 ## [0.7.5] - 2026-09-13
 
 ### Fixed (CI 审计机制加固 / CI Audit Mechanism Hardening)
