@@ -9,7 +9,7 @@
 ## 一行安装
 
 ```bash
-pip install pandax-guard
+pip install pandaone-guard
 ```
 
 ## 验证安装
@@ -48,13 +48,13 @@ pytest tests/ -v
 ## 升级
 
 ```bash
-pip install pandax-guard --upgrade
+pip install pandaone-guard --upgrade
 ```
 
 ## 卸载
 
 ```bash
-pip uninstall pandax-guard
+pip uninstall pandaone-guard
 # 清理 fingerprint
 rm -rf ~/.pandaone_fp.txt
 # 清理 PATH（如果之前手动添加过 pandaone-mcp）
@@ -64,7 +64,7 @@ rm -rf ~/.pandaone_fp.txt
 
 ```dockerfile
 FROM python:3.11-slim
-RUN pip install pandax-guard
+RUN pip install pandaone-guard
 ENTRYPOINT ["pandaone"]
 ```
 
