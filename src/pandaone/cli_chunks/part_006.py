@@ -44,6 +44,12 @@ def _run_installer(action, force=False):
     os_key = detect_os_key()
     if not os_key:
         return 2
+    # v0.7.9 fix (PR #35): Windows 用 Python winreg 直接写注册表,
+    # bypass PowerShell 完全 (PowerShell 5.1 / 7 兼容问题 + 5 BOM + #Requires + 注释内 () 干扰
+    # 等多个 bug 自 v0.7.0 起累积, 用户机器只有 PowerShell 5.1 时右键菜单永远不可用)。
+    # macOS / Linux 继续用 .sh 脚本 (无 PowerShell 依赖)。
+    if os_key == "Windows":
+        return _windows_registry_install(action, force)
     handler = PLATFORM_HANDLERS[os_key]
     script_rel = handler[action]
     interpreter = handler["interpreter"]
@@ -51,8 +57,6 @@ def _run_installer(action, force=False):
     if not script_path.exists():
         return 1
     cmd = interpreter + [str(script_path)]
-    if action == "install" and force and os_key == "Windows":
-        cmd += ["-Force"]
     env = os.environ.copy()
     try:
         from .i18n import get_lang
@@ -60,12 +64,169 @@ def _run_installer(action, force=False):
     except Exception:
         pass
     try:
-        result = subprocess.run(cmd, check=False, env=env, timeout=60, capture_output=True, text=True)
+        # v0.7.9 fix (PR #35): 暴露 PowerShell stderr 到用户，避免 silent failure
+        result = subprocess.run(cmd, check=False, env=env, timeout=60)
         return result.returncode
     except subprocess.TimeoutExpired:
+        print(f"[TIMEOUT] {script_path} 超过 60 秒", file=sys.stderr)
         return 124
     except FileNotFoundError:
+        print(f"[NOT FOUND] 解释器 {interpreter[0]} 不在 PATH", file=sys.stderr)
         return 127
+
+
+def _find_pandaone_exe_windows():
+    """Windows: 定位 pandaone.exe (在 PATH 或 Scripts 目录)"""
+    import shutil as _shutil
+    exe = _shutil.which("pandaone")
+    if exe:
+        return exe
+    # fallback: 同目录的 python.exe → Scripts\pandaone.exe
+    pyexe = _shutil.which("python")
+    if pyexe:
+        candidate = str(Path(pyexe).resolve().parent / "Scripts" / "pandaone.exe")
+        if Path(candidate).exists():
+            return candidate
+    return None
+
+
+def _windows_registry_install(action, force=False):
+    """
+    v0.7.9 fix (PR #35): Windows 直接用 Python winreg 写注册表,
+    完全 bypass PowerShell. 修复 5 个累积 bug (BOM / #Requires / [CmdletBinding()]
+    函数体内 $ErrorActionPreference / PowerShell 7+ 表达式 if 语法 / 注释内 () 干扰 parser).
+    注册表结构与原 PS1 等价:
+      HKCU\\Software\\Classes\\*\\shell\\Pandaone (任意文件右键)
+          \\shell\\Init\\shell\\open\\command  → pandaone init --root "%V"
+          \\shell\\Lock\\shell\\open\\command  → pandaone lock --root "%V"
+          \\shell\\Status\\shell\\open\\command → pandaone status --root "%V"
+          \\shell\\Unlock\\shell\\open\\command → pandaone unlock --root "%V"
+      HKCU\\Software\\Classes\\Directory\\shell\\Pandaone (目录右键)
+      HKCU\\Software\\Classes\\Directory\\Background\\shell\\Pandaone (空白处右键)
+    """
+    import winreg
+
+    BASE_KEYS = [
+        r"Software\Classes\*\shell\Pandaone",
+        r"Software\Classes\Directory\shell\Pandaone",
+        r"Software\Classes\Directory\Background\shell\Pandaone",
+    ]
+    SUB_COMMANDS = [
+        ("Init",   "初始化 Pandaone (init)", "init"),
+        ("Lock",   "锁定文件 (lock)",       "lock"),
+        ("Status", "查看状态 (status)",     "status"),
+        ("Unlock", "解锁文件 (unlock)",     "unlock"),
+    ]
+
+    try:
+        if action == "uninstall":
+            print("===============================================")
+            print("Pandaone Windows 右键菜单卸载程序")
+            print("===============================================")
+            for base in BASE_KEYS:
+                # 先删子命令，再删主菜单 (顺序避免权限问题)
+                for name, _, _ in SUB_COMMANDS:
+                    sub_path = f"{base}\\shell\\{name}"
+                    try:
+                        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, sub_path + "\\command")
+                    except FileNotFoundError:
+                        pass
+                    try:
+                        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, sub_path)
+                    except FileNotFoundError:
+                        pass
+                try:
+                    winreg.DeleteKey(winreg.HKEY_CURRENT_USER, base)
+                except FileNotFoundError:
+                    pass
+            print("[OK] 已卸载右键菜单")
+            print("如果右键菜单依然残留，请重启资源管理器：")
+            print("  taskkill /f /im explorer.exe && start explorer.exe")
+            return 0
+
+        # install
+        pandaone_exe = _find_pandaone_exe_windows()
+        if not pandaone_exe:
+            print("[WARN] 未找到 pandaone 可执行文件！", file=sys.stderr)
+            print("请先安装 Pandaone：")
+            print("  pip install pandaone-guard")
+            return 1
+
+        # 检查是否已安装
+        if not force:
+            try:
+                winreg.OpenKey(winreg.HKEY_CURRENT_USER, BASE_KEYS[0])
+                print("[INFO] Pandaone 右键菜单已存在。使用 --force 重新安装。")
+                return 0
+            except FileNotFoundError:
+                pass
+
+        print("===============================================")
+        print("Pandaone Windows 右键菜单安装程序")
+        print("===============================================")
+        print(f"[OK] pandaone: {pandaone_exe}")
+
+        # 清理旧条目 (幂等)
+        for base in BASE_KEYS:
+            for name, _, _ in SUB_COMMANDS:
+                sub_path = f"{base}\\shell\\{name}"
+                try:
+                    winreg.DeleteKey(winreg.HKEY_CURRENT_USER, sub_path + "\\command")
+                except FileNotFoundError:
+                    pass
+                try:
+                    winreg.DeleteKey(winreg.HKEY_CURRENT_USER, sub_path)
+                except FileNotFoundError:
+                    pass
+            try:
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, base)
+            except FileNotFoundError:
+                pass
+        print("[1/3] 已清理旧条目")
+
+        icon_value = f'"{pandaone_exe}",0'
+        for base in BASE_KEYS:
+            # 主菜单 (cascade = submenu)
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base) as key:
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "Pandaone")
+                winreg.SetValueEx(key, "MUIVerb", 0, winreg.REG_SZ, "Pandaone 审计工具 / Audit Tools")
+                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, icon_value)
+                winreg.SetValueEx(key, "SubCommands", 0, winreg.REG_SZ, "")
+            # 4 个 subcommands
+            for name, label, action_cmd in SUB_COMMANDS:
+                sub_path = f"{base}\\shell\\{name}"
+                with winreg.CreateKey(winreg.HKEY_CURRENT_USER, sub_path) as sub_key:
+                    winreg.SetValueEx(sub_key, "", 0, winreg.REG_SZ, label)
+                    winreg.SetValueEx(sub_key, "Icon", 0, winreg.REG_SZ, icon_value)
+                cmd_path = f"{sub_path}\\command"
+                cmd_value = f'"{pandaone_exe}" --silent --trust-default {action_cmd} --root "%V"'
+                with winreg.CreateKey(winreg.HKEY_CURRENT_USER, cmd_path) as cmd_key:
+                    winreg.SetValueEx(cmd_key, "", 0, winreg.REG_SZ, cmd_value)
+        print("[2/3] 已注册右键菜单 (任意文件 / 目录 / 空白处)")
+        print("[3/3] 已注册 4 个子命令 (Init / Lock / Status / Unlock)")
+
+        print()
+        print("[OK] 安装完成！")
+        print()
+        print("测试方法：")
+        print("  1. 在任意目录空白处点击右键")
+        print("  2. 看到「Pandaone 审计工具」级联菜单")
+        print("  3. 展开后看到：Init / Lock / Status / Unlock")
+        print()
+        print("卸载：")
+        print("  pandaone uninstall-context")
+        print()
+        print("如果右键菜单没立刻出现，请重启资源管理器：")
+        print("  taskkill /f /im explorer.exe && start explorer.exe")
+        return 0
+
+    except PermissionError as e:
+        print(f"[ERROR] 注册表权限不足: {e}", file=sys.stderr)
+        print("提示: HKCU 通常不需要管理员权限, 如仍报错请检查用户配置", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"[ERROR] {type(e).__name__}: {e}", file=sys.stderr)
+        return 1
 
 
 def cmd_install_context(args):

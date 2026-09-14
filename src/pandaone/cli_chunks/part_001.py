@@ -50,7 +50,7 @@ except Exception:
 # ============================================================
 # 路径常量
 # ============================================================
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 README_PATH = ROOT / "README.md"
 # 指纹文件放用户目录（避免 pip 安装后被覆盖）
 FP_PATH = Path.home() / ".pandaone_fp.txt"

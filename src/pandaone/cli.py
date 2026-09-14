@@ -22,8 +22,11 @@ if not _chunks:
 # 让 _exec_ns 直接 = globals() 保证两个 dict 是同一个引用。
 _exec_ns = globals()
 _exec_ns["__name__"] = "pandaone.cli"
-_exec_ns["__file__"] = str(Path(__file__).resolve())
+# v0.7.9 fix (PR #36): 把 __file__ 设到每个 chunk 自己的路径,
+# 否则 part_001.py 里 `ROOT = Path(__file__).parent.parent` 解析到 cli.py 自己路径
+# (因为 _exec_ns["__file__"] 被钉死在 cli.py 绝对路径),导致 ROOT 指错 (site-packages/)
 for chunk in _chunks:
+    _exec_ns["__file__"] = str(chunk.resolve())
     code = chunk.read_text(encoding="utf-8")
     exec(compile(code, str(chunk), "exec"), _exec_ns)
 
