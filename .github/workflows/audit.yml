@@ -67,7 +67,7 @@ jobs:
           fetch-depth: 0  # 需要 git 历史做 diff
 
       - name: 设置 Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.10"
 
