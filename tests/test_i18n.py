@@ -29,7 +29,7 @@ def reset_i18n_state(tmp_path, monkeypatch):
     # 临时 HOME 目录（Windows Path.home() 用 USERPROFILE；Unix 用 HOME）
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    # 清除可能的语言环境变量（让 _detect_os_language 走 Windows API / 兜底）
+    # 清除可能语言环境变量（让 _detect_os_language 走 Windows API / 兜底）
     monkeypatch.delenv("LANG", raising=False)
     monkeypatch.delenv("LC_ALL", raising=False)
     monkeypatch.delenv("LANGUAGE", raising=False)
@@ -246,12 +246,19 @@ class TestTranslation:
         assert not diff_en, f"en has keys not in zh-CN: {diff_en}"
 
     def test_all_called_keys_are_defined(self):
-        """Bug #20 回归测试：src/pandaone 中所有 t() 调用的 key 都必须在 zh-CN/en 中定义"""
+        """Bug #20 回归测试:src/pandaone 中所有 t() 调用的 key 都必须在 zh-CN/en 中定义"""
         import re
         from pathlib import Path
         src_dir = Path(i18n.__file__).parent
         pattern = re.compile(r'(?<![a-zA-Z0-9_])t\(\s*["\']([a-zA-Z_][a-zA-Z0-9_]*)["\']')
+        # 收集 i18n.py 主 dict 的 key
         defined = set(i18n.TRANSLATIONS["zh-CN"].keys()) | set(i18n.TRANSLATIONS["en"].keys())
+        # PR #28: 合并 i18n_extras (运行时注册,静态测试也需识别)
+        try:
+            from pandaone.i18n_extras import EXTRANSLATIONS
+            defined |= set(EXTRANSLATIONS["zh-CN"].keys()) | set(EXTRANSLATIONS["en"].keys())
+        except ImportError:
+            pass
         undefined = set()
         for py_file in src_dir.glob("*.py"):
             for match in pattern.finditer(py_file.read_text(encoding="utf-8")):
