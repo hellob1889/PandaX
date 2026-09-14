@@ -44,6 +44,6 @@ download = [
 ]
 
 [project.scripts]
-pandaone = "pandaone:main"
+pandaone = "pandaone.__main__:main"
 pandaone-guard = "pandaone_guard:main"
 pandaone-mcp = "pandaone_mcp:main"
