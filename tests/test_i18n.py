@@ -18,4 +18,4 @@
                 key = match.group(1)
                 if key not in defined:
                     undefined.add(key)
-        assert not undefined, f"t() calls undefined keys: {undefined}"
+        assert not undefined, f"t() calls undefined keys: {undefined}"  # PR #28 fix applied
