@@ -1,7 +1,6 @@
-﻿﻿﻿﻿﻿# ============================================================
+# ============================================================
 # Pandaone AI Agent Windows 右键菜单安装脚本
 # ============================================================
-#
 # 用法（管理员或普通用户均可）：
 #   powershell -ExecutionPolicy Bypass -File installer\windows\install_context_menu.ps1
 #
@@ -27,10 +26,8 @@
 #       \shell\Write\shell\open\command             (pandaone write --file)
 #   HKCU\Software\Classes\Directory\shell\Pandaone    (目录)
 #   HKCU\Software\Classes\Directory\Background\shell\Pandaone  (空白处)
-#
 # ============================================================
 
-#Requires -Version 5.1
 [CmdletBinding()]
 param(
     [switch]$Force,      # 强制重新安装（即使已安装）
