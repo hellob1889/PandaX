@@ -239,9 +239,51 @@ class TestCiWithBaseBranch:
         )
         assert rc == 0, f"write 失败: {err}"
 
-        # ci 应 pass（--base main 找不到就 fallback 到 HEAD~1，看到的变更都已审计）
+        # ci 应 pass（--base main 找到就直接用，HEAD~1 fallback 仅当 base 找不到时）
         rc, out, err = _run_cli("ci", "--root", str(project), "--base", "main")
         assert rc == 0, f"基于 main 对比应 pass: {out[-500:]}"
+
+    def test_ci_explicit_base_overrides_head_minus_1(self, tmp_path):
+        """PR #33 回归测试：--base 必须优先于 HEAD~1。
+
+        Bug 之前：candidates[0] = "HEAD~1" 永远存在,即使传 --base main 也被顶替。
+        修后：用户传的 base 优先于 HEAD~1 fallback。
+
+        设计：用 detached HEAD 让 main 不跟随 forward。setup_git_project init 后
+        checkout 到 detached HEAD,这样 evil.py commit 不会让 main 前进。
+
+        关键：步骤 4 和 5 都用 main 作 base 但表现不同 — 证明 base 真的在用,
+        不是 fallback 到 HEAD~1。
+        """
+        project = setup_git_project(tmp_path)
+        _git(["branch", "-M", "main"], cwd=project)
+        init_sha = _git(["rev-parse", "HEAD"], cwd=project)[1].strip()
+        # detached HEAD 让 main 不跟随 forward
+        _git(["checkout", "--detach", init_sha], cwd=project)
+
+        # 步骤 2: 绕过 audit 直接 commit evil.py
+        (project / "evil.py").write_text('import os\nos.system("rm -rf /")\n', encoding="utf-8")
+        _git(["add", "evil.py"], cwd=project)
+        _git(["commit", "-m", "add evil.py (bypassing audit)"], cwd=project)
+
+        evil_sha = _git(["rev-parse", "HEAD"], cwd=project)[1].strip()
+        main_sha = _git(["rev-parse", "main"], cwd=project)[1].strip()
+        assert main_sha == init_sha, f"main 不应 advance: {main_sha} != {init_sha}"
+
+        # 步骤 3: --base HEAD~1 --head HEAD → 看到 evil.py (FAIL)
+        rc3, out3, _ = _run_cli("ci", "--root", str(project), "--base", "HEAD~1", "--head", "HEAD")
+        assert rc3 == 1, f"--base HEAD~1 应检测到 evil.py 违规, rc={rc3}"
+
+        # 步骤 4: --base main --head HEAD → 看 init..HEAD 全部,evil.py 违规
+        rc4, out4, _ = _run_cli("ci", "--root", str(project), "--base", "main", "--head", "HEAD")
+        assert rc4 == 1, f"--base main 应检测到 evil.py (init..HEAD), rc={rc4}, out={out4[-300:]}"
+        assert "evil.py" in out4, f"输出应提到 evil.py, 实际: {out4[-500:]}"
+
+        # 步骤 5: --base evil_sha --head HEAD → evil_sha..HEAD 无变更 → PASS
+        rc5, out5, _ = _run_cli("ci", "--root", str(project), "--base", evil_sha, "--head", "HEAD")
+        assert rc5 == 0, (
+            f"--base evil_sha 应看到 0 violations, 但 rc={rc5}, out={out5[-500:]}"
+        )
 
 
 class TestCiNoInit:

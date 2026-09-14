@@ -167,7 +167,13 @@ def cmd_ci(args):
         r = _git_run("rev-parse", "--verify", ref)
         return r is not None and r.returncode == 0
     base_resolved = False
-    candidates = ["HEAD~1", base, f"origin/{base}", "main", "master", "origin/main", "origin/master"]
+    # PR #33 fix (baseline order): 用户的 base 必须优先于 HEAD~1 fallback。
+    # 之前 candidates[0] = "HEAD~1" 永远存在,导致即使传 --base main 也被 HEAD~1 顶替,
+    # --base 参数实际失效。改成 base → origin/base → HEAD~1 → main/master,这样:
+    #   1) 用户传 --base main  → 直接用 main(尊重显式意图)
+    #   2) --base NONEXISTENT  → HEAD~1 fallback(原行为保留)
+    #   3) 没传 base(默认 main) → main(原行为保留)
+    candidates = [base, f"origin/{base}", "HEAD~1", "main", "master", "origin/main", "origin/master"]
     for ref in candidates:
         if _resolve_ref(ref):
             base = ref
