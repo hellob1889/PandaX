@@ -14,14 +14,18 @@ if not _chunks:
     print("ERR: no cli_chunks/part_*.py found", file=sys.stderr)
     sys.exit(1)
 
-_exec_ns = {"__name__": "pandaone.cli", "__file__": str(Path(__file__).resolve())}
+# PR #32 fix (cli loader): 用模块 globals() 作为 exec namespace,
+# 这样 part_*.py 里 `def main():` 的 __globals__ 就是 cli 模块 globals。
+# 之前用独立 _exec_ns dict,exec 后再 `for k,v: globals()[k]=v` 复制 — 这是浅复制,
+# 之后 monkey-patch `cli.build_parser = patched` 只改 cli 模块 globals,
+# main 函数体内查找 `build_parser` 走自己的 __globals__ (_exec_ns),看不到 patched version。
+# 让 _exec_ns 直接 = globals() 保证两个 dict 是同一个引用。
+_exec_ns = globals()
+_exec_ns["__name__"] = "pandaone.cli"
+_exec_ns["__file__"] = str(Path(__file__).resolve())
 for chunk in _chunks:
     code = chunk.read_text(encoding="utf-8")
     exec(compile(code, str(chunk), "exec"), _exec_ns)
-
-for _k, _v in _exec_ns.items():
-    if not _k.startswith("_"):
-        globals()[_k] = _v
 
 if __name__ == "__main__":
     sys.exit(main())

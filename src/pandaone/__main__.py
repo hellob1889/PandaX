@@ -116,7 +116,20 @@ def _git_gate():
 _ensure_doctor_registered()
 
 
-if __name__ == "__main__":
+def main():
+    """CLI 入口: 让 entry point (`pandaone` 命令) 走这里。
+
+    PR #32 fix: 之前 `if __name__ == "__main__":` 保护块只在 `python -m pandaone`
+    时跑;entry point `pandaone` (pyproject.toml `pandaone = "pandaone:main"`)
+    走 `pandaone/__init__.py:main`,**完全跳过 __main__.py**,导致 monkey-patch
+    注册的 doctor 子命令不可用。
+    改用顶层 `def main()` + entry point 改 `"pandaone.__main__:main"`,保证 import
+    副作用(_ensure_doctor_registered)和 git_gate 都被调用。
+    """
     _git_gate()
-    from pandaone.cli import main
+    from pandaone.cli import main as _cli_main
+    sys.exit(_cli_main())
+
+
+if __name__ == "__main__":
     sys.exit(main())
