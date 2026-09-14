@@ -2,6 +2,72 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.8] - 2026-09-14
+
+### Fixed (PR #28 follow-up: git auto-installer + doctor 子命令真正可用)
+
+PR #28 在 fix/auto-install-git 分支写了 git_installer.py / cmd_doctor.py / i18n_extras.py,
+通过 PR #31 merge 到 main。但 PR #28 设计了两个**隐藏 bug**,让 doctor 子命令
+对 `pandaone` entry point 实际**不可用**,`ci --base` 参数**被忽略**。v0.7.8 修复
+这两个 bug + 加 doctor 的 cmd_doctor 等价 PR #28 的内容。
+
+- **PR #32 (P0 / 阻断): `pandaone doctor` 不可用**
+  - 现象:`pandaone --help` 列 14 个子命令,没有 doctor。`pandaone doctor` 报
+    `invalid choice: 'doctor'`。
+  - 根因(双 bug):
+    1. `pyproject.toml` entry point `pandaone = "pandaone:main"` 走
+       `pandaone/__init__.py:main`,**完全跳过 `__main__.py`** — monkey-patch
+       注册的 doctor 子命令从未生效。
+    2. v0.7.7 把 84KB cli.py 拆 cli_chunks/part_*.py 用 `exec()` 加载,loader 用独立
+       `_exec_ns` dict 作 exec namespace,exec 后 `for k,v: globals()[k]=v` 浅复制。
+       Python 函数 `__globals__` 在 def 时绑定,part_006 的 `def main():` 的
+       `__globals__` 指向原 `_exec_ns` (不是 cli 模块 globals)。monkey-patch
+       `cli.build_parser = patched` 只改 cli 模块 globals,`cli.main()` 内部查找
+       `build_parser` 走自己的 `__globals__` — 看不到 patched version。
+  - 修复:
+    1. `src/pandaone/__main__.py`:把 `if __name__ == "__main__":` 保护块改成
+       顶层 `def main():`,让 entry point 能调到。
+    2. `pyproject.toml`:entry point 改 `"pandaone.__main__:main"` — import 时
+       触发 `_ensure_doctor_registered()` 注册副作用。
+    3. `src/pandaone/cli.py` loader:`_exec_ns = globals()` 直接共享 dict 引用,
+       让 part_006 main 函数的 `__globals__` 自然指向 cli 模块 globals。
+
+- **PR #33 (P1): `pandaone ci --base` 被 HEAD~1 fallback 顶替**
+  - 现象:`pandaone ci --base main --head HEAD` 即使 base 解析成功,实际 diff
+    仍是 `HEAD~1..HEAD`,`--base main` 参数被静默忽略。
+  - 根因:`cmd_ci` 里 `candidates = ["HEAD~1", base, f"origin/{base}", ...]`
+    `HEAD~1` 永远存在且排第一,`for ref in candidates: ... base = ref` 把
+    用户的 base 顶替掉。
+  - 修复:把顺序改成 `[base, f"origin/{base}", "HEAD~1", "main", "master", ...]` —
+    用户传的 base 优先,HEAD~1 降级为真正的 fallback。
+  - 测试:新增 `test_ci_explicit_base_overrides_head_minus_1` 回归测试,用
+    detached HEAD 让 main 不跟随 forward,断言 `--base HEAD~1` 和 `--base main`
+    表现不同 (证明 base 真的在用),`--base <evil_sha>` 看 0 变更 PASS。
+
+### Added (PR #28 / #31)
+- **`git_installer.py`**:跨平台 git 自动安装 (Windows: winget / choco / scoop /
+  manual download;macOS: brew;Linux: apt / dnf / yum)。多路径探测 (PATH +
+  WindowsApps shim + `D:\软件\Git` 等用户目录 + USERPROFILE `\cmd\git.exe`)。
+  缺失 git 时 `pandaone` 启动自动触发安装,避免 L2 (watchdog 回滚) 和 L3
+  (pre-commit hook) 静默降级。
+- **`cmd_doctor.py`**:`pandaone doctor` 子命令。报告 7 层防护 + git + Python
+  状态,支持 `--silent --json` 输出给 CI / 监控系统用。退出码:0=全部 OK,
+  1=git 缺失,2=Python 太老。
+- **`i18n_extras.py`**:18 个新 key × 2 语言 (zh-CN + en) 翻译,doctor + git gate
+  文案。
+- **32 个新单测**:`tests/test_git_installer.py` (19 个) + `tests/test_cmd_doctor.py`
+  (13 个),覆盖跨平台 git 检测、安装、doctor 输出格式、JSON 结构、退出码。
+
+### Notes
+- 升级方式:`pip install --upgrade pandaone-guard`
+- 用户面行为变化:
+  - `pandaone --help` 多一个 `doctor` 子命令
+  - `pandaone ci --base <ref>` 现在尊重用户传的 `<ref>`,不被 HEAD~1 顶替
+  - `pandaone` 启动自动检测 git,缺失时尝试自动安装 (可用
+    `PANDAONE_SKIP_GIT_CHECK=1` 环境变量跳过,适合 CI 环境)
+- API 兼容性:不破坏现有 API;`pandaone write` / `pandaone init` / `pandaone ci`
+  等所有子命令行为不变
+
 ## [0.7.7] - 2026-09-13
 
 ### Fixed (验证报告驱动的批量 bugfix)
