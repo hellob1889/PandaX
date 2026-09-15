@@ -426,7 +426,13 @@ CLI probes git availability; auto-downloads portable version when missing.
 - 三层探测策略 / Three-tier probe strategy:
 
   1. `shutil.which("git")`（PATH 中 / in PATH）
-  2. 常见路径列表（D:\软件\Git\cmd、C:\Program Files\Git\cmd 等 / common path list）
+  2. `_windows_candidate_dirs()` 派生候选（v0.7.10）/ Derived candidates (since v0.7.10):
+     - `%ProgramFiles%` / `%ProgramFiles(x86)` / `%ProgramW6432%\Git\cmd|bin`
+     - `%LOCALAPPDATA%\Programs\Git` (Portable Git / 微软商店版 / Microsoft Store)
+     - `%USERPROFILE%\scoop\apps\git\current|<ver>\cmd|bin` (Scoop)
+     - 注册表 / Registry: `HKLM\SOFTWARE\GitForWindows\InstallPath\cmd|bin` （Git for Windows 安装器自写 / Git for Windows installer writes this）
+     - `C:\Git\cmd|bin`（便携位置 / portable location）
+     - `%USERPROFILE%\Git\cmd` 等常见解压位置 / common extracted locations
   3. 未找到 → 提示 + 可选自动下载 / Not found → prompt + optional auto-download
 
 - `--probe-only`：只探测不下载（默认）/ Probe only, don't download (default)
@@ -455,7 +461,7 @@ CLI probes git availability; auto-downloads portable version when missing.
 
 **第一性原理 / First Principles**：
 
-- 用户的开发机 git 装在非标准路径很常见（如 D:\软件\Git\）/ User's dev machine often has git in non-standard path
+- 用户的开发机 git 装在非标准路径很常见（v0.7.10 之前用 `D:\软件\Git\cmd` 这种**作者机器硬编码**探测，是 bug；v0.7.10 改为注册表 `InstallPath` 动态发现）/ User's dev machine often has git in non-standard path (pre-v0.7.10 used `D:\软件\Git\cmd` **author-machine hardcoding**, which was a bug; v0.7.10 uses registry `InstallPath` for dynamic discovery)
 
 - CLI 应智能探测而不是假设 PATH / CLI should smart-probe instead of assuming PATH
 
