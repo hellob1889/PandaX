@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# Pandaone AI Agent 一键硬隔离安装脚本 (macOS / Linux)
+# Pandaone AI Agent 一键硬隔离安装 + 环境自动配置脚本 (macOS / Linux)
 # ============================================================
 #
 # 第一性原理:
@@ -8,22 +8,29 @@
 #   - venv 路径固定到 ~/.local/share/pandaone/venv (XDG 标准), 与 wheel 同目录
 #   - wheel 源永远从 GitHub API 拉最新 release (不硬编码 URL, 不从 PyPI 拉)
 #   - 自动把 venv/bin 加到 PATH (shell rc 持久化)
+#   - **v0.7.12**: 默认还会自动配置 git pre-commit hook (仅当 cwd 是 git repo)
+#     用户需求: "GitHub 安装后所有环境都自动配置好"
+#     (macOS/Linux 没有 Windows 右键菜单的概念, 所以只做 hook)
 #
 # 对抗式审查:
 #   - 不支持 pip install --user 兜底 (硬隔离承诺不能开后门)
 #   - 不依赖 pipx (用户机器可能没装, 多一个依赖)
 #   - 不从 PyPI 拉 (用户明确要 "GitHub 下载")
 #   - 已存在 venv 时直接复用 (升级而非重建)
+#   - hook 安装只在当前 git repo 内, 不污染其他 repo (per-repo scope)
 #
 # 用法:
-#   # 默认: 装最新版
+#   # 默认: 装最新版 + 自动配置 git hook (cwd 是 git repo 时)
 #   curl -sSL https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.sh | bash
 #
 #   # 装指定版本
-#   bash install.sh --version v0.7.11
+#   bash install.sh --version v0.7.12
 #
 #   # 装本地 wheel (开发/调试用)
-#   bash install.sh --wheel-path /path/to/pandaone_guard-0.7.11-py3-none-any.whl
+#   bash install.sh --wheel-path /path/to/pandaone_guard-0.7.12-py3-none-any.whl
+#
+#   # 只装 pandaone, 不配置 git hook
+#   bash install.sh --skip-hook
 #
 set -euo pipefail
 
@@ -51,11 +58,13 @@ err()  { printf "${C_RED}✗ %s${C_RESET}\n" "$1"; }
 VERSION=""
 WHEEL_PATH=""
 FORCE=0
+SKIP_HOOK=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --version)    VERSION="$2"; shift 2 ;;
         --wheel-path) WHEEL_PATH="$2"; shift 2 ;;
         --force)      FORCE=1; shift ;;
+        --skip-hook)  SKIP_HOOK=1; shift ;;
         -h|--help)
             sed -n '2,30p' "$0"; exit 0 ;;
         *) err "Unknown arg: $1"; exit 1 ;;
@@ -217,7 +226,37 @@ ok "$VERSION_OUTPUT"
 IMPORTED_VER=$("$VENV_PY" -c "import importlib.metadata; print(importlib.metadata.version('pandaone-guard'))")
 ok "importlib.metadata.version = $IMPORTED_VER"
 
-# ---- 8. 提示下一步 ----
+# ---- 8. 自动配置 git pre-commit hook (仅当 cwd 是 git repo) ----
+if [ "$SKIP_HOOK" -eq 0 ]; then
+    # 从 cwd 向上找 .git 目录 (进入 git repo 边界)
+    GIT_ROOT=""
+    CHECK_DIR="$(pwd)"
+    while [ -n "$CHECK_DIR" ]; do
+        if [ -d "$CHECK_DIR/.git" ]; then
+            GIT_ROOT="$CHECK_DIR"
+            break
+        fi
+        PARENT="$(dirname "$CHECK_DIR")"
+        if [ "$PARENT" = "$CHECK_DIR" ]; then break; fi
+        CHECK_DIR="$PARENT"
+    done
+    if [ -n "$GIT_ROOT" ]; then
+        step "Configuring git pre-commit hook in $GIT_ROOT ..."
+        if "$VENV_PY" -m pandaone --silent --trust-default install-hook 2>&1; then
+            ok "Git pre-commit hook installed in $GIT_ROOT"
+        else
+            warn "Git hook install failed (exit=$?)"
+            echo "       You can retry later: pandaone install-hook"
+        fi
+    else
+        printf "${C_YELLOW}[INFO] cwd is not in a git repo, skipping git hook${C_RESET}\n"
+        echo "       (cd to a git repo and run: pandaone install-hook)"
+    fi
+else
+    printf "${C_YELLOW}[SKIP] git hook (per --skip-hook)${C_RESET}\n"
+fi
+
+# ---- 9. 提示下一步 ----
 echo ""
 printf "${C_CYAN}═══════════════════════════════════════════════════${C_RESET}\n"
 printf "${C_GREEN} Installation complete!${C_RESET}\n"
