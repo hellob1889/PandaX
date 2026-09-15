@@ -2,6 +2,66 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.11] - 2026-09-15
+
+### Added: 一键硬隔离安装 (PR #41)
+
+**问题**：用户机器上多个 Python 版本（3.10 + 3.11）共存时，`pip install --user pandaone-guard==0.7.10` 只更新其中一个 Python 的 site-packages，另一个 Python 的 entry point（`pandaone.EXE`）会继续跑旧版本（0.7.8），导致 `pandaone doctor` 报告错误的版本号。这是 Python 多版本隔离的通用坑，不是 pandaone 独有。
+
+**解决方案**：GitHub Release v0.7.11 新增两个**硬隔离**安装脚本，自动把所有内容装到专用 venv（不碰任何 site-packages）：
+
+| 平台 | 脚本 | venv 路径 |
+|---|---|---|
+| Windows | `install.ps1` | `%LOCALAPPDATA%\pandaone\venv\` |
+| macOS / Linux | `install.sh` | `~/.local/share/pandaone/venv` |
+
+**特性**：
+- ✅ 硬隔离：永远 venv 装，**不** fallback 到 `--user` / system site-packages
+- ✅ 从 GitHub Release API 拉**最新** wheel（不是 PyPI，永远跟随最新 release）
+- ✅ SHA256 校验 GitHub attestation（防止中间人）
+- ✅ 自动把 venv/Scripts（Windows）或 venv/bin（*nix）加到 PATH
+- ✅ 自动验证 `pandaone --version` 和 `importlib.metadata.version`
+- ✅ 复用已下载 wheel + 已存在 venv（升级而非重建）
+
+**用法**：
+
+```powershell
+# Windows 一行 (PowerShell)
+irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
+```
+
+```bash
+# macOS / Linux 一行
+curl -sSL https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.sh | bash
+```
+
+或从 [GitHub Release v0.7.11](https://github.com/hellob1889/Pandaone-AI-Agent/releases/tag/v0.7.11) Assets 下载 `install.ps1` / `install.sh` 本地跑。
+
+**publish.yml 修改**：
+- L270 `files:` 改为 multi-line glob：`dist/*.whl` + `dist/*.tar.gz` + `install.ps1` + `install.sh`，让 GitHub Release 自动 attach 这两个脚本
+- release body 加 "Hard-isolated install" 段落，链接到 GitHub raw URL
+
+**对比传统 pip install**：
+
+```bash
+# 传统方式 (用户机器 Python 3.10/3.11 共存时会冲突):
+pip install --user pandaone-guard==0.7.10
+# → 装到 Python 3.10 user site-packages
+# → 但 pandaone.EXE 来自 Python 3.11 scripts，仍然跑 Python 3.11 site-packages 里的旧版本
+# → pandaone --version 显示旧版本号
+
+# 硬隔离方式 (推荐):
+irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
+# → 装到独立 venv: C:\Users\X\AppData\Local\pandaone\venv\
+# → pandaone.EXE 来自该 venv Scripts 目录
+# → pandaone --version 永远显示真实装的版本
+```
+
+### 升级方式
+
+- **已用 install.ps1/install.sh 装的**：`irm ... | iex` 再次跑一次（自动检测并升级）
+- **传统 pip install 装的**：`pip install --upgrade pandaone-guard`（不变）
+
 ## [0.7.10] - 2026-09-15
 
 ### Fixed (PR #40 — Bug #40: 移除 `D:\软件\Git\cmd` 等作者机器硬编码路径)
