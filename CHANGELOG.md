@@ -2,6 +2,52 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.10] - 2026-09-15
+
+### Fixed (PR #40 — Bug #40: 移除 `D:\软件\Git\cmd` 等作者机器硬编码路径)
+
+**问题**：v0.7.9 及之前版本，`pandaone doctor` / `pandaone install-git` / git auto-detection 在 4 处硬编码了作者自用机器的路径 `D:\软件\Git\cmd`。99.9% 的 Windows 用户都没有这条路径，导致：
+- `_find_git_executable` 永远多跑一次 `os.path.isfile('D:\软件\Git\cmd\git.exe')` 返回 False
+- `for prefix in ["D:\\", "C:\\"]: for sub in ["软件", "Program Files", ...]` 这种"作者目录白名单"模式跨语言失效（中文 Windows 是"软件"，英文 Windows 是"Software"）
+- 4 处候选列表各自维护，重复硬编码 → 永远同步不齐
+
+**修复**：
+- 在 `src/pandaone/git_installer.py` 新增 `_windows_candidate_dirs()` 单一来源函数
+- 来源基于**环境变量 + 注册表**：
+  1. `%ProgramFiles%` / `%ProgramFiles(x86)` / `%ProgramW6432%\Git\cmd|bin`
+  2. `%LOCALAPPDATA%\Programs\Git\cmd|bin` (Portable Git / 微软商店版)
+  3. `%USERPROFILE%\scoop\apps\git\current|2.47.1|2.43.0\cmd|bin` (Scoop 安装)
+  4. 注册表 `HKLM\SOFTWARE\GitForWindows\InstallPath\cmd|bin` (Git for Windows 安装器自写)
+  5. `C:\Git\cmd|bin` (便携位置)
+  6. `%USERPROFILE%\Git\cmd` 等常见解压位置
+- 4 处调用点全部改为调用 `_windows_candidate_dirs()`：
+  - `git_installer.py` `_find_git_executable`
+  - `cli_chunks/part_003.py` `_resolve_git_exe`
+  - `cli_chunks/part_005.py` `cmd_install_git`
+  - `pandaone_guard/__main__.py` `_ensure_git_in_path`
+  - `tests/conftest.py` `GIT_CANDIDATES`
+
+**对抗式审查**：
+- 不假设用户在哪个盘（C/D/E/...）
+- 不假设语言环境（中文"软件" vs 英文"Software"）
+- 不假设安装方式（标准 / Scoop / 微软商店 / 解压）
+- 注册表项是 Git for Windows 安装器**自己写的**，作为权威来源
+- 所有调用点共用一个函数，杜绝未来再漂移
+
+### 用户面行为变化
+
+- `pandaone doctor` 在 Windows 上能正确检测到**用户实际安装**的 git（不再受作者机器路径污染）
+- Git 在 PATH 时仍优先返回（保持 fast path 行为）
+- 在 Windows 上 Git 装在非默认位置（`D:\dev\Git` 等）也能检测（注册表 InstallPath + 多种常见子目录模式）
+
+### 升级方式
+
+```bash
+pip install --upgrade pandaone-guard==0.7.10
+```
+
+无需 `--update-fingerprint`（本次未改 cli loader，纯 git 检测逻辑）。
+
 ## [0.7.9] - 2026-09-14
 
 ### Fixed (PR #35 — `pandaone install-context` Windows broken since v0.7.0)

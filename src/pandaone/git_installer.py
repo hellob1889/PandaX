@@ -72,6 +72,25 @@ class InstallResult:
 # ============================================================
 # 常见 Windows git 安装路径(当 PATH 被劫持 / 用户级安装时找不到)
 # ============================================================
+#
+# 第一性原理:
+#   - 早期版本硬编码作者机器路径 (D:\软件\Git\cmd 等)，99.9% 用户都没有
+#   - 修复后改为**单一来源** (_windows_candidate_dirs):
+#     - %ProgramFiles% / %ProgramFiles(x86)% / %ProgramW6432% (标准安装)
+#     - %LOCALAPPDATA%\Programs\Git (Portable / 微软商店版)
+#     - %USERPROFILE%\scoop\apps\git (Scoop 安装)
+#     - 注册表 HKLM\SOFTWARE\GitForWindows\InstallPath (Git for Windows 安装器自写)
+#     - C:\Git (便携安装)
+#     - 用户家目录下的常见解压位置
+#   - 不假设用户在哪个盘、不假设语言环境、不假设安装方式
+#   - 所有 4 处调用点 (git_installer._find_git_executable / part_003._resolve_git_exe
+#     / part_005.cmd_install_git / pandaone_guard.__main__._ensure_git_in_path)
+#     共用这个函数,杜绝未来再漂移
+#
+# 对抗式审查:
+#   - 删除了原 for prefix in ["D:\\", "C:\\"]: for sub in ["软件", "Program Files", ...]
+#     这种"作者机器目录白名单"模式 — 跨语言 (中文"软件" vs 英文"Software") 永远无法兼容
+#   - 加 winreg 查询作为权威来源 — Git for Windows 安装器自己会写注册表
 
 COMMON_GIT_PATHS_WINDOWS = [
     r"C:\Program Files\Git\bin\git.exe",
@@ -88,29 +107,82 @@ COMMON_GIT_PATHS_MACOS = [
 ]
 
 
+def _windows_candidate_dirs() -> List[str]:
+    """
+    Windows 上 git.exe 可能存在的目录列表。
+
+    返回目录路径列表 (不含 git.exe),调用方负责拼 git.exe 并 isfile 校验。
+
+    来源 (按优先级):
+      1. %ProgramFiles% / %ProgramFiles(x86)% / %ProgramW6432%\\Git\\cmd|bin
+      2. %LOCALAPPDATA%\\Programs\\Git\\cmd|bin   (Portable Git / 微软商店版)
+      3. %USERPROFILE%\\scoop\\apps\\git\\current|2.47.1|2.43.0\\cmd|bin
+      4. 注册表 HKLM\\SOFTWARE\\GitForWindows\\InstallPath\\cmd|bin
+      5. C:\\Git\\cmd|bin
+      6. %USERPROFILE%\\Git\\cmd 等常见解压位置
+    """
+    cands: List[str] = []
+
+    # 1. 标准安装 (32 位 + 64 位 + WOW64)
+    for env in ("ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"):
+        base = os.environ.get(env, "")
+        if not base:
+            continue
+        for sub in (r"Git\cmd", r"Git\bin"):
+            cands.append(os.path.join(base, sub))
+
+    # 2. 用户级安装 (Portable Git / 微软商店版)
+    local_appdata = os.environ.get("LOCALAPPDATA", "")
+    if local_appdata:
+        cands.append(os.path.join(local_appdata, "Programs", "Git", "cmd"))
+        cands.append(os.path.join(local_appdata, "Programs", "Git", "bin"))
+
+    # 3. Scoop
+    userprofile = os.environ.get("USERPROFILE", "")
+    if userprofile:
+        scoop_base = os.path.join(userprofile, "scoop", "apps", "git")
+        for ver in ("current", "2.47.1", "2.43.0"):
+            cands.append(os.path.join(scoop_base, ver, "cmd"))
+            cands.append(os.path.join(scoop_base, ver, "bin"))
+
+    # 4. 注册表: Git for Windows 安装器自写 InstallPath
+    if sys.platform == "win32":
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\GitForWindows") as key:
+                install_path, _ = winreg.QueryValueEx(key, "InstallPath")
+                if install_path:
+                    cands.append(os.path.join(install_path, "cmd"))
+                    cands.append(os.path.join(install_path, "bin"))
+        except (FileNotFoundError, OSError, ImportError):
+            pass
+
+    # 5. C:\Git (罕见便携位置)
+    cands.append(r"C:\Git\cmd")
+    cands.append(r"C:\Git\bin")
+
+    # 6. 用户家目录下常见解压位置
+    home = os.path.expanduser("~")
+    if home:
+        for sub in (r"Git\cmd", r"git\cmd", r"Apps\Git\cmd", r"tools\git\cmd"):
+            cands.append(os.path.join(home, sub))
+
+    return cands
+
+
 def _find_git_executable() -> Optional[str]:
     """多渠道找 git 可执行文件: PATH → 常见安装路径 → winget 已知位置。"""
     p = shutil.which("git")
     if p and _can_run_git(p):
         return p
 
-    candidates = []
+    candidates: List[str] = []
     if sys.platform.startswith("win"):
+        # 优先用绝对路径常量 (file-based check 更快)
         candidates.extend(COMMON_GIT_PATHS_WINDOWS)
-        local_programs = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "Git", "bin")
-        if os.path.isdir(local_programs):
-            candidates.append(os.path.join(local_programs, "git.exe"))
-        scoop = os.path.join(os.environ.get("USERPROFILE", ""), "scoop", "apps", "git", "current", "bin")
-        if os.path.isdir(scoop):
-            candidates.append(os.path.join(scoop, "git.exe"))
-        for prefix in ["D:\\", "C:\\"]:
-            for sub in ["软件", "Program Files", "Tools", "dev"]:
-                p2 = os.path.join(prefix, sub, "Git", "cmd", "git.exe")
-                if os.path.isfile(p2):
-                    candidates.append(p2)
-                p3 = os.path.join(prefix, sub, "Git", "bin", "git.exe")
-                if os.path.isfile(p3):
-                    candidates.append(p3)
+        # 然后用 _windows_candidate_dirs 派生 (环境变量 + 注册表)
+        for d in _windows_candidate_dirs():
+            candidates.append(os.path.join(d, "git.exe"))
     elif sys.platform == "darwin":
         candidates.extend(COMMON_GIT_PATHS_MACOS)
 

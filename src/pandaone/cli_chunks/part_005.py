@@ -35,14 +35,23 @@ def cmd_install_git(args):
     if existing:
         print(t("git_probe_found", path=existing))
         return 0
-    candidates = [
-        r"C:\Program Files\Git\cmd",
-        r"C:\Program Files (x86)\Git\cmd",
-        r"C:\Program Files\Git\bin",
-        r"D:\软件\Git\cmd",
-        r"C:\Git\cmd",
-    ]
-    for cand in candidates:
+    # Bug #40 fix (v0.7.10): 不再硬编码作者机器路径 `D:\软件\Git\cmd`，
+    # 统一从 git_installer._windows_candidate_dirs() 派生候选目录
+    # (基于 %ProgramFiles% / %LOCALAPPDATA% / 注册表 InstallPath)
+    if os.name == "nt":
+        try:
+            from pandaone.git_installer import _windows_candidate_dirs
+            cands = _windows_candidate_dirs()
+        except ImportError:
+            cands = [
+                r"C:\Program Files\Git\cmd",
+                r"C:\Program Files (x86)\Git\cmd",
+                r"C:\Program Files\Git\bin",
+                r"C:\Git\cmd",
+            ]
+    else:
+        cands = []
+    for cand in cands:
         if Path(cand, "git.exe").exists():
             print(t("git_probe_found", path=cand))
             return 0

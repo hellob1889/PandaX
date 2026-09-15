@@ -139,9 +139,11 @@ def _resolve_git_exe() -> str:
     Bug #21 fix: 统一 git 可执行解析逻辑，所有 git 调用共享。
 
     之前 doctor (scripts/doctor.py) 用 shutil.which + Windows 候选目录回退，
-    但 write/ci 直接 subprocess.run(["git", ...])。边缘场景下行为不一致：
-    doctor 报 OK（找到 D:\软件\Git\cmd\git.exe），write 报 FileNotFoundError
-    （当前进程 PATH 没该路径，subprocess 调用失败）。
+    但 write/ci 直接 subprocess.run(["git", ...])。边缘场景下行为不一致。
+
+    Bug #40 fix (v0.7.10): 移除所有 `D:\\软件\\Git\\cmd` 等作者机器硬编码路径。
+    改为调用 git_installer._windows_candidate_dirs() 单一来源
+    (基于 %ProgramFiles% / %LOCALAPPDATA% / 注册表 InstallPath)。
 
     策略：与 doctor 相同的"PATH 优先 + Windows 候选回退"算法。
     返回值是绝对路径（如果找到）或 "git"（fallback，让 subprocess 自己找）。
@@ -150,21 +152,24 @@ def _resolve_git_exe() -> str:
     git_path = _sh.which("git")
     if git_path:
         return git_path
-    # Windows 常见安装路径（与 doctor.py 一致）
+    # Windows 常见安装路径（与 doctor.py + git_installer.py 共用）
     if os.name == "nt":
-        candidates = [
-            r"D:\软件\Git\cmd",
-            r"C:\Program Files\Git\cmd",
-            r"C:\Program Files (x86)\Git\cmd",
-            r"C:\Program Files\Git\bin",
-            r"C:\Git\cmd",
-        ]
-        for c in candidates:
-            p = Path(c, "git.exe")
-            if p.exists():
-                # 同时把候选目录加入当前进程 PATH，避免后续 subprocess 找不到
-                os.environ["PATH"] = str(Path(c)) + os.pathsep + os.environ.get("PATH", "")
-                return str(p)
+        try:
+            from pandaone.git_installer import _windows_candidate_dirs
+            for c in _windows_candidate_dirs():
+                p = Path(c, "git.exe")
+                if p.exists():
+                    # 同时把候选目录加入当前进程 PATH，避免后续 subprocess 找不到
+                    os.environ["PATH"] = str(Path(c)) + os.pathsep + os.environ.get("PATH", "")
+                    return str(p)
+        except ImportError:
+            # git_installer 不在时退到最小硬编码候选（仅标准位置，无作者路径）
+            for c in [r"C:\Program Files\Git\cmd", r"C:\Program Files (x86)\Git\cmd",
+                      r"C:\Program Files\Git\bin", r"C:\Git\cmd"]:
+                p = Path(c, "git.exe")
+                if p.exists():
+                    os.environ["PATH"] = str(Path(c)) + os.pathsep + os.environ.get("PATH", "")
+                    return str(p)
     return "git"  # 让 subprocess 自己解析（最佳努力 fallback）
 
 

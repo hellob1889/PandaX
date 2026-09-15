@@ -320,20 +320,32 @@ def run_watchdog(root: Path, daemon: bool = False):
 
 
 def _ensure_git_in_path():
-    """探测 git 路径并加入 PATH（PyInstaller 环境常缺失）"""
+    """探测 git 路径并加入 PATH（PyInstaller 环境常缺失）
+
+    Bug #40 fix (v0.7.10): 不再硬编码作者机器路径 `D:\\软件\\Git\\cmd`。
+    改为调用 git_installer._windows_candidate_dirs() 单一来源
+    (基于 %ProgramFiles% / %LOCALAPPDATA% / 注册表 InstallPath)。
+    """
     import shutil
 
     if shutil.which("git"):
         return  # 已在 PATH
 
-    # 常见路径探测
-    candidates = [
-        r"C:\Program Files\Git\cmd",
-        r"C:\Program Files (x86)\Git\cmd",
-        r"C:\Program Files\Git\bin",
-        r"D:\软件\Git\cmd",
-        r"C:\Git\cmd",
-    ]
+    # 常见路径探测 (Windows 走 git_installer 派生，非 Windows 退到 PATH)
+    if os.name == "nt":
+        try:
+            from pandaone.git_installer import _windows_candidate_dirs
+            candidates = _windows_candidate_dirs()
+        except ImportError:
+            candidates = [
+                r"C:\Program Files\Git\cmd",
+                r"C:\Program Files (x86)\Git\cmd",
+                r"C:\Program Files\Git\bin",
+                r"C:\Git\cmd",
+            ]
+    else:
+        candidates = []
+
     for cand in candidates:
         if Path(cand, "git.exe").exists():
             os.environ["PATH"] = cand + os.pathsep + os.environ.get("PATH", "")
