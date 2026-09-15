@@ -74,11 +74,79 @@ foreach ($cmd in @("python", "python3", "py")) {
         }
     } catch {}
 }
+
+# ---- 1.5. v0.7.13: 没 Python → 自动装嵌入式 Python (无管理员) ----
 if (-not $py) {
-    Write-Err "Python ≥ 3.8 not found."
-    Write-Host "  Download: https://www.python.org/downloads/windows/" -ForegroundColor Yellow
-    Write-Host "  During install, CHECK 'Add Python to PATH'!" -ForegroundColor Yellow
-    exit 1
+    Write-Warn "Python ≥ 3.8 not found in PATH"
+    Write-Host "  Auto-installing embedded Python 3.12 (no admin required)..." -ForegroundColor Yellow
+
+    # 创建隔离目录
+    foreach ($d in @($InstallRoot, $WheelCacheDir)) {
+        if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
+    }
+
+    $pyInstallRoot = Join-Path $InstallRoot "python"
+    $pyExe = Join-Path $pyInstallRoot "python.exe"
+    $pyEmbeddedZip = Join-Path $pyInstallRoot "python-3.12.7-embed-amd64.zip"
+
+    if (-not (Test-Path $pyExe)) {
+        if (-not (Test-Path $pyInstallRoot)) {
+            New-Item -ItemType Directory -Path $pyInstallRoot -Force | Out-Null
+        }
+        if (-not (Test-Path $pyEmbeddedZip)) {
+            Write-Step "Downloading embedded Python 3.12.7 (~11 MB)..."
+            try {
+                Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.7/python-3.12.7-embed-amd64.zip" `
+                    -OutFile $pyEmbeddedZip -UseBasicParsing -TimeoutSec 180
+            } catch {
+                Write-Err "Failed to download embedded Python: $_"
+                Write-Host "  Manual install: https://www.python.org/downloads/windows/" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+        Write-Step "Extracting embedded Python to $pyInstallRoot..."
+        try {
+            Expand-Archive -Path $pyEmbeddedZip -DestinationPath $pyInstallRoot -Force
+        } catch {
+            Write-Err "Failed to extract: $_"
+            exit 1
+        }
+
+        # 嵌入式 Python 默认禁用 site-packages (._pth 文件里有 #import site)
+        # 必须打开才能 venv 装 pip 包
+        $pthFile = Get-ChildItem -Path $pyInstallRoot -Filter "python*._pth" | Select-Object -First 1
+        if ($pthFile) {
+            $content = Get-Content $pthFile.FullName -Raw
+            if ($content -match '^#import site') {
+                $content = $content -replace '^#import site', 'import site'
+                Set-Content -Path $pthFile.FullName -Value $content -NoNewline
+                Write-Step "Enabled site-packages in embedded Python (for venv compatibility)"
+            }
+        }
+    }
+
+    $py = $pyExe
+    Write-OK "Embedded Python ready: $py"
+}
+
+# ---- 1.6. v0.7.13: 检测 Git (友好提示, 不自动装) ----
+$gitAvailable = $false
+try {
+    $gitVer = & git --version 2>&1
+    if ($LASTEXITCODE -eq 0 -and $gitVer -match "git version") {
+        Write-OK "Git: $($gitVer.Trim())"
+        $gitAvailable = $true
+    }
+} catch {}
+if (-not $gitAvailable) {
+    Write-Warn "git not found in PATH"
+    Write-Host "  For git pre-commit hook + right-click context, install git:" -ForegroundColor Yellow
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        Write-Host "    winget install Git.Git           (recommended, requires admin)" -ForegroundColor Cyan
+    }
+    Write-Host "    https://git-scm.com/download/win  (manual download)" -ForegroundColor Cyan
+    Write-Host "  (No git = no auto pre-commit hook installation. You can install git later and re-run install.ps1.)" -ForegroundColor DarkGray
+    Write-Host ""
 }
 
 # ---- 2. 创建隔离目录结构 ----
@@ -210,8 +278,11 @@ if (-not $SkipContext) {
     Write-Host "[SKIP] 右键菜单 (per -SkipContext). Run: pandaone install-context" -ForegroundColor DarkGray
 }
 
-# ---- 9. 自动配置 git pre-commit hook (仅当 cwd 是 git repo) ----
-if (-not $SkipHook) {
+# ---- 9. 自动配置 git pre-commit hook (仅当 cwd 是 git repo + git 可用) ----
+if (-not $SkipHook -and -not $gitAvailable) {
+    Write-Host "[SKIP] git hook (git not installed)" -ForegroundColor DarkGray
+}
+if (-not $SkipHook -and $gitAvailable) {
     $cwd = (Get-Location).Path
     # 从 cwd 向上找 .git 目录 (进入 git repo 边界)
     $gitRoot = $null
