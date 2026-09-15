@@ -1,5 +1,5 @@
 # ============================================================
-# Pandaone AI Agent 一键硬隔离安装脚本 (Windows)
+# Pandaone AI Agent 一键硬隔离安装 + 环境自动配置脚本 (Windows)
 # ============================================================
 #
 # 第一性原理:
@@ -7,28 +7,39 @@
 #   - venv 路径固定到 %LOCALAPPDATA%\pandaone\, 与 wheel 文件同目录
 #   - wheel 源永远从 GitHub API 拉最新 release (不硬编码 URL, 不从 PyPI 拉)
 #   - 自动把 venv/Scripts 加到用户 PATH (持久化, 新 cmd 生效)
+#   - **v0.7.12**: 默认还会自动配置 2 个环境:
+#       1. Windows 右键菜单 (`pandaone install-context`)
+#       2. Git pre-commit hook (仅当当前目录是 git repo, 跑 `pandaone install-hook`)
+#     用户需求: "GitHub 安装后所有环境都自动配置好"
 #
 # 对抗式审查:
 #   - 不支持 pip install --user 兜底 (硬隔离承诺不能开后门)
 #   - 不依赖 pipx (用户机器可能没装, 多一个依赖)
 #   - 不从 PyPI 拉 (用户明确要 "GitHub 下载")
 #   - 已存在 venv 时直接复用 (升级而非重建)
+#   - 已装右键菜单/hook 时不重复 (idempotent)
+#   - hook 安装只在当前 git repo 内, 不污染其他 repo (per-repo scope)
 #
 # 用法:
-#   # 默认: 装最新版
+#   # 默认: 装最新版 + 自动配置环境 (右键菜单 + cwd 是 git repo 就装 hook)
 #   irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
 #
 #   # 装指定版本
-#   .\install.ps1 -Version v0.7.11
+#   .\install.ps1 -Version v0.7.12
 #
 #   # 装本地 wheel (开发/调试用)
-#   .\install.ps1 -WheelPath C:\path\to\pandaone_guard-0.7.11-py3-none-any.whl
+#   .\install.ps1 -WheelPath C:\path\to\pandaone_guard-0.7.12-py3-none-any.whl
+#
+#   # 只装 pandaone, 不配置右键菜单/hook
+#   .\install.ps1 -SkipContext -SkipHook
 #
 [CmdletBinding()]
 param(
     [string]$Version = "",
     [string]$WheelPath = "",
-    [switch]$Force
+    [switch]$Force,
+    [switch]$SkipContext,
+    [switch]$SkipHook
 )
 
 $ErrorActionPreference = "Stop"
@@ -184,7 +195,55 @@ Write-OK "pandaone $versionOutput"
 $importedVer = & $venvPython -c "import importlib.metadata; print(importlib.metadata.version('pandaone-guard'))"
 Write-OK "importlib.metadata.version = $importedVer"
 
-# ---- 8. 提示下一步 ----
+# ---- 8. 自动配置 Windows 右键菜单 (v0.7.12 默认开启) ----
+if (-not $SkipContext) {
+    Write-Step "Configuring Windows context-menu (右键菜单)..."
+    $ctxOutput = & $venvPython -m pandaone --silent --trust-default install-context 2>&1
+    $ctxExit = $LASTEXITCODE
+    if ($ctxExit -eq 0) {
+        Write-OK "Context-menu installed (右键菜单已注册)"
+    } else {
+        Write-Warn "Context-menu install failed (exit=$ctxExit): $ctxOutput"
+        Write-Host "       You can retry later: pandaone install-context" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "[SKIP] 右键菜单 (per -SkipContext). Run: pandaone install-context" -ForegroundColor DarkGray
+}
+
+# ---- 9. 自动配置 git pre-commit hook (仅当 cwd 是 git repo) ----
+if (-not $SkipHook) {
+    $cwd = (Get-Location).Path
+    # 从 cwd 向上找 .git 目录 (进入 git repo 边界)
+    $gitRoot = $null
+    $checkDir = $cwd
+    while ($checkDir) {
+        if (Test-Path (Join-Path $checkDir ".git")) {
+            $gitRoot = $checkDir
+            break
+        }
+        $parent = Split-Path $checkDir -Parent
+        if ($parent -eq $checkDir) { break }
+        $checkDir = $parent
+    }
+    if ($gitRoot) {
+        Write-Step "Configuring git pre-commit hook in $gitRoot ..."
+        $hookOutput = & $venvPython -m pandaone --silent --trust-default install-hook 2>&1
+        $hookExit = $LASTEXITCODE
+        if ($hookExit -eq 0) {
+            Write-OK "Git pre-commit hook installed in $gitRoot"
+        } else {
+            Write-Warn "Git hook install failed (exit=$hookExit): $hookOutput"
+            Write-Host "       You can retry later: pandaone install-hook" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "[INFO] cwd is not in a git repo, skipping git hook" -ForegroundColor DarkGray
+        Write-Host "       (cd to a git repo and run: pandaone install-hook)" -ForegroundColor DarkGray
+    }
+} else {
+    Write-Host "[SKIP] git hook (per -SkipHook)" -ForegroundColor DarkGray
+}
+
+# ---- 10. 提示下一步 ----
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host " Installation complete!" -ForegroundColor Green
