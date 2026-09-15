@@ -89,7 +89,38 @@ if [ -z "$PY" ]; then
     echo "  macOS: brew install python3"
     echo "  Ubuntu/Debian: sudo apt install python3 python3-venv"
     echo "  Fedora: sudo dnf install python3"
+    echo "  Arch: sudo pacman -S python python-pip"
     exit 1
+fi
+
+# ---- 1.5. v0.7.13: 检测 Git (友好提示, 不自动装) ----
+if command -v git >/dev/null 2>&1; then
+    GIT_VER=$(git --version)
+    ok "Git: $GIT_VER"
+else
+    warn "git not found in PATH"
+    echo "  For git pre-commit hook, install git:"
+    case "$OSTYPE" in
+        darwin*)
+            echo "    xcode-select --install"
+            echo "    or: brew install git"
+            ;;
+        linux*)
+            if command -v apt >/dev/null 2>&1; then
+                echo "    sudo apt install git"
+            elif command -v dnf >/dev/null 2>&1; then
+                echo "    sudo dnf install git"
+            elif command -v yum >/dev/null 2>&1; then
+                echo "    sudo yum install git"
+            elif command -v pacman >/dev/null 2>&1; then
+                echo "    sudo pacman -S git"
+            elif command -v apk >/dev/null 2>&1; then
+                echo "    sudo apk add git"
+            fi
+            ;;
+    esac
+    echo "  (No git = no auto pre-commit hook. Install git later and re-run install.sh.)"
+    echo ""
 fi
 
 # ---- 2. 创建隔离目录结构 ----
@@ -226,8 +257,11 @@ ok "$VERSION_OUTPUT"
 IMPORTED_VER=$("$VENV_PY" -c "import importlib.metadata; print(importlib.metadata.version('pandaone-guard'))")
 ok "importlib.metadata.version = $IMPORTED_VER"
 
-# ---- 8. 自动配置 git pre-commit hook (仅当 cwd 是 git repo) ----
-if [ "$SKIP_HOOK" -eq 0 ]; then
+# ---- 8. 自动配置 git pre-commit hook (仅当 cwd 是 git repo + git 可用) ----
+if [ "$SKIP_HOOK" -eq 0 ] && ! command -v git >/dev/null 2>&1; then
+    printf "${C_YELLOW}[SKIP] git hook (git not installed)${C_RESET}\n"
+fi
+if [ "$SKIP_HOOK" -eq 0 ] && command -v git >/dev/null 2>&1; then
     # 从 cwd 向上找 .git 目录 (进入 git repo 边界)
     GIT_ROOT=""
     CHECK_DIR="$(pwd)"
