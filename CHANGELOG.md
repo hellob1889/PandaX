@@ -2,6 +2,59 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.9] - 2026-09-14
+
+### Fixed (PR #35 — `pandaone install-context` Windows broken since v0.7.0)
+
+**问题**：Windows 用户从 v0.7.0 起右键菜单永远不可用。修 PS1 6 个 bug 仍不能完整工作。
+
+**Root cause**：PowerShell 脚本 5 个累积 bug 导致 parser 失败：
+
+1. **5 个 UTF-8 BOM**：文件头 `EF BB BF` 重复 5 次，PowerShell 5.1 parser 把后续 `[CmdletBinding()]` 误认为普通 attribute
+2. **`#Requires -Version 5.1` line**：v0.7.4+ 添加，PowerShell 5.1 parser 把它当成 `#Requires` 后立即接 `[CmdletBinding()]` 失败
+3. **`[CmdletBinding()]` 后函数体内 `$ErrorActionPreference = 'Stop'`**：PowerShell 5.1 parser bug，把 param list 延伸到 `$ErrorActionPreference`
+4. **注释里的 `(任意文件) (pandaone init) (pandaone lock)`**：PowerShell 5.1 parser 把注释里的括号也算 param list 括号
+5. **PowerShell 7+ 表达式 `if`**：`$VAR = if (...) { ... } else { ... }` 是 PS7+ 语法，用户机器 PS5.1 不支持
+
+**修复策略**：不再折腾 PowerShell — Windows 直接用 Python `winreg` 模块写注册表，完全 bypass PowerShell。注册表结构与原 PS1 等价（HKCU\\Software\\Classes\\\*\\shell\\Pandaone + 4 subcommands）。
+
+### Fixed (PR #35 — cli.py loader `__file__` bug)
+
+`cli.py` loader 用 `_exec_ns["__file__"] = str(Path(__file__).resolve())` 把 `__file__` 钉死成 cli.py 自己路径，所有 part_* 脚本里 `ROOT = Path(__file__).parent.parent` 解析到 site-packages/ 而非 site-packages/pandaone/。导致 L4 防线 README.md 找不到 + portable git 下载错位 + sys.path.insert 错。
+
+**修复**：loader 在每个 chunk exec 前 `_exec_ns["__file__"] = str(chunk.resolve())` 让每个 chunk 用自己路径。
+
+### Fixed (PR #35 — README.md not in wheel)
+
+`MANIFEST.in` 没 `include src/pandaone/README.md`，导致 wheel 安装后 L4 防线 README summary 永远报错 "[ERROR] README.md 未找到"。
+
+**修复**：`include src/pandaone/README.md`。
+
+### Added (PR #35 — install-context 暴露 stderr)
+
+`cmd_install_context` 之前用 `subprocess.run(..., capture_output=True)` 把 PowerShell stderr 完全吞掉，用户只能看到 exit 1 不知道原因。
+
+**修复**：去掉 `capture_output=True`，stderr 直接输出 + 加 `TimeoutExpired/FileNotFoundError` 友好错误消息。
+
+### 升级方式
+
+```bash
+pip install --upgrade pandaone-guard
+
+# 升级后首次跑会触发 L5 指纹更新（v0.7.9 改了 cli loader, SHA256 变了）:
+pandaone --update-fingerprint 0000
+
+# 然后右键菜单安装:
+pandaone install-context
+```
+
+### 用户面行为变化
+
+- `pandaone install-context` 在 Windows **真的能用**了（之前 v0.7.0~v0.7.8 一直不可用）
+- 注册表写入通过 Python `winreg`，不依赖 PowerShell（无 PS5.1/PS7 兼容问题）
+- 4 个子命令：Init / Lock / Status / Unlock
+- macOS / Linux 仍用 .sh 脚本（未受影响）
+
 ## [0.7.8] - 2026-09-14
 
 ### Fixed (PR #28 follow-up: git auto-installer + doctor 子命令真正可用)

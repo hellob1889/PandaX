@@ -2,6 +2,7 @@ include README.md
 include LICENSE
 include CHANGELOG.md
 include RELEASE.md
+include src/pandaone/README.md
 
 include src/pandaone/banner.txt
 recursive-include src/pandaone/templates *.sh pre-commit-hook pre-commit-check.py README.md

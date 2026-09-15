@@ -251,6 +251,31 @@ TRANSLATIONS = {
         "info_os_detected": "[INFO] 检测到平台: {os}",
         "info_running": "[INFO] 执行: {cmd}",
 
+
+        # ============ v0.7.9: Windows 右键菜单 winreg 集成 (PR #35) ============
+        "ctx_subprocess_timeout": "[TIMEOUT] {script} 超过 60 秒",
+        "ctx_interp_not_found": "[NOT FOUND] 解释器 {interp} 不在 PATH",
+        "ctx_banner_uninstall": "===============================================\nPandaone Windows 右键菜单卸载程序\n===============================================",
+        "ctx_banner_install": "===============================================\nPandaone Windows 右键菜单安装程序\n===============================================",
+        "ctx_pandaone_ok": "[OK] pandaone: {exe}",
+        "ctx_step1": "[1/3] 已清理旧条目",
+        "ctx_step2": "[2/3] 已注册右键菜单 (任意文件 / 目录 / 空白处)",
+        "ctx_step3": "[3/3] 已注册 4 个子命令 (Init / Lock / Status / Unlock)",
+        "ctx_install_done": "[OK] 安装完成！",
+        "ctx_test_label": "测试方法：",
+        "ctx_test_step1": "  1. 在任意目录空白处点击右键",
+        "ctx_test_step2": "  2. 看到「Pandaone 审计工具」级联菜单",
+        "ctx_test_step3": "  3. 展开后看到：Init / Lock / Status / Unlock",
+        "ctx_uninstall_label": "卸载：",
+        "ctx_install_restart_hint": "如果右键菜单没立刻出现，请重启资源管理器：",
+        "ctx_uninstall_done": "[OK] 已卸载右键菜单",
+        "ctx_uninstall_restart_hint": "如果右键菜单依然残留，请重启资源管理器：",
+        "ctx_exe_not_found": "[WARN] 未找到 pandaone 可执行文件！",
+        "ctx_install_hint": "请先安装 Pandaone：",
+        "ctx_already_installed": "[INFO] Pandaone 右键菜单已存在。使用 --force 重新安装。",
+        "ctx_perm_error": "[ERROR] 注册表权限不足: {err}",
+        "ctx_perm_hint": "提示: HKCU 通常不需要管理员权限, 如仍报错请检查用户配置",
+
         # ============ install-git ============
         "git_probe_check": "[INFO] 探测 git ...",
         "git_probe_found": "[OK] git 已安装: {path}",
@@ -576,6 +601,31 @@ TRANSLATIONS = {
         "warn_installer_stderr": "[WARN] installer stderr (exit={code}):",
         "info_os_detected": "[INFO] Detected platform: {os}",
         "info_running": "[INFO] Running: {cmd}",
+
+
+        # ============ v0.7.9: Windows Right-Click Menu winreg Integration (PR #35) ============
+        "ctx_subprocess_timeout": "[TIMEOUT] {script} timed out after 60 seconds",
+        "ctx_interp_not_found": "[NOT FOUND] Interpreter {interp} not in PATH",
+        "ctx_banner_uninstall": "===============================================\nPandaone Windows Right-Click Menu Uninstaller\n===============================================",
+        "ctx_banner_install": "===============================================\nPandaone Windows Right-Click Menu Installer\n===============================================",
+        "ctx_pandaone_ok": "[OK] pandaone: {exe}",
+        "ctx_step1": "[1/3] Cleaned up old entries",
+        "ctx_step2": "[2/3] Registered right-click menu (any file / directory / background)",
+        "ctx_step3": "[3/3] Registered 4 sub-commands (Init / Lock / Status / Unlock)",
+        "ctx_install_done": "[OK] Installation complete!",
+        "ctx_test_label": "How to test:",
+        "ctx_test_step1": "  1. Right-click anywhere in any directory",
+        "ctx_test_step2": "  2. Look for the 'Pandaone Audit Tools' cascade menu",
+        "ctx_test_step3": "  3. Expand to see: Init / Lock / Status / Unlock",
+        "ctx_uninstall_label": "Uninstall:",
+        "ctx_install_restart_hint": "If the right-click menu doesn't appear immediately, restart Explorer:",
+        "ctx_uninstall_done": "[OK] Right-click menu uninstalled",
+        "ctx_uninstall_restart_hint": "If the right-click menu persists, restart Explorer:",
+        "ctx_exe_not_found": "[WARN] pandaone executable not found!",
+        "ctx_install_hint": "Please install Pandaone first:",
+        "ctx_already_installed": "[INFO] Pandaone right-click menu already exists. Use --force to reinstall.",
+        "ctx_perm_error": "[ERROR] Insufficient registry permissions: {err}",
+        "ctx_perm_hint": "Hint: HKCU usually doesn't require admin. If it fails, check user profile.",
 
         # ============ install-git ============
         "git_probe_found": "[OK] git installed: {path}",
