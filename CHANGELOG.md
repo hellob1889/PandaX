@@ -2,6 +2,49 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.12] - 2026-09-15
+
+### Changed: install 脚本默认自动配置环境 (PR #41 增强)
+
+**用户诉求**：「如果从 GitHub 安装 pandaone，所有的环境要自动配置好」
+
+之前 v0.7.11 的 install.ps1/install.sh 只做了"装 pandaone + 加 PATH"，**Windows 右键菜单**和 **git pre-commit hook** 还要用户手动跑 `pandaone install-context` / `pandaone install-hook`。
+
+**v0.7.12 默认全自动**：
+
+| 步骤 | v0.7.11 行为 | v0.7.12 行为 |
+|---|---|---|
+| 装 pandaone 到 venv | ✅ 自动 | ✅ 自动 |
+| 加 venv/Scripts 到 PATH | ✅ 自动 | ✅ 自动 |
+| Windows 右键菜单 | ❌ 手动 `pandaone install-context` | ✅ **自动** `pandaone install-context`（仅 Windows） |
+| Git pre-commit hook | ❌ 手动 `pandaone install-hook` | ✅ **自动** `pandaone install-hook`（仅当 cwd 是 git repo） |
+
+**用法（无变化）**：
+```powershell
+# Windows
+irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
+```
+
+```bash
+# macOS / Linux
+curl -sSL https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.sh | bash
+```
+
+跑这一行命令后，**所有环境都配置好**，不用任何后续步骤。
+
+**Opt-out flags**（不想自动配置环境的）：
+```powershell
+irm ... | iex -SkipContext -SkipHook   # Windows
+curl ... | bash --skip-hook             # macOS/Linux
+```
+
+**对抗式审查**：
+- ✅ Idempotent：右键菜单/hook 已存在时不重复装
+- ✅ Per-repo scope：hook 安装只在当前 cwd 的 git repo 内（不污染其他 repo）
+- ✅ Non-blocking：自动配置失败不影响 pandaone 主功能（仅 warn）
+- ✅ Opt-out：-SkipContext / -SkipHook / --skip-hook 让用户能关闭
+- ✅ No silent fallback：失败时打印明确错误 + 重试命令
+
 ## [0.7.11] - 2026-09-15
 
 ### Added: 一键硬隔离安装 (PR #41)
