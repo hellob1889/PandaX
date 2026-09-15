@@ -5,13 +5,16 @@ pytest 全局配置：自动探测 git 路径并加入 PATH。
 
 第一性原理：
   - git 是 Pandaone AI Agent 的关键依赖（用于自动 commit）
-  - 用户可能 git 装在非默认路径（如 D:\软件\Git\）
+  - 用户可能 git 装在非默认路径
   - 测试不应假设 git 在 PATH 中
 
 策略：
-  - 探测常见 git 安装路径
+  - 探测常见 git 安装路径（来自 pandaone.git_installer._windows_candidate_dirs 单一来源）
   - 找到第一个存在的 git.exe 加到 PATH
   - 测试用 subprocess 启动时就会继承此 PATH
+
+Bug #40 fix (v0.7.10): 不再硬编码 `D:\软件\Git\cmd` 等作者机器路径，
+统一从 git_installer._windows_candidate_dirs() 派生。
 """
 import json
 import os
@@ -21,13 +24,19 @@ from pathlib import Path
 
 import pytest
 
-# 常见 git 安装位置（Windows）
-GIT_CANDIDATES = [
-    r"D:\软件\Git\cmd",
-    r"C:\Program Files\Git\cmd",
-    r"C:\Program Files (x86)\Git\cmd",
-    r"C:\Program Files\Git\bin",
-]
+# 常见 git 安装位置（Windows）— 单一来源 = pandaone.git_installer._windows_candidate_dirs
+# 兼容 pandaone 还没完全 import 的早期阶段（pytest 收集阶段），用 try/except 兜底
+try:
+    from pandaone.git_installer import _windows_candidate_dirs as _git_windows_dirs
+    GIT_CANDIDATES = _git_windows_dirs()
+except Exception:
+    # 兜底：极端情况下 pandaone 不可用，使用最小硬编码候选（仅标准位置，无作者路径）
+    GIT_CANDIDATES = [
+        r"C:\Program Files\Git\cmd",
+        r"C:\Program Files (x86)\Git\cmd",
+        r"C:\Program Files\Git\bin",
+        r"C:\Git\cmd",
+    ]
 
 
 def _find_git_dir() -> str | None:
