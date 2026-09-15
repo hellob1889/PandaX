@@ -267,7 +267,11 @@ jobs:
         with:
           tag_name: ${{ github.event_name == 'push' && github.ref_name || steps.release-tag-dispatch.outputs.tag }}
           name: ${{ github.event_name == 'push' && github.ref_name || steps.release-tag-dispatch.outputs.tag }}
-          files: dist/*
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            install.ps1
+            install.sh
           generate_release_notes: true
           body: |
             ## What's Changed
@@ -276,9 +280,25 @@ jobs:
 
             ## Installation
 
+            ### One-line (PyPI)
             ```bash
             pip install --upgrade pandaone-guard
             ```
+
+            ### Hard-isolated install (recommended — no site-packages pollution)
+            Downloads the GitHub Release wheel into a dedicated venv at `%LOCALAPPDATA%\pandaone\venv\` (Windows) or `~/.local/share/pandaone/venv` (macOS/Linux):
+
+            **Windows (PowerShell):**
+            ```powershell
+            irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
+            ```
+
+            **macOS / Linux:**
+            ```bash
+            curl -sSL https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.sh | bash
+            ```
+
+            Or download `install.ps1` / `install.sh` from the Assets section below and run locally.
 
             This installs the `pandaone` CLI command (see the rename note in the v0.7.4 commit message — internal brand is Pandaone AI Agent, distribution channel stays pandaone-guard to preserve the existing PyPI project's Trusted Publisher config).
 
