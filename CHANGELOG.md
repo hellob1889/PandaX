@@ -2,6 +2,60 @@
 
 All notable changes to Pandaone AI Agent will be documented in this file.
 
+## [0.7.13] - 2026-09-15
+
+### Changed: install 脚本支持新电脑零前置环境 (PR #42 增强)
+
+**用户诉求**：「新电脑，需要配什么环境，才能使用，我希望拉取下来的 pandaone 能自动配好所有的环境，而不是手动配」
+
+之前 v0.7.12 要求新电脑**必须先装 Python ≥ 3.8**，否则 install 失败退出。v0.7.13 让 install 脚本真正"零前置"：
+
+| 场景 | v0.7.12 行为 | v0.7.13 行为 |
+|---|---|---|
+| PATH 没 Python | ❌ 退出，提示"please install Python" | ✅ **自动下载嵌入式 Python 3.12** 到 `%LOCALAPPDATA%\pandaone\python\`（无需管理员） |
+| PATH 没 Git | ⚠️ 静默跳过 hook 步骤 | ✅ 明确打印安装命令（winget / brew / apt / dnf / pacman / apk） |
+| git hook 步骤但 git 不可用 | ⚠️ 跑 install-hook 失败 warn | ✅ 直接跳过 hook 步骤 |
+
+**自动装 Python 实现（Windows）**：
+1. 检测 `python` / `python3` / `py` 在 PATH 里 ≥ 3.8
+2. 没有 → 从 python.org 下载 `python-3.12.7-embed-amd64.zip` (~11 MB)
+3. 解压到 `%LOCALAPPDATA%\pandaone\python\`（**用户级，无管理员**）
+4. 启用 `import site`（嵌入式 Python 默认禁用，否则 venv 装 pip 包会失败）
+5. 用这个嵌入式 Python 创建 venv + 装 wheel
+
+**macOS / Linux 自动装 Python**：⚠️ **不做**
+- macOS 用 brew install python3（需要用户先装 brew）
+- Linux apt/yum/dnf/pacman 都涉及 sudo
+- 嵌入式 Python 在 Linux/macOS 平台限制较多
+- install 脚本仍给对应命令提示（brew / apt / dnf / pacman / apk）
+
+**自动装 Git**：⚠️ **不做**（所有平台）
+- Windows: 需要 winget admin 或手动下载 MSI
+- macOS: xcode-select --install 或 brew install git
+- Linux: 涉及 sudo
+- install 脚本打印对应命令，git 装好后用户重跑 install 即可
+
+**对抗式审查**：
+- ✅ 嵌入式 Python 是**无管理员、无 GUI、安全可控**的（python.org 官方分发）
+- ⚠️ 自动装 Python 在 macOS/Linux **不做**——平台差异 + 权限问题
+- ⚠️ 自动装 Git **不做**——风险大于价值
+- ✅ Git 不可用时 hook 步骤**优雅跳过**（不报错）
+- ✅ 友好提示让用户知道下一步该做什么
+
+**新电脑 onboarding 流程（v0.7.13）**：
+```powershell
+# Windows: 之前需要先装 Python, 现在只需要 PowerShell
+irm https://raw.githubusercontent.com/hellob1889/Pandaone-AI-Agent/main/install.ps1 | iex
+
+# 跑完输出:
+#   ✓ Embedded Python installed
+#   ⚠ git not found, run: winget install Git.Git
+#   ✓ Context-menu installed (右键菜单)
+#   ✓ Git pre-commit hook installed (or [SKIP] if no git)
+
+# 用户装好 git 后再跑一次 install.ps1 → hook 自动装好
+```
+
 ## [0.7.12] - 2026-09-15
 
 ### Changed: install 脚本默认自动配置环境 (PR #41 增强)
